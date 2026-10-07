@@ -7,6 +7,7 @@ import { rng, hash } from "/assets/js/lib/random.js";
 import { overlayTexture } from "/assets/js/lib/paper-textures.js";
 import { loadFontStylesheet, fontString } from "/assets/js/lib/fonts.js";
 import { loadMedia } from "/assets/js/lib/media.js";
+import { loadGifenc, quantizeFrame, gifDelay } from "/assets/js/lib/gif.js";
 import {
   h,
   icon,
@@ -21,8 +22,6 @@ import {
   resetMeasurements,
 } from "./pages.js";
 
-const GIFENC_URL =
-  "https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js";
 const JSZIP_URL = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
 const SIZES = {
   "9:16": [1080, 1920],
@@ -378,7 +377,7 @@ function delays() {
     if (s.pacing === "speed-up") d *= 1.9 - 1.3 * x; // ~1.9× → 0.6×
     if (s.pacing === "slow-down") d *= 0.6 + 1.4 * x * x; // 0.6× → 2×
     if (s.land && i === n - 1) d = s.landMs;
-    return Math.max(20, Math.round(d / 10) * 10); // GIF delays are in 1/100 s; <20 ms gets slowed down by browsers
+    return gifDelay(d);
   });
 }
 let timeline = { starts: [0], total: 1 };
@@ -1100,13 +1099,6 @@ function markWord(img, initial) {
 }
 
 /* ---------- Export: GIF / ZIP ---------- */
-let gifenc;
-const loadGifenc = () =>
-  (gifenc ||= import(GIFENC_URL).catch((err) => {
-    gifenc = null;
-    throw new Error("Could not load the GIF encoder. Check your connection.");
-  }));
-
 let jszip;
 const loadJSZip = () =>
   (jszip ||= new Promise((resolve, reject) => {
@@ -1132,25 +1124,9 @@ const gifSize = () => {
 };
 const nextTick = () => new Promise((r) => setTimeout(r, 0));
 
-// A 4×4 ordered-dither matrix. GIFs only get 256 colours per frame, so smooth
-// gradients (vignette, blur falloff) would band into rings without it.
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
-  (v) => (v / 16 - 0.5) * 10,
-);
-
 function encodeFrame(lib, gctx, gw, gh, f) {
   renderFrame(gctx, gw, gh, f);
-  const { data } = gctx.getImageData(0, 0, gw, gh);
-  for (let y = 0, i = 0; y < gh; y++) {
-    for (let x = 0; x < gw; x++, i += 4) {
-      const d = BAYER[((y & 3) << 2) | (x & 3)];
-      data[i] += d;
-      data[i + 1] += d;
-      data[i + 2] += d; // Uint8ClampedArray clamps for us
-    }
-  }
-  const palette = lib.quantize(data, 256);
-  return { index: lib.applyPalette(data, palette), palette };
+  return quantizeFrame(lib, gctx, gw, gh);
 }
 
 async function exportGif(btn) {

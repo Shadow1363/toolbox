@@ -27,3 +27,33 @@ export const easingOptions = [
 ];
 
 export const ease = (name, t) => (easings[name] || easings.linear)(clamp(t));
+
+/** Extra in-out curves for transitions (not in easingOptions, so existing menus stay the same). */
+easings.easeInOutExpo = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t < 0.5 ? 2 ** (20 * t - 10) / 2 : (2 - 2 ** (-20 * t + 10)) / 2);
+easings.easeInOutBack = (t) => {
+  const c2 = 1.70158 * 1.525;
+  return t < 0.5 ? ((2 * t) ** 2 * ((c2 + 1) * 2 * t - c2)) / 2 : ((2 * t - 2) ** 2 * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
+};
+
+/** CSS-style cubic-bezier(x1, y1, x2, y2) → easing function. */
+export function cubicBezier(x1, y1, x2, y2) {
+  const bx = (t) => 3 * x1 * t * (1 - t) ** 2 + 3 * x2 * t * t * (1 - t) + t ** 3;
+  const by = (t) => 3 * y1 * t * (1 - t) ** 2 + 3 * y2 * t * t * (1 - t) + t ** 3;
+  const dx = (t) => 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
+  return (x) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 6; i++) { // Newton, then bisection if the slope is flat
+      const d = dx(t);
+      if (Math.abs(d) < 1e-6) break;
+      t = clamp(t - (bx(t) - x) / d);
+    }
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 20 && Math.abs(bx(t) - x) > 1e-5; i++) {
+      if (bx(t) < x) lo = t; else hi = t;
+      t = (lo + hi) / 2;
+    }
+    return by(t);
+  };
+}

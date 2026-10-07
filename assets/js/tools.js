@@ -70,6 +70,16 @@ export const tools = [
     thumbnail: "/assets/img/text-match-cut.svg",
     tags: ["gif", "match cut", "newspaper", "highlight", "kinetic typography"],
   },
+  {
+    id: "transitions",
+    category: "video-effects",
+    name: "Cinematic Transitions",
+    description:
+      "Join clips with zoom-through text, whip pans, glitches, light leaks and more.",
+    thumbnail: "/assets/img/transitions.svg",
+    status: "new",
+    tags: ["transition", "webgl", "zoom", "whip pan", "glitch", "light leak", "edit", "gif"],
+  },
 ];
 
 /* ---------- helpers (used by site.js and tool pages) ---------- */

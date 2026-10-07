@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cinematic Transitions · Toolbox</title>
+  <meta name="description" content="Join clips with cinematic transitions: zoom through text, whip pans, glitches, light leaks and more. Preview live and export WebM or GIF in your browser.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="transitions">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Clips</h3><div id="upload"></div></section>
+        <div id="editor" class="tr-editor"></div>
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Preview">
+        <div id="toolbar" class="tr-toolbar"></div>
+        <div class="preview-stage">
+          <canvas id="preview" width="1920" height="1080"></canvas>
+          <div class="preview-overlay is-note" id="overlay" hidden><div>Sample clips. Drop your own videos or images to replace them.</div></div>
+        </div>
+        <div id="transport"></div>
+        <div id="timeline" class="tr-timeline" aria-label="Timeline"></div>
+        <div id="export"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

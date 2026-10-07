@@ -17,20 +17,20 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - With no upload, tools draw a built-in demo (Paper Effect, Screen Showcase) under an `.preview-overlay.is-note` hint.
 
 ## Import
-- `createDropzone(root, { accept: ['video', 'image'], label, limits, onLoad, onClear })` gives a drop zone plus file picker (one file). Text Match Cut has its own multi-file picker that still calls `loadMedia`.
+- `createDropzone(root, { accept: ['video', 'image'], label, limits, onLoad, onClear })` gives a drop zone plus file picker (one file). Text Match Cut and Transitions have their own multi-file pickers that still call `loadMedia`.
 - `loadMedia` detects the kind by MIME type, or by extension when `file.type` is empty. Limits come from `LIMITS` in `media.js` (video 1 GB, image 50 MB), overridable per call.
 - Files load from `URL.createObjectURL`; `media.dispose()` revokes the URL, and the dropzone calls it when the file is replaced or cleared.
 - Videos are `muted`, `playsInline`, `preload="auto"`. WebM files reporting `Infinity` duration get a seek-to-end fix. Undecodable codecs (HEVC `.mov` in Chrome/Firefox) produce a friendly error.
 
 ## Export
-- `createExportBar(root, { stage, filename, getVideo, video, png, hint, videoLabel, actions, beforeExport, afterExport })`. `video`, `png` and `hint` may be functions; call `exportBar.refresh()` when they would change. `actions` adds extra buttons (Text Match Cut: GIF, ZIP).
+- `createExportBar(root, { stage, filename, getVideo, getAudio, hasAudio, video, png, hint, videoLabel, actions, beforeExport, afterExport })`. `video`, `png` and `hint` may be functions; call `exportBar.refresh()` when they would change. `actions` adds extra buttons (GIF, ZIP). Multi-clip tools pass `getAudio: () => mixTrack(videos)` instead of `getVideo`.
 - **Video:** `recordStage` plays the stage once in real time and records `canvas.captureStream(30)` with MediaRecorder.
   - MIME is picked from VP9 → VP8 → WebM → MP4 (Safari records MP4). Bitrate scales with pixel count (4–20 Mbps).
   - `fixWebmDuration` patches the missing duration in Chrome WebM.
-  - Audio: `audioGraph(video)` routes the element through Web Audio (once per element). After that, mute through `setPreviewMuted`, never `video.muted`.
+  - Audio: `audioGraph(video)` routes the element through Web Audio (once per element): source → `level` (clip volume/fades) → `monitor` (preview mute) → speakers, and `level` → recorder. After that, mute through `setPreviewMuted`, never `video.muted`.
   - The tab must stay visible: background tabs throttle `requestAnimationFrame` and the recording stalls.
 - **Transparency:** clear the canvas and add the `checker` class to the preview. Alpha survives only in Chromium WebM and in PNG; show `TRANSPARENT_HINT`.
-- **GIF** (Text Match Cut only): `gifenc` with a per-frame `quantize(256)` palette, a 4×4 Bayer dither before quantizing (prevents gradient banding), delays rounded to 10 ms and at least 20 ms (browsers slow faster frames to 100 ms). Size is estimated by encoding two sample frames.
+- **GIF** (`lib/gif.js`): `gifenc` with a per-frame `quantize(256)` palette, a 4×4 Bayer dither before quantizing (prevents gradient banding), delays rounded to 10 ms and at least 20 ms (browsers slow faster frames to 100 ms). For a fixed fps, carry the rounding error forward (Transitions does) or the GIF runs slow. Size is estimated by encoding sample frames.
 - **Frames ZIP:** JSZip, `frame-001.png…` plus `timing.csv`.
 - Long jobs use `progressModal(title, onCancel, message)`, yield with `setTimeout(0)` between frames, and support cancel.
 
@@ -69,18 +69,35 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
   - UI: filmstrip (lock, regenerate, remove) and the `markWord` dialog for user screenshots.
   - Exports: GIF, ZIP and WebM.
 
+### transitions: cinematic transitions between clips
+- Files: `script.js` (UI, video sync, export), `sequence.js` (timeline math, `drawClip`), `engine.js` (WebGL renderer + `GLSL_HEADER`), `gallery.js` (picker with live thumbnails), `samples.js` (demo/gallery frames), `transitions/*.js` (one per transition; `index.js` registry, `_common.js` param/2D helpers, `_text.js` text layout + masks).
+- Model: `clips[]` (video trim in/out or image duration + Ken Burns, per-clip fit), `cuts[i]` between clips i and i+1, plus `intro`/`outro` slots that transition from/to a solid color. Slot = `{ type, duration, easing, bezier, params, slotColor }`; `type: 'cut'` means none.
+- Overlap model (`buildTimeline`): a transition of length d starts d s before clip A ends and clip B starts then; d is capped at 45% of each neighbouring clip.
+- Per frame `renderAt(ctx, t)`: `frameAt(tl, t)` → one clip via `drawClip`, or two side frames (`tr-side-A/B` scratch) → `engine.render`. Preview, PNG, WebM and GIF all call it. The preview plays `previewRange()`: the selected transition ±1 s, the selected clip, or the full sequence.
+- Videos: the stage runs on the wall clock (`getVideo` is null); `syncVideos(t)` plays, pre-rolls (parks the next clip on `trimIn` 1.5 s early), drift-corrects (>0.25 s) and pauses each `<video>`, and crossfades their audio `level`. GIF export seeks instead (`seekClips`) so frames are exact.
+- Engine: frames are prepared in 2D (fit/fill/blurred fill), uploaded as `uA`/`uB`, plus `uMask`; drawn on an offscreen WebGL canvas, then copied onto the 2D preview. No WebGL, or a shader that fails to compile → that transition's `draw2d`.
+- Text transitions redraw their mask canvas every frame (crisp at any zoom). Zoom through text finds the thickest point of the chosen letter with a distance transform (`letterFocus`) and zooms until that stroke covers the frame (`coverScale`).
+
+#### Add a transition
+1. Create `transitions/transitions/<id>.js` exporting `{ id, name, category: 'scale'|'text'|'motion', description, duration, easing, maxDuration?, pickCenter?, params, presets, glsl, uniforms(P, env), mask?(P, env), draw2d(ctx, A, B, p, P, env) }`. `luma-fade.js` is the smallest example.
+2. `glsl` defines `vec4 transition(vec2 uv)` (uv (0,0) = top-left). The header gives you `uA`, `uB`, `uMask`, `uProgress` (eased), `uRaw`, `uRes`, `uSeed`, and helpers `getA/getB` (mirrored edges), `getMask`, `zoomAt`, `rotateAt`, `dirBlur/zoomBlur/spinBlur`, `sdRoundBox`, `rand`, `fbm`, `luma`. `half` is a reserved word in GLSL ES.
+3. `params` are `createControls` specs (helpers: `direction`, `axis`, `range`, `percent`, `seed`, `textParams`). Avoid ids `duration`, `easing`, `bezier`, `slotColor`. `uniforms` maps params to uniforms (numbers or 2–4 element arrays). `env` = `{ W, H, k, p, raw, duration, mask, refresh }`.
+4. Import it in `transitions/index.js` and add it to `TRANSITIONS`. It then appears in the gallery and the editor.
+5. Check the WebGL and 2D paths at p = 0, 0.5 and 1: p = 0 must look like A and p = 1 like B.
+
 ## Performance
 - Rendering at 1080–1920px is the cost centre. Rebuild only what changed: Text Match Cut caches pages by seed and font version, and Paper Effect caches textures.
 - Reuse offscreen canvases with `scratch()` rather than creating canvases per frame.
 - `ctx.filter = 'blur()'` is fast but missing in older Safari; `drawBlurred` falls back to downscale/upscale.
 - Draw thumbnails in time-sliced batches (`requestAnimationFrame`, ~24 ms budget), as the filmstrip does.
-- GIF size grows with resolution × frames: default to 50% scale, show the estimate, and keep frame counts ≤ 40.
+- GIF size grows with resolution × frames: default to a reduced scale, show the estimate, and warn on long sequences (Transitions asks before > 180 frames).
+- Transitions uploads two 1080p frames per transition frame; outside a transition it draws the clip straight to 2D and skips WebGL.
 - Object URLs are revoked by `media.dispose()`; tool code that creates its own URLs must revoke them too.
 
 ## Ideas for future tools
 - Kinetic captions from an SRT/VTT file, using `text-anim.js`.
 - Picture-in-picture webcam bubble over a screen recording.
-- Glitch / VHS / film-grain filters for video.
+- Glitch / VHS / film-grain filters for video (the Glitch and Light leak shaders are a starting point).
 - Animated bar-chart race from CSV.
 - Split-screen before/after comparison with a wipe.
 

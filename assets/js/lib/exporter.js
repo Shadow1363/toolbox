@@ -6,9 +6,11 @@
  *     stage,                              // from createStage()
  *     filename: () => 'my-clip',          // without extension
  *     getVideo: () => videoOrNull,        // source video, for its audio track
+ *     getAudio: () => trackOrNull,        // or: a ready audio track (called inside the click)
  *     video: true,                        // show "Export video" (bool or () => bool)
  *     png: true,                          // show "Export PNG"   (bool or () => bool)
  *     hint: 'Text…',                      // small note next to the buttons
+ *     hasAudio: () => bool,               // show the Audio toggle (default: getVideo() returns a video)
  *     videoLabel: 'Export WebM',          // optional label for the video button
  *     actions: [{ label, icon, primary, onClick }],  // extra buttons placed first (e.g. GIF, ZIP)
  *     beforeExport, afterExport,          // optional hooks (async ok)
@@ -52,14 +54,16 @@ export function exportPNG(canvas, filename) {
  * Record the stage from t=0 to the end in real time.
  * Must be called from a user gesture (click) so audio can start.
  */
-export async function recordStage({ stage, getVideo, includeAudio = true, fps = 30, onProgress, signal }) {
+export async function recordStage({ stage, getVideo, getAudio, includeAudio = true, fps = 30, onProgress, signal }) {
   if (!canRecord()) throw new Error('Your browser does not support video recording (MediaRecorder). Try Chrome, Edge or Firefox.');
   const canvas = stage.canvas;
   const video = getVideo?.() || null;
 
   // Audio graph must be created/resumed synchronously inside the click.
   let audioTrack = null;
-  if (video && includeAudio) {
+  if (getAudio && includeAudio) {
+    try { audioTrack = getAudio(); } catch (err) { console.warn('Audio capture unavailable', err); }
+  } else if (video && includeAudio) {
     try {
       const g = audioGraph(video);
       if (g) { g.ctx.resume(); audioTrack = g.track; }
@@ -137,7 +141,7 @@ export function progressModal(title, onCancel, message = 'Recording in real time
 
 /* ---------- Export bar ---------- */
 export function createExportBar(root, opts) {
-  const { stage, filename = () => 'export', getVideo = () => null, beforeExport, afterExport } = opts;
+  const { stage, filename = () => 'export', getVideo = () => null, getAudio, beforeExport, afterExport } = opts;
   const want = (v) => (typeof v === 'function' ? v() : v);
   const recordable = canRecord();
 
@@ -168,7 +172,7 @@ export function createExportBar(root, opts) {
     try {
       await beforeExport?.();
       const result = await recordStage({
-        stage, getVideo, includeAudio: audioToggle.checked, signal: ctrl.signal, onProgress: modal.set,
+        stage, getVideo, getAudio, includeAudio: audioToggle.checked, signal: ctrl.signal, onProgress: modal.set,
       });
       if (result) {
         downloadBlob(result.blob, `${filename()}.${result.ext}`);
@@ -201,7 +205,7 @@ export function createExportBar(root, opts) {
     videoBtn.hidden = !showVideo;
     videoBtn.disabled = !recordable;
     pngBtn.hidden = !want(opts.png ?? true);
-    audioLabel.hidden = !showVideo || !getVideo() || !recordable;
+    audioLabel.hidden = !showVideo || !(opts.hasAudio ? opts.hasAudio() : getVideo()) || !recordable;
     const custom = want(opts.hint);
     hint.textContent = !recordable && showVideo
       ? 'Video export needs MediaRecorder support (Chrome, Edge, Firefox, Safari 14.1+).'

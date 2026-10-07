@@ -97,9 +97,10 @@ export function seekVideo(v, t) {
 
 /* ---------- Audio routing ----------
  * To record a video's audio we route it through Web Audio:
- *   <video> → MediaElementSource ─┬→ monitor gain → speakers (preview)
- *                                 └→ MediaStreamDestination (recorder)
+ *   <video> → MediaElementSource → level gain ─┬→ monitor gain → speakers (preview)
+ *                                              └→ MediaStreamDestination (recorder)
  * createMediaElementSource can only be called once per element, so we cache it.
+ * `level` is the clip's own volume (e.g. fades); `monitor` is the preview mute.
  */
 let audioCtx;
 const graphs = new WeakMap();
@@ -110,15 +111,32 @@ export function audioGraph(video) {
   if (!Ctx) return null;
   audioCtx ||= new Ctx();
   const source = audioCtx.createMediaElementSource(video);
+  const level = audioCtx.createGain();
   const monitor = audioCtx.createGain();
   const dest = audioCtx.createMediaStreamDestination();
-  source.connect(monitor).connect(audioCtx.destination);
-  source.connect(dest);
+  source.connect(level);
+  level.connect(monitor).connect(audioCtx.destination);
+  level.connect(dest);
   monitor.gain.value = video.muted ? 0 : 1;
   video.muted = false; // the graph now controls loudness; the element must output sound to feed it
-  const g = { ctx: audioCtx, monitor, track: dest.stream.getAudioTracks()[0] };
+  const g = { ctx: audioCtx, level, monitor, track: dest.stream.getAudioTracks()[0] };
   graphs.set(video, g);
   return g;
+}
+
+/**
+ * One audio track mixing several videos (for multi-clip tools). Call inside a click,
+ * like audioGraph. Returns null when Web Audio is unavailable or there are no videos.
+ */
+let mixDest;
+const mixed = new WeakSet();
+export function mixTrack(videos) {
+  const list = videos.map(audioGraph).filter(Boolean);
+  if (!list.length) return null;
+  mixDest ||= audioCtx.createMediaStreamDestination();
+  for (const g of list) if (!mixed.has(g)) { g.level.connect(mixDest); mixed.add(g); }
+  audioCtx.resume();
+  return mixDest.stream.getAudioTracks()[0];
 }
 
 /** Mute/unmute preview audio, whether or not the audio graph exists yet. */
