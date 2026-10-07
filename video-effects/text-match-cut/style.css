@@ -1,0 +1,29 @@
+/* Text Match Cut — tool-specific styles (shared look comes from /assets/css/styles.css). */
+
+/* Filmstrip */
+.tmc-filmstrip { display: flex; flex-direction: column; gap: 8px; }
+.tmc-strip-head { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.tmc-strip { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: thin; }
+.tmc-frame { flex: none; display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 10px; border: 1.5px solid transparent; background: var(--bg-elev); }
+.tmc-frame.is-current { border-color: var(--accent); }
+.tmc-frame.is-locked .tmc-thumb { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.tmc-thumb { padding: 0; border: 0; background: none; cursor: pointer; border-radius: 6px; overflow: hidden; line-height: 0; }
+.tmc-thumb canvas { display: block; border-radius: 6px; }
+.tmc-frame-bar { display: flex; align-items: center; gap: 2px; }
+.tmc-ms { font: 11px var(--font-mono); color: var(--text-faint); white-space: nowrap; }
+.tmc-mini { display: inline-grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer; }
+.tmc-mini:hover { background: var(--surface-2); color: var(--text); }
+.tmc-mini[aria-pressed="true"] { color: var(--accent); }
+.tmc-mini svg { width: 14px; height: 14px; }
+
+/* Screenshots */
+.tmc-shot-zone { padding: 14px; }
+.tmc-shot-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tmc-shot-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.tmc-shot-list img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; flex: none; }
+.tmc-shot-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Mark-the-word dialog */
+.modal.tmc-mark { width: min(1060px, 100%); }
+.tmc-mark-wrap { margin-top: 14px; display: grid; place-items: center; background: var(--bg-elev); border-radius: var(--radius); padding: 10px; }
+.tmc-mark-canvas { max-width: 100%; height: auto; cursor: crosshair; touch-action: none; border-radius: 4px; }

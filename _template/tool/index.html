@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Tool · Toolbox</title>
+  <meta name="description" content="One sentence describing the tool.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<!-- data-tool must match the tool's id in /assets/js/tools.js (fills header, breadcrumb and title). -->
+<body data-tool="my-tool">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <div id="controls"></div>
+      </aside>
+      <section class="panel panel-pad" aria-label="Result">
+        <div class="ctrl">
+          <label class="ctrl-label" for="input">Input</label>
+          <textarea id="input" rows="8" spellcheck="false">{"hello": "world", "list": [1, 2, 3]}</textarea>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-label"><span>Output</span><button class="btn btn-sm" id="copy" type="button">Copy</button></div>
+          <textarea id="output" rows="8" readonly spellcheck="false"></textarea>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

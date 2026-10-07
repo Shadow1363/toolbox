@@ -1,0 +1,134 @@
+/** Loading and validating user media (video / image) + audio routing for export. */
+
+export const LIMITS = {
+  video: 1024 * 1024 * 1024, // 1 GB
+  image: 50 * 1024 * 1024,   // 50 MB
+};
+
+const IMAGE_EXT = /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i;
+const VIDEO_EXT = /\.(mp4|m4v|webm|mov|ogv|mkv)$/i;
+
+export class MediaError extends Error {}
+
+/** Work out whether a File is a video or an image (some OSes leave file.type empty). */
+export function kindOf(file) {
+  if (file.type.startsWith('video/') || (!file.type && VIDEO_EXT.test(file.name))) return 'video';
+  if (file.type.startsWith('image/') || (!file.type && IMAGE_EXT.test(file.name))) return 'image';
+  return null;
+}
+
+/**
+ * Validate and load a File.
+ * @param {File} file
+ * @param {{accept?: ('video'|'image')[], limits?: {video?: number, image?: number}}} opts
+ * @returns {Promise<{kind, el, width, height, duration, name, size, url, dispose}>}
+ */
+export async function loadMedia(file, { accept = ['video', 'image'], limits = {} } = {}) {
+  const kind = kindOf(file);
+  const acceptLabel = accept.join(' or ');
+  if (!kind) throw new MediaError(`“${file.name}” isn't a supported file. Please choose a ${acceptLabel}.`);
+  if (!accept.includes(kind)) throw new MediaError(`This tool takes a ${acceptLabel}, not an ${kind}.`);
+
+  const max = limits[kind] ?? LIMITS[kind];
+  if (file.size > max) {
+    throw new MediaError(`That ${kind} is ${(file.size / 1024 ** 2).toFixed(0)} MB. The limit is ${(max / 1024 ** 2).toFixed(0)} MB.`);
+  }
+
+  const url = URL.createObjectURL(file);
+  const dispose = () => URL.revokeObjectURL(url);
+  try {
+    const media = kind === 'video' ? await loadVideo(url, file) : await loadImage(url, file);
+    return { ...media, kind, name: file.name, size: file.size, url, dispose };
+  } catch (err) {
+    dispose();
+    throw err;
+  }
+}
+
+function loadImage(url, file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      if (!img.naturalWidth) return reject(new MediaError(`Couldn't read “${file.name}”.`));
+      resolve({ el: img, width: img.naturalWidth, height: img.naturalHeight, duration: 0 });
+    };
+    img.onerror = () => reject(new MediaError(`Couldn't decode “${file.name}”. Try a PNG, JPG or WebP.`));
+    img.src = url;
+  });
+}
+
+function loadVideo(url, file) {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video');
+    if (file.type && !v.canPlayType(file.type) && !/quicktime/.test(file.type)) {
+      return reject(new MediaError(`Your browser can't play ${file.type} files. Try MP4 (H.264) or WebM.`));
+    }
+    v.muted = true;
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.crossOrigin = 'anonymous';
+    const timer = setTimeout(() => fail(`Timed out reading “${file.name}”.`), 20_000);
+    const fail = (msg) => { clearTimeout(timer); v.removeAttribute('src'); reject(new MediaError(msg)); };
+    v.onerror = () => fail(`Couldn't decode “${file.name}”. The codec may be unsupported here (e.g. HEVC .mov in Chrome/Firefox). Try MP4 (H.264) or WebM.`);
+    v.onloadeddata = () => {
+      clearTimeout(timer);
+      if (!v.videoWidth) return fail(`“${file.name}” has no video track.`);
+      // Some WebM files report Infinity until fully scanned; force the browser to find the end.
+      if (!isFinite(v.duration)) {
+        v.currentTime = 1e9;
+        v.addEventListener('seeked', () => { v.currentTime = 0; done(); }, { once: true });
+      } else done();
+    };
+    const done = () => resolve({ el: v, width: v.videoWidth, height: v.videoHeight, duration: v.duration });
+    v.src = url;
+  });
+}
+
+/** Seek a video and wait until the frame is ready. */
+export function seekVideo(v, t) {
+  return new Promise((resolve) => {
+    if (Math.abs(v.currentTime - t) < 0.001 && v.readyState >= 2) return resolve();
+    const on = () => { v.removeEventListener('seeked', on); resolve(); };
+    v.addEventListener('seeked', on);
+    v.currentTime = t;
+  });
+}
+
+/* ---------- Audio routing ----------
+ * To record a video's audio we route it through Web Audio:
+ *   <video> → MediaElementSource ─┬→ monitor gain → speakers (preview)
+ *                                 └→ MediaStreamDestination (recorder)
+ * createMediaElementSource can only be called once per element, so we cache it.
+ */
+let audioCtx;
+const graphs = new WeakMap();
+
+export function audioGraph(video) {
+  if (graphs.has(video)) return graphs.get(video);
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  audioCtx ||= new Ctx();
+  const source = audioCtx.createMediaElementSource(video);
+  const monitor = audioCtx.createGain();
+  const dest = audioCtx.createMediaStreamDestination();
+  source.connect(monitor).connect(audioCtx.destination);
+  source.connect(dest);
+  monitor.gain.value = video.muted ? 0 : 1;
+  video.muted = false; // the graph now controls loudness; the element must output sound to feed it
+  const g = { ctx: audioCtx, monitor, track: dest.stream.getAudioTracks()[0] };
+  graphs.set(video, g);
+  return g;
+}
+
+/** Mute/unmute preview audio, whether or not the audio graph exists yet. */
+export function setPreviewMuted(video, muted) {
+  const g = graphs.get(video);
+  if (g) g.monitor.gain.value = muted ? 0 : 1;
+  else video.muted = muted;
+}
+
+export function isPreviewMuted(video) {
+  const g = graphs.get(video);
+  return g ? g.monitor.gain.value === 0 : video.muted;
+}
