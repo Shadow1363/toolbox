@@ -696,10 +696,9 @@ let savedMode = null;
 const exportBar = createExportBar(document.getElementById('export'), {
   stage,
   filename: () => 'transitions',
-  videoLabel: 'Export WebM',
   getAudio: () => (clips.some(isVideo) ? (ensureAudio(), mixTrack(clips.filter(isVideo).map((c) => c.media.el))) : null),
   hasAudio: () => clips.some(isVideo),
-  actions: [{ label: 'Export GIF', icon: 'image', onClick: exportGif }],
+  onGif: exportGif,
   hint: () => estimateText,
   beforeExport: () => { savedMode = previewMode; previewMode = 'full'; stage.invalidate(); },
   afterExport: () => { previewMode = savedMode || 'selection'; stage.seek(0); changed(); },

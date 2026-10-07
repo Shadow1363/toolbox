@@ -9,6 +9,7 @@
  *     getVideo: () => videoOrNull,  // when a video is returned it drives the clock
  *   });
  *   stage.invalidate();             // redraw after a settings change
+ *   stage.renderFrame(t);           // draw t right now (frame-by-frame export); stage.release() resumes the loop
  *
  * Without a video the clock is the wall clock, looping over getDuration().
  * Events (stage.events): 'tick' {t}, 'ended'.
@@ -25,6 +26,7 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
   let dirty = true;
   let rafId = 0;
   let scrubbing = false;
+  let held = false;       // true while an exporter draws frames itself
 
   const ui = transport ? buildTransport(transport) : null;
 
@@ -34,6 +36,7 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
 
   function frame(now) {
     rafId = requestAnimationFrame(frame);
+    if (held) return;
     const v = video();
     if (playing) {
       if (v) {
@@ -159,6 +162,15 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
     /** Call after the media source changes. */
     reset() { pause(); clock = 0; watchVideo(); seek(0); },
     setTransportDisabled(d) { ui?.setDisabled(d); },
+    /** Pause the live loop and draw time t synchronously. Seek any video to t first. */
+    renderFrame(t) {
+      if (playing) pause();
+      held = true;
+      clock = t;
+      render(t);
+      ui?.sync(t);
+    },
+    release() { held = false; dirty = true; },
     destroy() { cancelAnimationFrame(rafId); },
   };
 }

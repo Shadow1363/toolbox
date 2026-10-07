@@ -314,6 +314,9 @@ input[type="color"]::-moz-color-swatch { border: 0; border-radius: 5px; }
 .modal h2 { font-size: 18px; margin-bottom: 6px; }
 .modal p { color: var(--text-muted); font-size: 14px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.gif-dialog-controls { display: grid; gap: 14px; margin: 14px 0 12px; }
+.modal p.gif-dialog-info { font: 12px var(--font-mono); }
+.modal p.gif-dialog-warn { margin-top: 10px; font-size: 13px; }
 .progress { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 16px; }
 .progress > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .15s linear; }
 .progress-label { display: flex; justify-content: space-between; font: 12px var(--font-mono); color: var(--text-muted); margin-top: 8px; }

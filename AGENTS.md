@@ -41,9 +41,9 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 | --- | --- |
 | `controls.js` | `createControls(root, sections, { onChange })`: declarative settings panel with a live `state`, `showIf`, presets, swatches |
 | `upload.js` / `media.js` | `createDropzone(...)` and `loadMedia(file)`: drag-drop + picker, type/size validation, `MediaError` messages; `audioGraph`/`mixTrack` route video audio for export |
-| `stage.js` | `createStage({ canvas, transport, render(t), getDuration, getVideo })`: preview loop + play/scrub/mute bar |
-| `exporter.js` | `createExportBar(...)`, `recordStage`, `progressModal`, `exportPNG`, `TRANSPARENT_HINT` |
-| `gif.js` | `loadGifenc`, `quantizeFrame` (Bayer dither + palette), `gifDelay` |
+| `stage.js` | `createStage({ canvas, transport, render(t), getDuration, getVideo })`: preview loop + play/scrub/mute bar; `renderFrame(t)`/`release()` for frame-by-frame export |
+| `exporter.js` | `createExportBar(...)`: the standard **Export video / Export GIF / Export PNG** bar every media tool uses; `recordStage`, `recordStageGif`, `progressModal`, `exportPNG`, `TRANSPARENT_HINT` |
+| `gif.js` | `loadGifenc`, `quantizeFrame` (Bayer dither + palette, 1-bit alpha), `frameOptions`, `gifDelay`, `gifDelays` |
 | `canvas.js` | `fit`, `outputSize`, `scratch`, `drawBlurred`, `roundRectPath`, `linearGradient` |
 | `text-anim.js` | `drawAnimatedText` with entrance (`ANIMATIONS`) and exit (`EXIT_ANIMATIONS`) |
 | `fonts.js` | `FONTS` list (Google Fonts, loaded on demand), `fontString`, `ensureFont` |

@@ -275,6 +275,7 @@ const exportBar = createExportBar(document.getElementById('export'), {
   filename: () => `text-behind-${(media?.name || 'clip').replace(/\.[^.]+$/, '')}`,
   getVideo: () => (isVideo() ? media.el : null),
   video: () => !!media,
+  gif: () => !!media,
   png: () => !!media,
   beforeExport: () => {
     if (!segmenter && !modelError) throw new Error('The segmentation model is still loading. Try again in a moment.');

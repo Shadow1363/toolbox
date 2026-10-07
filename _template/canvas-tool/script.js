@@ -61,5 +61,6 @@ const exportBar = createExportBar(document.getElementById('export'), {
   filename: () => 'my-canvas-tool',
   getVideo: () => (isVideo() ? media.el : null),
   video: () => !!media,
+  gif: () => !!media,
   png: () => !!media,
 });

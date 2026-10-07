@@ -324,9 +324,8 @@ const exportBar = createExportBar(document.getElementById('export'), {
   stage,
   filename: () => `paper-${(media?.name || 'demo').replace(/\.[^.]+$/, '')}`,
   getVideo: () => (isVideo() ? media.el : null),
-  video: () => isVideo() || s.stopMotion || isAnimated(),
   hint: () => [
-    !isVideo() && !s.stopMotion && !isAnimated() ? 'Add an entrance/exit or turn on stop-motion to export an animated clip of an image.' : '',
+    !isVideo() && !s.stopMotion && !isAnimated() ? 'Video and GIF of a still image hold one frame; add an entrance/exit or handmade jitter to animate it.' : '',
     s.bg === 'transparent' ? TRANSPARENT_HINT : '',
   ].filter(Boolean).join(' '),
 });

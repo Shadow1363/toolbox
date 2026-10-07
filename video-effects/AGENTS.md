@@ -8,7 +8,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 
 ## Shared pipeline
 `createDropzone` → `media` → `createControls` state → `createStage({ render(t) })` → `createExportBar`.
-- `render(t)` is the only drawing path. Preview, PNG and video export all call it, so the export is the preview.
+- `render(t)` is the only drawing path. Preview, PNG, GIF and video export all call it, so the export is the preview.
 - Clock: when `getVideo()` returns a `<video>`, its `currentTime` drives `t`; otherwise the stage uses the wall clock and loops over `getDuration()`.
 - Scale convention: `k = Math.min(W, H) / 1080`. Sliders are authored for a 1080px short side, so multiply sizes by `k`.
 - Output size: `outputSize(w, h, 1920)` caps the long side at 1920 with even dimensions (video encoders need them).
@@ -23,14 +23,21 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - Videos are `muted`, `playsInline`, `preload="auto"`. WebM files reporting `Infinity` duration get a seek-to-end fix. Undecodable codecs (HEVC `.mov` in Chrome/Firefox) produce a friendly error.
 
 ## Export
-- `createExportBar(root, { stage, filename, getVideo, getAudio, hasAudio, video, png, hint, videoLabel, actions, beforeExport, afterExport })`. `video`, `png` and `hint` may be functions; call `exportBar.refresh()` when they would change. `actions` adds extra buttons (GIF, ZIP). Multi-clip tools pass `getAudio: () => mixTrack(videos)` instead of `getVideo`.
+- Every tool exports **video, GIF and PNG** from one `createExportBar`, always in that order with those labels. Keep all three; a still source still exports a clip of the stage duration.
+- `createExportBar(root, { stage, filename, getVideo, getAudio, hasAudio, video, gif, png, onGif, primary, hint, actions, beforeExport, afterExport })`.
+  - `video`/`gif`/`png` enable each button (bool or function; disabled buttons stay visible, e.g. before an upload). `hint` may be a function. Call `exportBar.refresh()` when any of them would change.
+  - `primary` picks the highlighted button (`'video'` by default; Text Match Cut uses `'gif'`). `actions` adds extra buttons after the three (Text Match Cut's ZIP).
+  - Multi-clip tools pass `getAudio: () => mixTrack(videos)` instead of `getVideo`.
+  - `beforeExport`/`afterExport` run around video and built-in GIF exports; throw from `beforeExport` to refuse with a toast.
 - **Video:** `recordStage` plays the stage once in real time and records `canvas.captureStream(30)` with MediaRecorder.
   - MIME is picked from VP9 → VP8 → WebM → MP4 (Safari records MP4). Bitrate scales with pixel count (4–20 Mbps).
   - `fixWebmDuration` patches the missing duration in Chrome WebM.
   - Audio: `audioGraph(video)` routes the element through Web Audio (once per element): source → `level` (clip volume/fades) → `monitor` (preview mute) → speakers, and `level` → recorder. After that, mute through `setPreviewMuted`, never `video.muted`.
   - The tab must stay visible: background tabs throttle `requestAnimationFrame` and the recording stalls.
-- **Transparency:** clear the canvas and add the `checker` class to the preview. Alpha survives only in Chromium WebM and in PNG; show `TRANSPARENT_HINT`.
-- **GIF** (`lib/gif.js`): `gifenc` with a per-frame `quantize(256)` palette, a 4×4 Bayer dither before quantizing (prevents gradient banding), delays rounded to 10 ms and at least 20 ms (browsers slow faster frames to 100 ms). For a fixed fps, carry the rounding error forward (Transitions does) or the GIF runs slow. Size is estimated by encoding sample frames.
+- **Transparency:** clear the canvas and add the `checker` class to the preview. Full alpha survives in PNG and Chromium WebM; GIF keeps 1-bit alpha (hard edges). Show `TRANSPARENT_HINT`.
+- **GIF, built in:** the GIF button opens a dialog (fps 10–24, width 320–800 or full; frame count, size estimate, warning over 180 frames; choice saved in `localStorage`), then `recordStageGif` steps through the stage: seeks `getVideo()` to each frame, calls `stage.renderFrame(t)` (pauses the live loop), downscales and encodes, then `stage.release()`s and restores the playhead. Frames are exact, so it needs no real-time playback and works in any browser.
+- **GIF, custom:** tools whose frames aren't a plain function of the stage clock pass `onGif(btn)` and encode themselves (Text Match Cut: per-page holds; Transitions: multi-clip seeking).
+- **GIF encoding** (`lib/gif.js`): `gifenc` with a per-frame `quantize(256)` palette and a 4×4 Bayer dither before quantizing (prevents gradient banding). Frames with clear pixels switch to `rgba4444` + `oneBitAlpha`; spread `frameOptions(q)` into `writeFrame` to get the transparent index and `dispose: 2`. Delays are in 10 ms steps and at least 20 ms (browsers slow faster frames to 100 ms); `gifDelays(n, fps)` carries the rounding error forward so the GIF keeps time.
 - **Frames ZIP:** JSZip, `frame-001.png…` plus `timing.csv`.
 - Long jobs use `progressModal(title, onCancel, message)`, yield with `setTimeout(0)` between frames, and support cancel.
 
@@ -67,7 +74,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
   - Data: the `frames[]` model (`page` or `image` frames, `locked`); `delays()`/`rebuildTimeline()` map `t` to a frame index.
   - Drawing: `renderFrame()` = `drawContent` (page transformed so the keyword sits at the centre, highlight drawn after the text) → three blur levels masked by `maskEllipse` → texture → vignette. It redraws only when the frame index or `version` changes.
   - UI: filmstrip (lock, regenerate, remove) and the `markWord` dialog for user screenshots.
-  - Exports: GIF, ZIP and WebM.
+  - Exports: GIF (primary, its own `onGif` with per-page holds), video, PNG of the current frame, and a frames ZIP.
 
 ### transitions: cinematic transitions between clips
 - Files: `script.js` (UI, video sync, export), `sequence.js` (timeline math, `drawClip`), `engine.js` (WebGL renderer + `GLSL_HEADER`), `gallery.js` (picker with live thumbnails), `samples.js` (demo/gallery frames), `transitions/*.js` (one per transition; `index.js` registry, `_common.js` param/2D helpers, `_text.js` text layout + masks).
@@ -105,8 +112,8 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - [ ] Start from `_template/canvas-tool/`; keep `render(t)` the only drawing path.
 - [ ] Scale sizes by `k`; cap output with `outputSize` or a `SIZES` preset.
 - [ ] Seed all randomness; no `Math.random` inside `render`.
-- [ ] Wire `createExportBar`; set `video`/`png`/`hint` (+ `TRANSPARENT_HINT` when the background can be clear).
+- [ ] Wire `createExportBar` so video, GIF and PNG all work; set `video`/`gif`/`png` only to disable them until there's something to export, and `hint` (+ `TRANSPARENT_HINT` when the background can be clear).
 - [ ] Validate uploads with `createDropzone`/`loadMedia`; handle missing WebGL / MediaRecorder / canvas filter.
 - [ ] Pin and lazy-load any CDN library; show a `toast` if it fails to load.
-- [ ] Test: no console errors, export plays with correct duration (`ffprobe`), 390px layout has no sideways scroll, light and dark themes.
+- [ ] Test: no console errors, all three exports download and the video/GIF have the correct duration (`ffprobe`), 390px layout has no sideways scroll, light and dark themes.
 - [ ] Register in `assets/js/tools.js`, add a thumbnail, and add a section above.

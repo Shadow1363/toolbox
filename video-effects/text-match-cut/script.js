@@ -1247,17 +1247,9 @@ function scheduleEstimate() {
 const exportBar = createExportBar(document.getElementById("export"), {
   stage,
   filename: () => `match-cut-${slug()}`,
-  videoLabel: "WebM",
-  actions: [
-    {
-      label: "Export GIF",
-      icon: "download",
-      primary: true,
-      onClick: exportGif,
-    },
-    { label: "PNG frames (.zip)", icon: "archive", onClick: exportZip },
-  ],
-  png: false,
+  primary: "gif",
+  onGif: exportGif,
+  actions: [{ label: "PNG frames (.zip)", icon: "archive", onClick: exportZip }],
   hint: () => estimate,
 });
 
