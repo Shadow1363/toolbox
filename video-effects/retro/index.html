@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Retro Looks · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Retro Looks · Toolbox</title>
+  <meta name="description" content="Give videos a retro look: VHS tape, CRT screen, film grain and dust, 8mm, dithering with limited palettes and ASCII art. Stackable WebGL effects that run in your browser.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="retro">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Media</h3><div id="upload"></div></section>
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Preview">
+        <div class="preview-stage">
+          <canvas id="preview" width="1280" height="720"></canvas>
+          <div class="preview-overlay" id="overlay" hidden></div>
+        </div>
+        <div id="transport"></div>
+        <div id="export"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

@@ -109,6 +109,66 @@ export const tools = [
     tags: ["crop", "mask", "circle", "heart", "star", "svg", "png", "transparent", "cutout", "shape", "keyframes", "gif"],
   },
   {
+    id: "auto-captions",
+    category: "video-effects",
+    name: "Auto Captions",
+    description:
+      "Transcribe speech on your device and add word-by-word animated captions. Export video, SRT or VTT.",
+    thumbnail: "/assets/img/auto-captions.svg",
+    status: "new",
+    tags: ["subtitles", "captions", "transcribe", "transcription", "whisper", "speech to text", "karaoke", "srt", "vtt", "ai"],
+  },
+  {
+    id: "background-remover",
+    category: "video-effects",
+    name: "Background Remover",
+    description:
+      "Remove the background behind a person, or swap it for a color, blur, image or looping video.",
+    thumbnail: "/assets/img/background-remover.svg",
+    status: "new",
+    tags: ["background", "remove background", "green screen", "chroma", "segmentation", "mediapipe", "ai", "transparent", "blur", "virtual background"],
+  },
+  {
+    id: "zoom-on-click",
+    category: "video-effects",
+    name: "Zoom on Click",
+    description:
+      "Smooth automatic zooms on screen recordings: follow clicks, add your own points, or let it suggest them.",
+    thumbnail: "/assets/img/zoom-on-click.svg",
+    status: "new",
+    tags: ["zoom", "screen recording", "screencast", "tutorial", "demo", "click", "cursor", "motion blur", "pan"],
+  },
+  {
+    id: "progress-overlay",
+    category: "video-effects",
+    name: "Progress Overlay",
+    description:
+      "A progress bar or countdown timer over your video, with chapters. Export it alone on a transparent background.",
+    thumbnail: "/assets/img/progress-overlay.svg",
+    status: "new",
+    tags: ["progress bar", "countdown", "timer", "count up", "chapters", "overlay", "transparent", "shorts", "reels"],
+  },
+  {
+    id: "retro",
+    category: "video-effects",
+    name: "Retro Looks",
+    description:
+      "VHS, CRT, film grain, 8mm, dithering and ASCII art. Stack them; WebGL keeps it smooth at full resolution.",
+    thumbnail: "/assets/img/retro.svg",
+    status: "new",
+    tags: ["vhs", "crt", "film grain", "8mm", "super 8", "dither", "1-bit", "pixel", "ascii", "scanlines", "vintage", "glitch", "webgl", "filter"],
+  },
+  {
+    id: "speed-ramp",
+    category: "video-effects",
+    name: "Speed Ramp",
+    description:
+      "Draw a speed curve: slow motion and fast forward from 0.25× to 4× with smooth easing and pitch-corrected audio.",
+    thumbnail: "/assets/img/speed-ramp.svg",
+    status: "new",
+    tags: ["speed", "slow motion", "slow-mo", "fast forward", "timelapse", "ramp", "time remap", "velocity", "edit"],
+  },
+  {
     id: "file-converter",
     category: "convert",
     section: "Files",

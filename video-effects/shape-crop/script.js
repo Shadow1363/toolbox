@@ -11,7 +11,7 @@
 import { createControls } from '/assets/js/lib/controls.js';
 import { createDropzone } from '/assets/js/lib/upload.js';
 import { createStage } from '/assets/js/lib/stage.js';
-import { createExportBar, canRecord, pickMimeType, TRANSPARENT_HINT } from '/assets/js/lib/exporter.js';
+import { createExportBar, canRecordAlpha, TRANSPARENT_HINT } from '/assets/js/lib/exporter.js';
 import { outputSize, scratch, drawBlurred } from '/assets/js/lib/canvas.js';
 import { h, icon, toast, downloadBlob, formatTime, formatBytes } from '/assets/js/lib/dom.js';
 import { ease, easingOptions, clamp, lerp } from '/assets/js/lib/easing.js';
@@ -30,7 +30,7 @@ const ASPECTS = [['free', 'Free'], ['1:1', '1:1'], ['4:5', '4:5'], ['9:16', '9:1
 const ANIMS = [['none', 'None'], ['scale-in', 'Scale in'], ['scale-out', 'Scale out'], ['scale-inout', 'Scale in and out'],
   ['reveal', 'Reveal (shape grows from 0)'], ['rotate', 'Rotate (spin)']];
 // Chromium records VP8/VP9 WebM with the canvas alpha; Firefox drops it and Safari records MP4.
-const videoAlpha = canRecord() && /webm/.test(pickMimeType(true)) && /Chrome\//.test(navigator.userAgent);
+const videoAlpha = canRecordAlpha();
 
 let media = null;
 let myShapes = loadMyShapes();

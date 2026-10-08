@@ -19,9 +19,4 @@ Ideas and bug reports are welcome: open an issue and pick **Feature request** or
 
 ## License
 
-© 2026 Tomas Martinez ([tomasmartinez.xyz](https://tomasmartinez.xyz)). Licensed under the [GNU GPL v3.0](LICENSE) or later, with additional attribution terms under section 7 (see [NOTICE](NOTICE)).
-
-In short: you can use, change and share this, even commercially, as long as:
-- your version stays open source under the GPL, and you share its source;
-- you keep the attribution: the file header comments, the author tags in the HTML, and the visible "Toolbox by tomasmartinez.xyz" footer credit;
-- changed versions are marked as changed and aren't presented as the original or as your own work.
+© 2026 Tomas Martinez ([tomasmartinez.xyz](https://tomasmartinez.xyz)). Licensed under the [GNU GPL v3.0](LICENSE)

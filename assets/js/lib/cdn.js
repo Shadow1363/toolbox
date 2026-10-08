@@ -38,6 +38,8 @@ export const LIBS = {
   qrcode: { kind: 'esm', url: `${NPM}/qrcode-generator@2.0.4/+esm` },
   jsqr: { kind: 'esm', url: `${NPM}/jsqr@1.4.0/+esm` },
   hashWasm: { kind: 'esm', url: `${NPM}/hash-wasm@4.12.0/+esm` },
+  // Machine learning (bundles onnxruntime-web, which fetches its WASM from jsDelivr). Loaded inside workers by lib/whisper.js.
+  transformers: { kind: 'esm', url: `${NPM}/@huggingface/transformers@4.2.0/dist/transformers.min.js` },
 };
 
 const loaded = new Map();

@@ -1,0 +1,11 @@
+<!-- Progress Overlay thumbnail · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b2a4a"/><stop offset="1" stop-color="#0e1424"/></linearGradient></defs>
+  <rect width="320" height="200" fill="url(#bg)"/>
+  <path d="M0 150 60 110l40 26 60-52 50 38 40-24 70 46v56H0z" fill="#2b3f6b" opacity=".7"/>
+  <circle cx="262" cy="56" r="30" fill="none" stroke="#000" stroke-opacity=".4" stroke-width="7"/>
+  <circle cx="262" cy="56" r="30" fill="none" stroke="#5cf08f" stroke-width="7" stroke-linecap="round" stroke-dasharray="132 189" transform="rotate(-90 262 56)"/>
+  <text x="262" y="62" text-anchor="middle" font-family="Menlo, monospace" font-weight="700" font-size="17" fill="#fff">0:42</text>
+  <g><rect x="20" y="172" width="86" height="9" rx="4.5" fill="#ffd23f"/><rect x="112" y="172" width="86" height="9" rx="4.5" fill="#ffd23f"/><rect x="204" y="172" width="96" height="9" rx="4.5" fill="#fff" opacity=".3"/><rect x="204" y="172" width="38" height="9" rx="4.5" fill="#ffd23f"/></g>
+  <g font-family="Arial, sans-serif" font-weight="700" font-size="10" fill="#fff" opacity=".85"><text x="22" y="164">Intro</text><text x="114" y="164">Setup</text><text x="206" y="164">Results</text></g>
+</svg>

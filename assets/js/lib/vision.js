@@ -87,7 +87,8 @@ export function segmentFrame(segmenter, source, key) {
 
 /**
  * Guess whether a mask marks the person (true) or the background (false):
- * the person is usually nearer the centre than the frame edges.
+ * the person is usually nearer the centre than the frame edges. Returns null when the frame
+ * gives no clear answer (no person yet, e.g. a title card), so callers can ask again later.
  */
 export function looksLikePerson({ data, width, height }) {
   let edge = 0, edgeN = 0, centre = 0, centreN = 0;
@@ -99,7 +100,9 @@ export function looksLikePerson({ data, width, height }) {
       else if (nx > 0.35 && nx < 0.65 && ny > 0.3) { centre += v; centreN++; }
     }
   }
-  return centre / centreN >= edge / edgeN;
+  const c = centre / centreN, e = edge / edgeN;
+  if (Math.abs(c - e) < 0.15) return null;
+  return c > e;
 }
 
 /* ---------- Landmarks ---------- */

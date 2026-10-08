@@ -21,7 +21,7 @@ export function createPersonMask(prefix) {
     raw: null,        // latest raw mask from the model
     prev: null,       // smoothed mask (Float32Array)
     time: -1,         // media time of `raw`
-    polarity: null,   // auto-detected: true = mask marks the person
+    polarity: null,   // auto-detected: true = mask marks the person; null = not sure yet (treated as normal)
     reset() { m.raw = null; m.prev = null; m.time = -1; m.polarity = null; },
 
     /** Run the model if the frame changed. Returns true when a mask is available. */
@@ -34,7 +34,7 @@ export function createPersonMask(prefix) {
       if (Math.abs(t - m.time) > 0.5) m.prev = null; // jumped: don't smooth across the seek
       m.raw = res;
       m.time = t;
-      if (m.polarity == null) m.polarity = looksLikePerson(res);
+      if (m.polarity == null) m.polarity = looksLikePerson(res); // stays null until a frame clearly shows a person
       if (m.prev && m.prev.length === res.data.length && smoothing > 0) {
         for (let i = 0; i < res.data.length; i++) m.prev[i] = m.prev[i] * smoothing + res.data[i] * (1 - smoothing);
       } else m.prev = res.data.slice();
@@ -49,7 +49,7 @@ export function createPersonMask(prefix) {
       const img = mctx.createImageData(width, height);
       const invert = polarity === 'invert' || (polarity === 'auto' && m.polarity === false);
       const lo = threshold - softness / 2, hi = threshold + softness / 2;
-      const d = m.prev;
+      const d = m.prev || m.raw.data; // prev is cleared when a tool resets smoothing (e.g. before an export)
       for (let i = 0, j = 0; i < d.length; i++, j += 4) {
         const v = invert ? 1 - d[i] : d[i];
         img.data[j] = img.data[j + 1] = img.data[j + 2] = 255;

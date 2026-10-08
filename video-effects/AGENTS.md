@@ -25,34 +25,56 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 
 ## Export
 - Every tool exports **video, GIF and PNG** from one `createExportBar`, always in that order with those labels. Keep all three; a still source still exports a clip of the stage duration.
-- `createExportBar(root, { stage, filename, getVideo, getAudio, hasAudio, video, gif, png, onGif, primary, hint, actions, beforeExport, afterExport })`.
+- `createExportBar(root, { stage, filename, getVideo, getAudio, hasAudio, video, gif, png, onGif, primary, hint, actions, beforeExport, afterExport, prepareFrame })`.
   - `video`/`gif`/`png` enable each button (bool or function; disabled buttons stay visible, e.g. before an upload). `hint` may be a function. Call `exportBar.refresh()` when any of them would change.
   - `primary` picks the highlighted button (`'video'` by default; Text Match Cut uses `'gif'`). `actions` adds extra buttons after the three (Text Match Cut's ZIP, Shape Crop's SVG); an action's `show` (bool or function) hides it, re-checked on `refresh()`.
   - Multi-clip tools pass `getAudio: () => mixTrack(videos)` instead of `getVideo`.
   - `beforeExport(kind)`/`afterExport(kind)` run around video and built-in GIF exports (`kind` is `'video'` or `'gif'`); throw from `beforeExport` to refuse with a toast.
-- **Video:** `recordStage` plays the stage once in real time and records `canvas.captureStream(30)` with MediaRecorder.
+  - `prepareFrame(t)` (async) runs before each built-in GIF frame is drawn, after `getVideo()` is seeked: seek extra videos (Background Remover's looping background) or a remapped source (Speed Ramp, whose stage has no video).
+  - Tools on a wall clock that still have sound pass `getAudio: () => audioGraph(video).track` + `hasAudio` instead of `getVideo` (Speed Ramp), so the exporter neither seeks the video nor treats it as the clock.
+- **Video:** `recordStage` plays the stage once in real time and records `canvas.captureStream(30)` with MediaRecorder. The progress modal states the length and an estimate (`estimateVideoBytes`: the recorder's target bitrate × duration); the success toast gives the real size.
   - MIME is picked from VP9 → VP8 → WebM → MP4 (Safari records MP4). Bitrate scales with pixel count (4–20 Mbps).
   - `fixWebmDuration` patches the missing duration in Chrome WebM.
   - Audio: `audioGraph(video)` routes the element through Web Audio (once per element): source → `level` (clip volume/fades) → `monitor` (preview mute) → speakers, and `level` → recorder. After that, mute through `setPreviewMuted`, never `video.muted`.
   - The tab must stay visible: background tabs throttle `requestAnimationFrame` and the recording stalls.
-- **Transparency:** clear the canvas and add the `checker` class to the preview. Full alpha survives in PNG and Chromium WebM; GIF keeps 1-bit alpha (hard edges). Show `TRANSPARENT_HINT`.
+- **Transparency:** clear the canvas and add the `checker` class to the preview. Full alpha survives in PNG and Chromium WebM (VP9, `alpha_mode=1`); GIF keeps 1-bit alpha (hard edges). Show `TRANSPARENT_HINT`. `canRecordAlpha()` says whether this browser keeps alpha in video; when it doesn't, record a matte color during `exportKind === 'video'` and warn in `beforeExport` (Shape Crop, Background Remover, Progress Overlay).
 - **GIF, built in:** the GIF button opens a dialog (start/end range, fps 10–24, width 320–800 or full; frame count, size estimate, warning over 180 frames; choice saved in `localStorage`), then `recordStageGif` steps through the stage: seeks `getVideo()` to each frame, calls `stage.renderFrame(t)` (pauses the live loop), downscales and encodes, then `stage.release()`s and restores the playhead. Frames are exact, so it needs no real-time playback and works in any browser.
 - **GIF, custom:** tools whose frames aren't a plain function of the stage clock pass `onGif(btn)` and encode themselves (Text Match Cut: per-page holds; Transitions: multi-clip seeking).
 - **GIF encoding** (`lib/gif.js`): `gifenc` with a per-frame `quantize(256)` palette and a 4×4 Bayer dither before quantizing (prevents gradient banding). Frames with clear pixels switch to `rgba4444` + `oneBitAlpha`; spread `frameOptions(q)` into `writeFrame` to get the transparent index and `dispose: 2`. Delays are in 10 ms steps and at least 20 ms (browsers slow faster frames to 100 ms); `gifDelays(n, fps)` carries the rounding error forward so the GIF keeps time.
 - **Frames ZIP:** JSZip, `frame-001.png…` plus `timing.csv`.
-- Long jobs use `progressModal(title, onCancel, message)`, yield with `setTimeout(0)` between frames, and support cancel.
+- Long jobs use `progressModal(title, onCancel, message)`, yield with `setTimeout(0)` between frames, and support cancel. Multi-step jobs call `modal.phase(title, message)` to start a new step (bar and ETA reset) and `modal.message(text)` for live detail (Auto Captions: decode → download → transcribe).
 
 ## Following people (MediaPipe)
 Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - `vision.js`: lazy-loads `@mediapipe/tasks-vision@1.1.0` (jsDelivr) once, with models from `storage.googleapis.com`; each task is cached and tries the GPU delegate, then CPU. All tasks run in VIDEO mode, and `nextTimestamp()` keeps timestamps strictly increasing even after seeking back.
-  - Segmentation: `SEGMENT_MODELS` (square, landscape, multiclass), `segmentFrame` (copies the mask inside the callback, where it's valid), `looksLikePerson` (auto polarity).
+  - Segmentation: `SEGMENT_MODELS` (square, landscape, multiclass), `segmentFrame` (copies the mask inside the callback, where it's valid), `looksLikePerson` (auto polarity; returns `null` when the frame has no clear person, e.g. a title card, so `createPersonMask` keeps asking instead of locking in a wrong guess).
   - Landmarks: `detectFace` (478 face-mesh points) and `detectPose` (33 body points with `visibility`), both normalized 0..1.
-- `person-mask.js`: `createPersonMask(prefix)` → `update(segmenter, source, t, { model, smoothing, still })`, `full(W, H, { threshold, softness, polarity, feather })`; `drawPersonCutout(ctx, source, alpha)`. Temporal smoothing depends on frame order, so pass `smoothing: 0` when the export seeks frames (GIF) and must match the preview.
+- `person-mask.js`: `createPersonMask(prefix)` → `update(segmenter, source, t, { model, smoothing, still })`, `full(W, H, { threshold, softness, polarity, feather })`; `drawPersonCutout(ctx, source, alpha)`. Temporal smoothing depends on frame order, so pass `smoothing: 0` when the export seeks frames (GIF) and must match the preview. Setting `mask.prev = null` (to restart smoothing before an export) is safe: `small()` falls back to the raw mask.
 - `head-tracking.js`: track once, then draw from stored data so playback is smooth and exports match the preview.
   - `trackHead(media, { fps, mode: 'auto'|'face'|'body', onProgress, signal })` seeks every 1/fps s and stores `{ found, x, y, size, roll, via }` (y = top of head; size = head width / frame height). Face first (crown ≈ landmark 10 + 30% of the face height); body (ears, else shoulders) when the face is missing or tiny.
   - `smoothTrack(track, { strength, hold, fadeOut, fadeIn })`: holds the last position through gaps, fades after `hold`, splits into segments wherever the head was fully hidden (no gliding across the frame), and smooths each segment with a zero-lag forward + backward One Euro pass. Cheap, so rerun it on slider changes.
   - `sampleTrack(smooth, t)` interpolates between samples.
 - Draw debug overlays (landmarks, boxes) on a separate canvas stacked over the preview so no export can include them (Nametag's `#debug`).
+
+## Speech (Whisper)
+- `lib/whisper.js` runs Whisper through transformers.js (`LIBS.transformers`, 4.2.0) inside `lib/whisper-worker.js`, a module worker, so the page stays responsive.
+  - Models: `onnx-community/whisper-{tiny,base,small}_timestamped`. Only these exports include the alignment heads that word timestamps (`return_timestamps: 'word'`) need.
+  - Device: `pickDevice('auto'|'webgpu'|'wasm')`. WebGPU loads an fp32 encoder (fp16 for small when `shader-f16` exists) plus a q4 decoder; WASM loads q8 for both. A failed WebGPU load falls back to WASM automatically.
+  - WASM sessions need `graphOptimizationLevel: 'basic'`: onnxruntime's extended optimizations reject the q8 merged decoder ("Missing required scale … TransposeDQWeightsForMatMulNBits").
+  - Downloads go to Cache Storage (`transformers-cache`, keyed by the Hugging Face URL), so each model downloads once. `modelBytes(model, device)` gives the size to show before downloading; `isCached` checks the cache, so the UI can say "Downloaded".
+  - `decodeAudio(blob)` decodes the file's audio track to 16 kHz mono through an `OfflineAudioContext`. `splitAudio` cuts it into windows of up to 29 s at the quietest 50 ms, so words aren't split, and skips near-silent windows (Whisper invents text on silence).
+  - `transcribe(audio, { model, device, language, onDownload, onProgress, onWords, signal })` returns `{ words: [{ text, start, end }], device }` with times in seconds. `onWords` streams each window as it finishes. Cancelling between windows keeps the words found so far. Cancelling during the download terminates the worker.
+
+## Screen Showcase styling (`lib/showcase-frame.js`)
+- Shared by Screen Showcase and Zoom on Click, so both tools offer the same backgrounds and frames.
+- `backgroundSection()` and `frameSection({ frame, padding })` return `createControls` sections. They own these ids: `bg`, `bgColor`, `gradient`, `gAngle`, `blurAmount`, `frame`, `url`, `padding`, `radius`, `border`, `borderColor`, `shadow`, `shadowOpacity`. Don't reuse them for other controls.
+- Drawing: `drawShowcaseBackground(ctx, media, W, H, k, s)` → `fitInFrame(media, W, H, k, s)` → `buildFrameCard(source, w, h, k, s, name)` → `drawCardShadow(ctx, card, r, tf, s, k, alpha)`.
+- `source` can be any drawable. Zoom on Click passes its zoomed content canvas. `mediaOffset(s, k)` is where the media sits inside the card, used to map clicks.
+
+## Passing files between tools (`lib/handoff.js`)
+- `sendFile('<receiving tool id>', file, meta)` stores a File plus structured-cloneable metadata in IndexedDB (`toolbox-handoff`). The receiver calls `takeFile(id)` on load (it reads and deletes the entry) and passes the file to `dropzone.load(file)`.
+- Each receiver has one slot; a newer send replaces it. Entries older than a day are ignored.
+- Zoom on Click receives `{ width, height, clicks: [{ t, x, y }] }`: seconds, and pixels of the recording (or 0..1 fractions). A future Screen Recorder should send its recording and click log in this shape. The same JSON (or a bare array) can be imported as a file; `parseClickLog` also accepts `time`/`ms` and `{ events: [{ type: 'click' }] }`.
 
 ## Tools
 
@@ -68,8 +90,8 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Stop-motion quantizes `t` to `fps` steps; "choppy" holds video frames in the `paper-hold` scratch canvas.
 
 ### screen-showcase: product-demo framing
-- Files: `screen-showcase/script.js`.
-- `buildCard()` (media + browser/phone chrome, radius, border) → `motion(t)` (intro zoom, fade, pan, tilt) → shadow polygon from `projectPoint` → card via `persp.draw` when tilted, plain `drawImage` otherwise.
+- Files: `screen-showcase/script.js`; backgrounds, frames and the shadow come from `lib/showcase-frame.js` (shared with Zoom on Click).
+- `buildFrameCard()` (media + browser/phone chrome, radius, border) → `motion(t)` (intro zoom, fade, pan, tilt) → `drawCardShadow` (projected polygon) → card via `persp.draw` when tilted, plain `drawImage` otherwise.
 - Aspect presets come from `SIZES` (16:9, 9:16, 1:1, 4:5).
 
 ### text-behind-person: text between background and person
@@ -129,6 +151,77 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 4. Import it in `shapes/index.js` and add it to `SHAPES` (the order is the picker order).
 5. Check it at extreme box ratios and with every param at its min and max; it must stay inside its box.
 
+### auto-captions: speech to animated captions
+- Files: `script.js` (UI, transcription flow, render), `transcript.js` (line model, retiming, pages, SRT/VTT), `captions.js` (`drawCaption`), `style.css`.
+- Flow: upload, then Transcribe. That runs `decodeAudio(fetch(media.url))`, downloads the model (shown in a `progressModal` phase), then calls `transcribe`; words stream into the transcript editor. `buildLines` groups words into lines, breaking on pauses over 0.7 s, sentence ends, 14 words or 7 s.
+- Model: `lines = [{ id, words: [{ text, start, end }] }]`. A line is the unit the user edits. `pagesOf(line, maxWords)` splits it into balanced captions. `timeline()` sets each caption's `until`: it bridges short gaps so captions don't flicker, and lingers 0.6 s otherwise. `pageAt(pages, t)` finds the caption with a binary search.
+- Editing keeps timing. `retime(snapshotWords, text)` matches tokens with an LCS. Matched words keep their times; new words split the span of the words they replace (or the gap they sit in) in proportion to their length. The snapshot is taken on focus, so every keystroke retimes against the original words. Enter splits the line at the cursor (`wordIndexAt`); Backspace at the start merges it into the line above.
+- The transcript is saved in localStorage per file (`auto-captions:<name>:<size>`) and restored on upload.
+- Styles: the presets (Karaoke, Pop-in, Classic, Bold short-form, Boxed word) only set panel values. The render reads `highlight` (`none|color|box|wipe`), `reveal` (`page|word`), `pop`, outline, shadow and background box. The current word stays highlighted until the next word starts. `offset` shifts every caption.
+- Exports: video/GIF/PNG of the burned-in captions, plus SRT and VTT actions. Both files have one cue per on-screen caption, with uppercase applied; VTT adds inline word timestamps (`<00:00:01.200>`).
+
+### background-remover: remove or replace the background
+- Files: `script.js`. Uses `vision.js` and `person-mask.js` (see Following people).
+- Per frame:
+  1. Draw the background into a separate layer: transparent/matte, color, the source blurred (drawn wider than the frame so the edges stay sharp), an image, or a looping video, with optional darkening.
+  2. Run the mask (`mask.update` with the user's temporal smoothing; smoothing is 0 for GIF).
+  3. Build the person layer: the source, then a brightness match toward the background's average luminance (`ctx.filter`), a soft-light tint with the background's average color, then cut out with `destination-in`.
+  4. Composite, then add the light wrap: the blurred background, masked to the person minus their blurred interior (an edge band), drawn with `screen`.
+- Background video: `syncBgVideo(t)` plays it along while the stage plays (re-syncs when drift exceeds 0.3 s) and parks it on `t % duration` when paused. GIF export seeks it in `prepareFrame`.
+- Transparent output keeps alpha in PNG, GIF (1-bit) and Chromium WebM. Elsewhere, video export records the matte color and warns.
+
+### zoom-on-click: automatic zooms on screen recordings
+- Files: `script.js` (UI, render, pointer editing, timeline strip), `camera.js` (keyframes, camera sampling, auto-suggest, click-log parsing), `style.css`.
+- Points: `{ id, t, x, y (0..1), zoom, dur, hold, easing, source: 'click'|'manual'|'auto' }`. Sources:
+  - Click log (`handoff.js` slot `zoom-on-click`, or an imported .json; duplicates are skipped).
+  - Clicks on the preview at the playhead, mapped back through the current camera.
+  - "Suggest zooms": `suggestZooms` seeks at 4 fps at 160 px and diffs luma. It keeps changes that are small and local (0.15–20% of pixels, bounding box under 45% of the frame) and the strongest one per 2 s.
+- Camera (`buildKeyframes`):
+  - Each move is centred on its click: it starts `dur/2` before `t` and arrives `dur/2` after. Every move takes at least `dur/2`, so near-simultaneous clicks glide instead of jumping.
+  - A click whose move starts before the previous zoom-out would end (+ "Follow nearby clicks" seconds) joins the same session: the camera pans from point to point.
+  - `cameraAt` interpolates the centre linearly and the zoom in log space, then `clampView` keeps the view inside the frame.
+- Render: background → `fitInFrame` → zoomed content canvas → `buildFrameCard` → shadow → card.
+  - Motion blur averages up to 24 camera samples across a shutter of up to 1/30 s, capped at a 3.5% smear so it stays subtle; the frame stays the same, only the view moves.
+  - The click ring expands for 0.7 s at the click spot.
+- Editing: markers (with zoom and time labels) are drawn on the `#marks` overlay canvas, never exported. Click to add, drag to move (the camera freezes during the drag), Delete removes the selected point. Result/Original switch; exports force Result.
+- The timeline strip shows sessions as bars and points as dots.
+- Points are saved in localStorage per file. With no upload, a built-in demo screenshot with two zooms plays.
+
+### progress-overlay: progress bar, countdown and chapters
+- Files: `script.js`, `style.css`.
+- Works with no video (a solid or transparent stage, length slider, aspect presets) or over a video. "Overlay only" hides the video (it still drives the clock) for a transparent export, with a matte fallback.
+- `p = (t − start) / (end − start)`. "Ends at" follows the clip end until the user moves it.
+- Bar styles: line, rounded (track + pill fill), segmented (`segmentStops()`: chapter boundaries, or N equal parts), circle (in one of the 9 spots). Positions: top, bottom, or edges (one clockwise path from the top-left, dashed to `p × perimeter`). Glow and "empty instead of fill" options.
+- Chapters `{ t, label }` are kept in localStorage (`progress-overlay:chapters`). They draw ticks on line/rounded bars and split the segmented bar. Labels: none, the current one, or all, each clipped to its own segment.
+- Timer: counts down (rounding up, like a countdown should) or up, in five formats, with an optional label and pill. It can sit in any of the 9 spots or inside the circle, and moves clear of a bar on the same edge.
+
+### retro: VHS, CRT, film, 8mm, dithering, ASCII
+- Files: `script.js` (panel, presets, demo, VHS on-screen text, render), `engine.js` (multi-pass WebGL renderer + `HEADER`), `effects.js` (`EFFECTS` shaders + uniform mappers, `PALETTES`, `CHARSETS`, `buildAtlas`).
+- Engine:
+  - Uploads the frame (downscaled to output size first), then runs each enabled effect as a full-screen pass, ping-ponging between two FBOs. The last pass draws to the GL canvas, which is copied onto the 2D preview.
+  - FBO passes use `uFlip = 0` and the final pass `uFlip = 1`, so uv (0,0) is always the top-left. Use `uv * uRes` for pixel positions, never `gl_FragCoord`.
+  - Extra textures (the glyph atlas, the VHS text) re-upload only when their `version` changes. Select the texture unit before creating a texture, because unit 0 holds the pass input.
+- Stacking: effects run in `EFFECTS` order when enabled: dither → ascii → film → mm8 → vhs → crt. Presets switch a stack on (VHS on a CRT, Terminal = mono ASCII + CRT).
+- All noise comes from `uFrame = floor(t × 24)`, so preview, GIF and video match. Pixel-sized parameters scale by `uK`.
+- Dither: Bayer 8×8 (recursive `bayer2`). Ramp palettes (dark → light) map by luma; "nearest" palettes (Retro PC 4, Fantasy console 16) map by weighted RGB distance. Palette names avoid brands.
+- ASCII: `buildAtlas` renders the characters in Space Mono and sorts them by measured ink. Each cell samples five taps for its color.
+- VHS: luma at the wobbled position plus chroma averaged over 6 taps to the left (bleed in YIQ), a moving tracking band, head-switching noise at the bottom, and noise. The camcorder text (PLAY, a clock counting up from the start time, the date; VT323) is drawn on a half-resolution canvas and composited inside the VHS pass, so it bleeds and wobbles, then gets curved by the CRT.
+- Without WebGL the preview shows the original frame with a hint.
+
+### speed-ramp: speed curve editor
+- Files: `script.js` (UI, curve editor canvas, video sync, audio), `curve.js` (`speedAt`/`logSpeedAt`, `buildMap`, `PRESETS`), `style.css`.
+- Curve: points `{ x: source s, v: log2 speed }` from −2 to 2 (0.25×–4×), eased with smoothstep (or linear) in log space, constant beyond the end points. `buildMap` integrates `1/speed` at 240 samples per second: `map.duration` is the new length, and `srcAt(τ)` and `outAt(x)` convert between output and source time.
+- Editor: click to add a point on the curve (adding one never changes the speed by itself), drag to move (snaps to 1×, can't cross its neighbours), double-click or Delete removes. The selected point has a numeric speed field. Points are saved per file.
+- Playback: the stage runs on output time (wall clock, `getVideo: () => null`). `syncVideo(τ)` sets `playbackRate = speed` and nudges it by up to ±20% to absorb drift, seeking only when drift exceeds 0.25 s; measured drift during export stays under 40 ms. When paused, it seeks to `srcAt(τ)` + 1 ms (remapped times land just under frame boundaries).
+- Audio goes through `audioGraph(video).level`, so preview and export match:
+  - Pitch-corrected: `preservesPitch`.
+  - Pitch follows speed: `preservesPitch = false`.
+  - Drop below or above thresholds: the level gain falls to 0 outside them.
+  - Mute.
+  - The graph is created on the first user gesture. The preview's sound toggle replaces the stage's mute button, which only appears when the stage owns a video.
+- Frame-rate warning: `requestVideoFrameCallback` estimates the source fps (median of 20 frames). When the slowest speed is below 1×, the warning gives the effective fps there.
+- Exports: video (real-time playback of the ramp), GIF (`prepareFrame` seeks each exact source frame), PNG.
+
 ## Performance
 - Rendering at 1080–1920px is the cost centre. Rebuild only what changed: Text Match Cut caches pages by seed and font version, and Paper Effect caches textures.
 - Reuse offscreen canvases with `scratch()` rather than creating canvases per frame.
@@ -140,9 +233,9 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 
 ## Ideas for future tools
 - Face-following effects on `head-tracking.js`: speech bubbles, blur/pixelate a face, sticker hats, spotlight follow.
-- Kinetic captions from an SRT/VTT file, using `text-anim.js`.
+- Import SRT/VTT into Auto Captions (skip transcription), reusing `transcript.js`.
+- Screen Recorder (`getDisplayMedia`) that logs clicks and hands recording + clicks to Zoom on Click via `handoff.js`.
 - Picture-in-picture webcam bubble over a screen recording.
-- Glitch / VHS / film-grain filters for video (the Glitch and Light leak shaders are a starting point).
 - Animated bar-chart race from CSV.
 - Split-screen before/after comparison with a wipe.
 

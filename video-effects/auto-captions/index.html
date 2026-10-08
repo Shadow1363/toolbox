@@ -1,0 +1,50 @@
+<!doctype html>
+<!-- Auto Captions · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Auto Captions · Toolbox</title>
+  <meta name="description" content="Transcribe speech in your browser with Whisper and burn in animated word-by-word captions. Edit the transcript, export WebM, GIF, PNG, SRT or VTT. Nothing is uploaded.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="auto-captions">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Media</h3><div id="upload"></div></section>
+        <div id="controls"></div>
+      </aside>
+      <div class="ac-main">
+        <section class="panel preview-panel" aria-label="Preview">
+          <div class="preview-stage">
+            <canvas id="preview" width="1280" height="720"></canvas>
+            <div class="preview-overlay" id="overlay" hidden></div>
+          </div>
+          <div id="transport"></div>
+          <div id="export"></div>
+        </section>
+        <section class="panel ac-transcript" aria-label="Transcript">
+          <div class="ac-transcript-head">
+            <h2>Transcript</h2>
+            <span class="ac-transcript-meta" id="transcript-meta"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="transcript-clear" hidden>Clear</button>
+          </div>
+          <p class="ac-transcript-help">Click a time to jump there. Edit words freely: unchanged words keep their timing and new words share the time of the ones they replace. <kbd>Enter</kbd> splits a line at the cursor; <kbd>Backspace</kbd> at the start merges it into the line above.</p>
+          <div class="ac-lines" id="lines"><p class="ac-empty">No transcript yet. Drop a video, then press <strong>Transcribe</strong>.</p></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

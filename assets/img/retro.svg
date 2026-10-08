@@ -1,0 +1,16 @@
+<!-- Retro Looks thumbnail · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1b4b"/><stop offset=".6" stop-color="#c2447a"/><stop offset="1" stop-color="#ffb36b"/></linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe66d"/><stop offset="1" stop-color="#ff6b6b"/></linearGradient>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#000" opacity=".22"/></pattern>
+    <clipPath id="sc"><circle cx="160" cy="118" r="50"/></clipPath>
+  </defs>
+  <rect width="320" height="200" fill="url(#sky)"/>
+  <g clip-path="url(#sc)"><rect x="100" y="60" width="120" height="120" fill="url(#sun)"/><g fill="#c2447a"><rect x="100" y="122" width="120" height="3"/><rect x="100" y="134" width="120" height="5"/><rect x="100" y="148" width="120" height="7"/></g></g>
+  <rect y="140" width="320" height="60" fill="#120c2c"/>
+  <g stroke="#ff4fd8" stroke-width="1.5"><path d="M0 150h320M0 162h320M0 180h320M160 140 160 200M120 140 40 200M200 140 280 200M80 140-80 200M240 140 400 200"/></g>
+  <rect width="320" height="200" fill="url(#scan)"/>
+  <g font-family="Courier New, monospace" font-weight="700" font-size="14" fill="#fff"><text x="16" y="26">PLAY ▶</text><text x="16" y="186">OCT. 08 1994</text></g>
+  <rect x="0" y="92" width="320" height="6" fill="#fff" opacity=".18"/>
+</svg>

@@ -47,10 +47,13 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 | `controls.js`             | `createControls(root, sections, { onChange })`: declarative settings panel with a live `state`, `showIf`, presets, swatches                                                                  |
 | `upload.js` / `media.js` | `createDropzone(...)` and `loadMedia(file)`: drag-drop + picker, type/size validation, `MediaError` messages; `createFilePicker` for any file type; `audioGraph`/`mixTrack` route video audio for export |
 | `stage.js`                | `createStage({ canvas, transport, render(t), getDuration, getVideo, getVideoOffset? })`: preview loop + play/scrub/mute bar; `renderFrame(t)`/`release()` for frame-by-frame export; `getVideoOffset` trims (stage t 0 = that video time) |
-| `exporter.js`             | `createExportBar(...)`: the standard **Export video / Export GIF / Export PNG** bar every media tool uses; `recordStage`, `recordStageGif`, `progressModal`, `exportPNG`, `TRANSPARENT_HINT` |
+| `exporter.js`             | `createExportBar(...)`: the standard **Export video / Export GIF / Export PNG** bar every media tool uses (video export shows its estimated size; `prepareFrame(t)` runs before each GIF frame); `recordStage`, `recordStageGif`, `progressModal` (`.phase()`/`.message()` for multi-step jobs), `exportPNG`, `canRecordAlpha`, `TRANSPARENT_HINT` |
 | `gif.js`                  | `loadGifenc`, `quantizeFrame` (Bayer dither + palette, 1-bit alpha), `frameOptions`, `gifDelay`, `gifDelays`                                                                                 |
 | `vision.js`               | MediaPipe Tasks Vision (lazy, one WASM fileset, GPU→CPU): `loadSegmenter`/`segmentFrame`, `loadFaceLandmarker`/`detectFace`, `loadPoseLandmarker`/`detectPose`, `nextTimestamp`              |
 | `person-mask.js`          | `createPersonMask(prefix)` (smoothing → threshold/softness → feathered alpha canvas) and `drawPersonCutout`                                                                                  |
+| `whisper.js` (+ `whisper-worker.js`) | Speech to text with Whisper (transformers.js in a module worker, WebGPU → WASM): `transcribe` (word timestamps), `decodeAudio`, `modelBytes`, `isCached`, `pickDevice`, language list |
+| `showcase-frame.js`       | Screen Showcase styling shared with Zoom on Click: `backgroundSection`/`frameSection` panel specs, `drawShowcaseBackground`, `fitInFrame`, `buildFrameCard`, `drawCardShadow`        |
+| `handoff.js`              | Pass a file + JSON metadata to another tool through IndexedDB: `sendFile(toolId, file, meta)`, `takeFile(toolId)`, `peekFile`, `clearFile`                                            |
 | `head-tracking.js`        | `trackHead` (offline pass, face then body), `smoothTrack` (One Euro, hold + fade), `sampleTrack(t)`; `OneEuro`                                                                               |
 | `canvas.js`               | `fit`, `outputSize`, `scratch`, `drawBlurred`, `roundRectPath`, `linearGradient`                                                                                                             |
 | `text-anim.js`            | `drawAnimatedText` with entrance (`ANIMATIONS`) and exit (`EXIT_ANIMATIONS`)                                                                                                                 |
@@ -100,7 +103,7 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 
 ## Conventions
 
-- **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Pins live in `assets/js/lib/cdn.js` (`LIBS`); add new libraries there and load them with `loadLib()`. Older pins still inline: `@mediapipe/tasks-vision@1.1.0` (`vision.js`), `gifenc@1.0.3` (`gif.js`), `jszip@3.10.1` (Text Match Cut). Fail gracefully with a `toast()` when the network is blocked.
+- **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Pins live in `assets/js/lib/cdn.js` (`LIBS`); add new libraries there and load them with `loadLib()` (workers import the `LIBS` URL directly, as `whisper-worker.js` does with `transformers`). ML model weights come from huggingface.co / storage.googleapis.com and are cached by the browser; show the download size before fetching them. Older pins still inline: `@mediapipe/tasks-vision@1.1.0` (`vision.js`), `gifenc@1.0.3` (`gif.js`), `jszip@3.10.1` (Text Match Cut). Fail gracefully with a `toast()` when the network is blocked.
 - **Privacy:** no backend, no analytics, no uploads.
 - **License and attribution:** GPL-3.0-or-later plus section 7 attribution terms (`LICENSE`, `NOTICE`). Every `.js`/`.css`/`.html`/`.svg` file starts with the attribution header containing the fingerprint `tm1363-c339e3ad`; copy it into new files (the `_template/` files already have it). Pages also carry the `author`/`copyright` meta tags. Never remove the header, the meta tags, the footer credit (`AUTHOR` in `site.js`) or the console signature.
 - **Names:** made-up names for generated sites, papers and people; no real brands or logos in UI, thumbnails or generated content.
@@ -111,11 +114,13 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 
 - `createControls` evaluates every `showIf` while it builds the panel. Helpers a `showIf` calls must be hoisted `function` declarations, not `const` arrows declared later (TDZ error). `onChange` may reference objects created afterwards, because it only fires on input.
 - Module top-level order matters: call render/init functions after the `const`s they use (`site.js` runs its init at the bottom for this reason).
+- Control ids share one `state` object per panel. Sections from a shared helper (`showcase-frame.js`) own their ids (`bg`, `blurAmount`, `padding`, `shadow`, …); reusing one silently makes two sliders fight (Zoom on Click's motion blur once read the background blur's 60).
+- Local testing with `python3 -m http.server` lets Chrome cache modules and workers heuristically; after editing a worker, hard-reload or use a server that sends `Cache-Control: no-store`.
 - Canvas text measured before a web font loads uses fallback widths. Wait with `ensureFont(family, weight, cb)` or re-layout on `document.fonts` `loadingdone` (see Text Match Cut).
 - `scratch(name, w, h)` canvases are shared by name and resize in place. Use a distinct name per size or use (e.g. `` `tmc-sharp-${W}x${H}` ``).
 - Inside render code, use seeded `rng`/`hash`, never `Math.random`. Otherwise preview and export differ.
 
 ## Categories
 
-- [Video Effects](video-effects/AGENTS.md): canvas effects for video, images and animated text.
+- [Video Effects](video-effects/AGENTS.md): canvas effects for video, images and animated text, plus captions, background removal, zooms, progress overlays, retro looks and speed ramps.
 - [Convert & Encode](convert/AGENTS.md): file converter (documents, data, images, audio/video), Base64, encoders, hashes, JSON, colors, timestamps, case, QR.

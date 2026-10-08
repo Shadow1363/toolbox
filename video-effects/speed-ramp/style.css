@@ -1,0 +1,10 @@
+/* Speed Ramp: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+
+.sr-editor { display: grid; gap: 6px; }
+.sr-editor-head { font-size: 13px; color: var(--text); min-height: 20px; }
+.sr-curve { width: 100%; height: 170px; display: block; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); touch-action: none; cursor: crosshair; }
+.sr-curve:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-selected { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-muted); min-height: 32px; }
+.sr-selected input { width: 76px; padding: 5px 8px; font-size: 13px; }
+.sr-selected .btn svg { width: 14px; height: 14px; }
+.sr-warn { margin-top: 2px; }

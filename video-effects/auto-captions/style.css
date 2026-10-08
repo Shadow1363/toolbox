@@ -1,0 +1,33 @@
+/* Auto Captions: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+
+.ac-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+@media (max-width: 960px) { .ac-main { order: -1; } }
+
+.ac-model-info { font-size: 12px; color: var(--text-muted); display: grid; gap: 2px; }
+.ac-model-info .is-cached { color: var(--success); }
+.ac-run { width: 100%; }
+
+.ac-transcript { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ac-transcript-head { display: flex; align-items: center; gap: 10px; }
+.ac-transcript-head h2 { font-size: 15px; font-weight: 650; }
+.ac-transcript-meta { font: 12px var(--font-mono); color: var(--text-muted); margin-right: auto; }
+.ac-transcript-help { font-size: 12px; color: var(--text-faint); }
+.ac-transcript-help kbd { font: 11px var(--font-mono); padding: 1px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-elev); }
+.ac-lines { display: grid; gap: 4px; max-height: 440px; overflow-y: auto; padding-right: 2px; scrollbar-width: thin; }
+.ac-empty { color: var(--text-muted); font-size: 14px; padding: 18px 0; text-align: center; }
+
+.ac-line { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: start; padding: 4px 6px; border-radius: var(--radius-sm); border: 1px solid transparent; }
+.ac-line.is-active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.ac-time { font: 12px var(--font-mono); color: var(--text-muted); background: none; border: 0; padding: 7px 4px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.ac-time:hover { color: var(--accent); background: var(--bg-elev); }
+.ac-line textarea { min-height: 0; resize: none; overflow: hidden; padding: 6px 8px; font-size: 14px; line-height: 1.45; background: transparent; border-color: transparent; }
+.ac-line textarea:hover { border-color: var(--border); }
+.ac-line textarea:focus { background: var(--bg-elev); }
+.ac-line-actions { display: flex; gap: 2px; opacity: .55; }
+.ac-line:hover .ac-line-actions, .ac-line:focus-within .ac-line-actions { opacity: 1; }
+.ac-line-actions .btn { width: 30px; height: 30px; padding: 0; font-size: 13px; }
+.ac-line-actions .btn svg { width: 14px; height: 14px; }
+@media (max-width: 560px) {
+  .ac-line { grid-template-columns: minmax(0, 1fr) auto; }
+  .ac-time { grid-column: 1 / -1; justify-self: start; padding: 2px 4px; }
+}

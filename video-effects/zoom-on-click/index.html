@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- Zoom on Click · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Zoom on Click · Toolbox</title>
+  <meta name="description" content="Smooth automatic zooms on screen recordings: zoom to clicks from a click log, points you add, or auto-suggestions. Motion blur, click rings and Screen Showcase frames. Runs in your browser.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="zoom-on-click">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Media</h3><div id="upload"></div></section>
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Preview">
+        <div class="zoc-viewbar" id="viewbar">
+          <div class="segmented" role="group" aria-label="Preview">
+            <button type="button" data-v="result" aria-pressed="true">Result</button>
+            <button type="button" data-v="original" aria-pressed="false">Original</button>
+          </div>
+          <span class="zoc-view-hint">Click the preview to add a zoom at the playhead · drag a marker to move it · Delete removes the selected one</span>
+        </div>
+        <div class="preview-stage">
+          <canvas id="preview" width="1280" height="720" aria-label="Preview: click to add a zoom point"></canvas>
+          <canvas id="marks" class="zoc-marks" width="1280" height="720" aria-hidden="true"></canvas>
+          <div class="preview-overlay" id="overlay" hidden></div>
+        </div>
+        <div class="zoc-timeline" id="timeline" aria-label="Zoom timeline"></div>
+        <div id="transport"></div>
+        <div id="export"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

@@ -16,6 +16,7 @@
  *     hasAudio: () => bool,               // show the Audio toggle (default: getVideo() returns a video)
  *     actions: [{ label, icon, onClick, show? }],  // extra buttons after the standard three (e.g. ZIP); show: bool or () => bool
  *     beforeExport, afterExport,          // optional hooks, run around video and built-in GIF exports (async ok); get 'video' | 'gif'
+ *     prepareFrame: async (t) => {},      // built-in GIF only: runs before each frame is drawn (seek extra videos, remap time)
  *   });
  */
 import { h, icon, toast, downloadBlob, formatTime, formatBytes, store } from './dom.js';
@@ -43,6 +44,18 @@ export function pickMimeType(withAudio) {
 }
 
 export const extensionFor = (mime) => (mime.includes('mp4') ? 'mp4' : 'webm');
+
+/**
+ * Can recorded video keep transparency? Chromium encodes canvas alpha into VP9 WebM;
+ * Safari (MP4) and Firefox drop it. Tools fall back to a solid color when this is false.
+ */
+export const canRecordAlpha = () => canRecord() && /webm/.test(pickMimeType(true)) && /Chrome\//.test(navigator.userAgent);
+
+/** Video bitrate used by recordStage: scales with pixel count, 4–20 Mbps. */
+export const videoBitrate = (canvas, fps = 30) => Math.round(Math.min(20e6, Math.max(4e6, canvas.width * canvas.height * fps * 0.12)));
+
+/** Rough size of a recorded video of `seconds` (MediaRecorder lands near its target bitrate). */
+export const estimateVideoBytes = (canvas, seconds, withAudio = false) => ((videoBitrate(canvas) + (withAudio ? 128e3 : 0)) * seconds) / 8;
 
 /** Save the canvas as a PNG. */
 export function exportPNG(canvas, filename) {
@@ -77,8 +90,7 @@ export async function recordStage({ stage, getVideo, getAudio, includeAudio = tr
 
   const stream = new MediaStream([...canvas.captureStream(fps).getVideoTracks(), ...(audioTrack ? [audioTrack] : [])]);
   const mimeType = pickMimeType(!!audioTrack);
-  const pixels = canvas.width * canvas.height;
-  const videoBitsPerSecond = Math.round(Math.min(20e6, Math.max(4e6, pixels * fps * 0.12)));
+  const videoBitsPerSecond = videoBitrate(canvas, fps);
   const recorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond } : { videoBitsPerSecond });
   const chunks = [];
   recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
@@ -122,16 +134,27 @@ export function progressModal(title, onCancel, message = 'Recording in real time
   const bar = h('div');
   const pct = h('span', {}, '0%');
   const eta = h('span', {}, '');
+  const head = h('h2', {}, title);
+  const text = h('p', {}, message);
   const modal = h('div', { class: 'modal-backdrop', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
     h('div', { class: 'modal' },
-      h('h2', {}, title),
-      h('p', {}, message),
+      head,
+      text,
       h('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': 100 }, bar),
       h('div', { class: 'progress-label' }, pct, eta),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn', type: 'button', onclick: onCancel }, 'Cancel'))));
   document.body.append(modal);
-  const start = performance.now();
+  let start = performance.now();
   return {
+    /** Start a new phase (e.g. download, then processing): new title/message, bar and ETA reset. */
+    phase(newTitle, newMessage) {
+      if (newTitle) head.textContent = newTitle;
+      if (newMessage != null) text.textContent = newMessage;
+      start = performance.now();
+      this.set(0);
+    },
+    /** Replace the message line. */
+    message(m) { text.textContent = m; },
     set(p) {
       p = Math.max(0, Math.min(1, p || 0));
       bar.style.width = `${p * 100}%`;
@@ -241,7 +264,7 @@ function gifDialog(stage) {
  * Render the stage from `start` to `end` (default: the whole clip) frame by frame and encode
  * an animated GIF. Any video from getVideo() is seeked to each frame, so no frames drop.
  */
-export async function recordStageGif({ stage, getVideo, fps = 15, width = '480', start = 0, end, onProgress, signal }) {
+export async function recordStageGif({ stage, getVideo, prepareFrame, fps = 15, width = '480', start = 0, end, onProgress, signal }) {
   const lib = await loadGifenc();
   const video = getVideo?.() || null;
   const dur = Math.min(stage.duration, end ?? stage.duration);
@@ -259,6 +282,7 @@ export async function recordStageGif({ stage, getVideo, fps = 15, width = '480',
       if (signal?.aborted) return null;
       const t = Math.min(dur - 0.001, start + i / fps);
       if (video) await seekVideo(video, stage.videoTime?.(t) ?? t);
+      await prepareFrame?.(t);
       stage.renderFrame(t);
       cx.clearRect(0, 0, w, hh);
       cx.drawImage(stage.canvas, 0, 0, w, hh);
@@ -277,7 +301,7 @@ export async function recordStageGif({ stage, getVideo, fps = 15, width = '480',
 
 /* ---------- Export bar ---------- */
 export function createExportBar(root, opts) {
-  const { stage, filename = () => 'export', getVideo = () => null, getAudio, beforeExport, afterExport } = opts;
+  const { stage, filename = () => 'export', getVideo = () => null, getAudio, beforeExport, afterExport, prepareFrame } = opts;
   const want = (v) => (typeof v === 'function' ? v() : v);
   const recordable = canRecord();
   const primary = opts.primary || 'video';
@@ -331,13 +355,15 @@ export function createExportBar(root, opts) {
     // The audio graph must be resumed synchronously inside the click, so recordStage starts here.
     const onHidden = () => document.hidden && toast('Export paused while the tab is hidden. Come back to finish it.', 'warning');
     document.addEventListener('visibilitychange', onHidden);
-    run('video', 'Exporting video…', undefined, async (signal, onProgress) => {
+    const withAudio = audioToggle.checked && !audioLabel.hidden;
+    const est = `${formatTime(stage.duration)} long, about ${formatBytes(estimateVideoBytes(stage.canvas, stage.duration, withAudio))}.`;
+    run('video', 'Exporting video…', `Recording in real time: ${est} Keep this tab visible until it finishes.`, async (signal, onProgress) => {
       try {
         const result = await recordStage({ stage, getVideo, getAudio, includeAudio: audioToggle.checked, signal, onProgress });
         if (!result) return null;
         const name = `${filename()}.${result.ext}`;
         downloadBlob(result.blob, name);
-        return name;
+        return `${name} (${formatBytes(result.blob.size)})`;
       } finally {
         document.removeEventListener('visibilitychange', onHidden);
       }
@@ -351,7 +377,7 @@ export function createExportBar(root, opts) {
     const choice = await gifDialog(stage);
     if (!choice) return;
     run('gif', 'Encoding GIF…', 'Rendering and compressing every frame. Longer clips take a while.', async (signal, onProgress) => {
-      const blob = await recordStageGif({ stage, getVideo, ...choice, signal, onProgress });
+      const blob = await recordStageGif({ stage, getVideo, prepareFrame, ...choice, signal, onProgress });
       if (!blob) return null;
       const name = `${filename()}.gif`;
       downloadBlob(blob, name);

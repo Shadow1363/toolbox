@@ -17,6 +17,7 @@ export const FONTS = [
   { family: 'Pacifico', spec: 'Pacifico' },
   { family: 'Space Mono', spec: 'Space+Mono:wght@400;700' },
   { family: 'Press Start 2P', spec: 'Press+Start+2P' },
+  { family: 'VT323', spec: 'VT323' },
   { family: 'Arial', system: true },
   { family: 'Georgia', system: true },
   { family: 'Courier New', system: true },
