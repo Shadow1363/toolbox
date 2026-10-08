@@ -1,0 +1,65 @@
+name: Bug report
+description: Something is broken or doesn't look right.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please don't attach private videos or photos. If a file triggers the bug, describe it (format, length, resolution) or share a sample you're happy to make public.
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool?
+      options:
+        - Text Effects
+        - Paper Effect
+        - Screen Showcase
+        - Text Behind Person
+        - Nametag Tracker
+        - Text Match Cut
+        - Cinematic Transitions
+        - Home page / site-wide
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the tool
+        2. Drop in a 10 s MP4 (1080p)
+        3. Click Export GIF
+        4. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: export
+    attributes:
+      label: Is it about an export?
+      options:
+        - "No"
+        - Export video
+        - Export GIF
+        - Export PNG
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: "e.g. Chrome 130 on Windows 11, Safari on iPhone 15"
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Errors in the browser console (optional)
+      description: Press F12 (or Cmd+Option+J on Mac), open the Console tab, and paste any red errors.
+      render: text

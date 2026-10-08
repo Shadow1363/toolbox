@@ -1,0 +1,59 @@
+name: Feature request
+description: Suggest a new tool, or a change to an existing one.
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! A rough description is fine; screenshots or links to examples help a lot.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of request is this?
+      options:
+        - A brand-new tool
+        - A change to an existing tool
+        - Something site-wide (home page, search, themes, layout)
+    validations:
+      required: true
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool?
+      description: Skip this if it's a new tool or site-wide.
+      options:
+        - Text Effects
+        - Paper Effect
+        - Screen Showcase
+        - Text Behind Person
+        - Nametag Tracker
+        - Text Match Cut
+        - Cinematic Transitions
+        - Other / not sure
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like?
+      description: Describe what it should do, as if explaining it to a friend.
+      placeholder: "e.g. A tool that turns an SRT subtitle file into animated captions over my video."
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What would you use it for?
+      description: The problem it solves or what you'd make with it. This helps decide what to build first.
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples or references
+      description: Screenshots, sketches, or links to videos or apps that do something similar.
+  - type: dropdown
+    id: help
+    attributes:
+      label: Would you like to build it?
+      options:
+        - No, just suggesting it
+        - Maybe, with some guidance
+        - Yes, I'll open a pull request
