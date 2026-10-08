@@ -70,6 +70,13 @@ export const LIBS = {
   faker: { kind: 'url', url: `${NPM}/@faker-js/faker@10.6.0/dist/locale/` },
   // EFF long wordlist (7776 words, CC BY 3.0) as a JSON array, for passphrases.
   effWords: { kind: 'url', url: `${NPM}/@wordlist/english-eff@1.0.1/dist/data/long.json` },
+  // Audio category (lib/audio-*.js). mediabunny: container probing, track picking, WebCodecs decode, Opus in OGG/WebM
+  // and audio stream copy. lamejs runs inside a classic worker (importScripts), so it is a 'url'. RNNoise: the ES module
+  // glue takes `locateFile` for its .wasm.
+  mediabunny: { kind: 'esm', url: `${NPM}/mediabunny@1.61.3/dist/bundles/mediabunny.min.mjs` },
+  lamejs: { kind: 'url', url: `${NPM}/lamejs@1.2.1/lame.min.js` },
+  rnnoise: { kind: 'esm', url: `${NPM}/@jitsi/rnnoise-wasm@0.2.1/dist/rnnoise.js` },
+  rnnoiseWasm: { kind: 'url', url: `${NPM}/@jitsi/rnnoise-wasm@0.2.1/dist/rnnoise.wasm` },
   // Machine learning (bundles onnxruntime-web, which fetches its WASM from jsDelivr). Loaded inside workers by lib/whisper.js.
   transformers: { kind: 'esm', url: `${NPM}/@huggingface/transformers@4.2.0/dist/transformers.min.js` },
 };

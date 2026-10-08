@@ -1,0 +1,20 @@
+/* Waveform Video: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+
+.audio-main > .preview-panel { position: static; }
+.wv-clip { font: 12px var(--font-mono); color: var(--text-muted); margin-right: auto; }
+.wv-model-info { font-size: 12px; color: var(--text-muted); display: grid; gap: 2px; }
+.wv-model-info .is-cached { color: var(--success); }
+.wv-run { width: 100%; }
+.wv-img-row { display: flex; align-items: center; gap: 8px; }
+.wv-img-row .wv-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); background: var(--bg-elev); flex: none; }
+.wv-img-row .wv-thumb[hidden] { display: none; }
+.wv-img-row .btn { flex: 1; }
+
+.wv-lines { display: grid; gap: 2px; max-height: 320px; overflow-y: auto; scrollbar-width: thin; }
+.wv-line { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid transparent; }
+.wv-line.is-active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.wv-time { font: 12px var(--font-mono); color: var(--text-muted); background: none; border: 0; padding: 7px 4px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.wv-time:hover { color: var(--accent); background: var(--bg-elev); }
+.wv-line textarea { min-height: 0; resize: none; overflow: hidden; padding: 6px 8px; font-size: 14px; line-height: 1.45; background: transparent; border-color: transparent; }
+.wv-line textarea:hover { border-color: var(--border); }
+.wv-line textarea:focus { background: var(--bg-elev); }

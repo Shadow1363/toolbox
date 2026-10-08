@@ -1,5 +1,5 @@
 /*
- * Auto Captions: draws one caption page at time t (karaoke wipe, pop-in, word highlight, boxes, outline).
+ * Captions renderer (Auto Captions, Waveform Video): draws one caption page at time t (karaoke wipe, pop-in, word highlight, boxes, outline).
  * © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad
  *
  *   drawCaption(ctx, page, t, style)
@@ -8,9 +8,9 @@
  *             bgColor, bgOpacity, posY (0..100), width (0..100), lineHeight }
  * Sizes are authored for a 1080px short side and scaled by k.
  */
-import { fontString } from '/assets/js/lib/fonts.js';
-import { roundRectPath } from '/assets/js/lib/canvas.js';
-import { easings, clamp } from '/assets/js/lib/easing.js';
+import { fontString } from './fonts.js';
+import { roundRectPath } from './canvas.js';
+import { easings, clamp } from './easing.js';
 
 const POP = 0.18; // seconds a word takes to pop in
 

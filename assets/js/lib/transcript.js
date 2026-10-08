@@ -1,5 +1,5 @@
 /*
- * Auto Captions: transcript model. Lines of timed words, edits that keep timing, caption pages, SRT/VTT.
+ * Transcript model (Auto Captions, Audio Extractor, Waveform Video). Lines of timed words, edits that keep timing, caption pages, SRT/VTT.
  * © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad
  *
  *   line = { id, words: [{ text, start, end }] }     // seconds, in source time

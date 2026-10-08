@@ -57,6 +57,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Draw debug overlays (landmarks, boxes) on a separate canvas stacked over the preview so no export can include them (Nametag's `#debug`).
 
 ## Speech (Whisper)
+- Also used by the Audio category (Extractor, Waveform Video); see [audio/AGENTS.md](../audio/AGENTS.md).
 - `lib/whisper.js` runs Whisper through transformers.js (`LIBS.transformers`, 4.2.0) inside `lib/whisper-worker.js`, a module worker, so the page stays responsive.
   - Models: `onnx-community/whisper-{tiny,base,small}_timestamped`. Only these exports include the alignment heads that word timestamps (`return_timestamps: 'word'`) need.
   - Device: `pickDevice('auto'|'webgpu'|'wasm')`. WebGPU loads an fp32 encoder (fp16 for small when `shader-f16` exists) plus a q4 decoder; WASM loads q8 for both. A failed WebGPU load falls back to WASM automatically.
@@ -64,6 +65,8 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
   - Downloads go to Cache Storage (`transformers-cache`, keyed by the Hugging Face URL), so each model downloads once. `modelBytes(model, device)` gives the size to show before downloading; `isCached` checks the cache, so the UI can say "Downloaded".
   - `decodeAudio(blob)` decodes the file's audio track to 16 kHz mono through an `OfflineAudioContext`. `splitAudio` cuts it into windows of up to 29 s at the quietest 50 ms, so words aren't split, and skips near-silent windows (Whisper invents text on silence).
   - `transcribe(audio, { model, device, language, onDownload, onProgress, onWords, signal })` returns `{ words: [{ text, start, end }], device }` with times in seconds. `onWords` streams each window as it finishes. Cancelling between windows keeps the words found so far. Cancelling during the download terminates the worker.
+  - Language: transformers.js silently assumes English when no language is passed, so with `language: null` `transcribe` first runs `detectLanguage` (one decoder step after `<|startoftranscript|>`, softmax over the language tokens, on the first speech window) and reports it through `onLanguage(code, p)` and the result's `language`/`languageProb`. `task: 'translate'` outputs English.
+  - `dropLoops` keeps at most two consecutive copies of a repeated 1–8 word phrase (Whisper tiny loops on unclear audio).
 
 ## Screen Showcase styling (`lib/showcase-frame.js`)
 - Shared by Screen Showcase and Zoom on Click, so both tools offer the same backgrounds and frames.
@@ -152,7 +155,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 5. Check it at extreme box ratios and with every param at its min and max; it must stay inside its box.
 
 ### auto-captions: speech to animated captions
-- Files: `script.js` (UI, transcription flow, render), `transcript.js` (line model, retiming, pages, SRT/VTT), `captions.js` (`drawCaption`), `style.css`.
+- Files: `script.js` (UI, transcription flow, render), `style.css`. The line model (`lib/transcript.js`: retiming, pages, SRT/VTT) and `drawCaption` (`lib/captions.js`) are shared with the Audio tools.
 - Flow: upload, then Transcribe. That runs `decodeAudio(fetch(media.url))`, downloads the model (shown in a `progressModal` phase), then calls `transcribe`; words stream into the transcript editor. `buildLines` groups words into lines, breaking on pauses over 0.7 s, sentence ends, 14 words or 7 s.
 - Model: `lines = [{ id, words: [{ text, start, end }] }]`. A line is the unit the user edits. `pagesOf(line, maxWords)` splits it into balanced captions. `timeline()` sets each caption's `until`: it bridges short gaps so captions don't flicker, and lingers 0.6 s otherwise. `pageAt(pages, t)` finds the caption with a binary search.
 - Editing keeps timing. `retime(snapshotWords, text)` matches tokens with an LCS. Matched words keep their times; new words split the span of the words they replace (or the gap they sit in) in proportion to their length. The snapshot is taken on focus, so every keystroke retimes against the original words. Enter splits the line at the cursor (`wordIndexAt`); Backspace at the start merges it into the line above.

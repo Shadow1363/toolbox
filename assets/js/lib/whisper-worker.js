@@ -3,10 +3,12 @@
  * © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad
  *
  * Messages in:  { type: 'load', repo, device, dtype, sessionOptions? }
- *               { type: 'run', id, audio: Float32Array (16 kHz mono), language: string|null }
+ *               { type: 'run', id, audio: Float32Array (16 kHz mono), language: string|null, task?: 'transcribe'|'translate' }
+ *               { type: 'detect', id, audio: Float32Array (≤ 30 s, 16 kHz mono) }
  * Messages out: { type: 'progress', file, loaded, total }   while downloading
  *               { type: 'ready', device }
  *               { type: 'result', id, words: [{ text, start, end }] }   times relative to the audio
+ *               { type: 'language', id, ranked: [[code, probability], …] }   most likely first
  *               { type: 'error', id?, message }
  */
 import { LIBS } from './cdn.js';
@@ -36,12 +38,12 @@ async function load({ repo, device, dtype, sessionOptions }) {
   post({ type: 'ready', device });
 }
 
-async function run({ id, audio, language }) {
+async function run({ id, audio, language, task }) {
   if (!asr) throw new Error('The speech model is not loaded.');
   const out = await asr(audio, {
     return_timestamps: 'word',
-    language: language || null,
-    task: 'transcribe',
+    language: language || null, // transformers.js treats null as English, so callers detect first
+    task: task === 'translate' ? 'translate' : 'transcribe',
   });
   const dur = audio.length / 16000;
   const words = (out.chunks || [])
@@ -55,12 +57,37 @@ async function run({ id, audio, language }) {
   post({ type: 'result', id, words });
 }
 
+/**
+ * Spoken language: one decoder step after <|startoftranscript|>, then a softmax over the language tokens
+ * (what Whisper itself does when no language is forced).
+ */
+async function detect({ id, audio }) {
+  if (!asr) throw new Error('The speech model is not loaded.');
+  const { Tensor } = await import(LIBS.transformers.url);
+  const cfg = asr.model.generation_config;
+  const langs = Object.entries(cfg.lang_to_id || {});
+  if (!langs.length) throw new Error('This model cannot detect languages.');
+  const { input_features } = await asr.processor(audio);
+  const sot = cfg.decoder_start_token_id;
+  const out = await asr.model({ input_features, decoder_input_ids: new Tensor('int64', BigInt64Array.from([BigInt(sot)]), [1, 1]) });
+  const logits = out.logits.data;
+  const vocab = out.logits.dims.at(-1);
+  const base = logits.length - vocab; // last position
+  const scores = langs.map(([tok, i]) => [tok.slice(2, -2), Number(logits[base + i])]);
+  const max = Math.max(...scores.map((s) => s[1]));
+  const exps = scores.map(([c, v]) => [c, Math.exp(v - max)]);
+  const sum = exps.reduce((a, [, v]) => a + v, 0);
+  const ranked = exps.map(([c, v]) => [c, v / sum]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  post({ type: 'language', id, ranked });
+}
+
 function post(msg) { self.postMessage(msg); }
 
 self.onmessage = async ({ data }) => {
   try {
     if (data.type === 'load') await load(data);
     else if (data.type === 'run') await run(data);
+    else if (data.type === 'detect') await detect(data);
   } catch (err) {
     console.error(err);
     post({ type: 'error', id: data.id, message: err?.message || String(err) });

@@ -448,3 +448,42 @@ input[type="color"]::-moz-color-swatch { border: 0; border-radius: 5px; }
 .dev-tabs .segmented button { flex: 1 0 auto; padding: 7px 14px; }
 .io-panel .io-sub { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
 .io-panel .code-out { min-height: 0; flex: none; }
+
+/* 15. Audio tools (shared by /audio/*: lib/audio-waveform.js, audio-player.js, audio-export.js) ---------- */
+.audio-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+@media (max-width: 960px) { .audio-main { order: -1; } }
+.audio-panel { padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.audio-panel-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.audio-panel-head h2 { font-size: 15px; font-weight: 650; margin-right: auto; }
+.audio-empty { color: var(--text-muted); font-size: 14px; padding: 28px 12px; text-align: center; border: 1.5px dashed var(--border); border-radius: var(--radius); }
+
+.waveform { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.waveform-bar { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.waveform-bar .icon-btn { width: 30px; height: 30px; }
+.waveform-bar .icon-btn svg { width: 15px; height: 15px; }
+.waveform-info { margin-left: auto; font: 12px var(--font-mono); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.waveform-view { position: relative; border-radius: var(--radius); background: var(--bg-elev); border: 1px solid var(--border); overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.waveform-canvas { display: block; max-width: none; cursor: text; }
+.waveform-canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.waveform-scroll { position: relative; height: 10px; border-radius: 99px; background: var(--bg-elev); border: 1px solid var(--border); cursor: pointer; touch-action: none; }
+.waveform-thumb { position: absolute; top: 1px; bottom: 1px; border-radius: 99px; background: var(--border-strong); min-width: 12px; cursor: grab; }
+.waveform-thumb:hover { background: var(--text-faint); }
+.waveform-label { font-size: 12px; font-weight: 600; color: var(--text-muted); display: flex; justify-content: space-between; gap: 8px; }
+
+.audio-player { flex-wrap: wrap; }
+.audio-player .time { min-width: 0; text-align: left; }
+.audio-player .spacer { flex: 1; }
+.audio-loop { font-size: 13px; }
+
+.audio-export { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+.audio-export-controls .ctrl-section { padding: 0; border: 0; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; }
+.audio-export-controls .ctrl { margin: 0; min-width: 150px; }
+.audio-export-controls .segmented button { flex: none; padding: 5px 10px; }
+.audio-export-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.audio-export-row .spacer { flex: 1; }
+.audio-export-estimate { font: 12px var(--font-mono); color: var(--text-muted); }
+
+.audio-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.audio-stat { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); min-width: 0; }
+.audio-stat span { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.audio-stat strong { font: 600 14px var(--font-mono); overflow-wrap: anywhere; }

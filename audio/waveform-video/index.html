@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- Waveform Video · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Waveform Video (Audiogram) · Toolbox</title>
+  <meta name="description" content="Turn a podcast clip or song into a shareable video: animated bars, circle or line visualizer, cover art, titles and auto captions, in 9:16, 1:1 or 16:9. Export WebM with sound, GIF or PNG. Runs in your browser.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="waveform-video">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Audio</h3><div id="upload"></div></section>
+        <div id="controls"></div>
+      </aside>
+      <div class="audio-main">
+        <section class="panel preview-panel" aria-label="Preview">
+          <div class="preview-stage">
+            <canvas id="preview" width="1080" height="1920"></canvas>
+            <div class="preview-overlay" id="overlay" hidden></div>
+          </div>
+          <div id="transport"></div>
+          <div id="export"></div>
+        </section>
+        <section class="panel audio-panel" aria-label="Clip">
+          <div class="audio-panel-head">
+            <h2>Clip</h2>
+            <span class="wv-clip" id="clip-info"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="clip-all" hidden>Use whole audio</button>
+          </div>
+          <p class="ctrl-hint">Drag on the waveform to pick the part that becomes the video (short clips work best: 15–60 s). Click to jump there.</p>
+          <div id="wave"></div>
+        </section>
+        <section class="panel audio-panel wv-captions" aria-label="Captions" id="captions-panel" hidden>
+          <div class="audio-panel-head">
+            <h2>Captions</h2>
+            <span class="wv-clip" id="caption-meta"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="caption-clear">Clear</button>
+          </div>
+          <p class="ctrl-hint">Edit the words freely: unchanged words keep their timing. Click a time to jump there.</p>
+          <div class="wv-lines" id="lines"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

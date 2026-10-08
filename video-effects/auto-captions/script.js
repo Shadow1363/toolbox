@@ -14,8 +14,8 @@ import { outputSize } from '/assets/js/lib/canvas.js';
 import { fontOptions, weightOptions, ensureFont } from '/assets/js/lib/fonts.js';
 import { h, icon, toast, downloadBlob, formatBytes, formatTime, store } from '/assets/js/lib/dom.js';
 import { WHISPER_MODELS, WHISPER_LANGUAGES, pickDevice, gpuSupport, modelBytes, isCached, decodeAudio, transcribe } from '/assets/js/lib/whisper.js';
-import { newLine, buildLines, lineText, lineStart, lineEnd, retime, splitLine, mergeLines, wordIndexAt, timeline, pageAt, toSRT, toVTT } from './transcript.js';
-import { drawCaption } from './captions.js';
+import { newLine, buildLines, lineText, lineStart, lineEnd, retime, splitLine, mergeLines, wordIndexAt, timeline, pageAt, toSRT, toVTT } from '/assets/js/lib/transcript.js';
+import { drawCaption } from '/assets/js/lib/captions.js';
 
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');

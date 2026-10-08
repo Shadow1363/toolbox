@@ -6,9 +6,12 @@
  *   modelBytes('base', device)                                // download size, for the UI
  *   await isCached('base', device)                            // already in the browser cache?
  *   const audio = await decodeAudio(fileOrBlob);              // Float32Array, 16 kHz mono
- *   const words = await transcribe(audio, { model: 'base', device, language: null,  // null = auto-detect
- *     onDownload: (loaded, total) => {}, onProgress: (done01) => {}, signal });
- *   // words: [{ text, start, end }] in seconds
+ *   const res = await transcribe(audio, { model: 'base', device, language: null,  // null = auto-detect
+ *     task: 'transcribe',                                     // or 'translate' (into English)
+ *     onDownload: (loaded, total) => {}, onProgress: (done01) => {}, onLanguage: (code, p) => {}, signal });
+ *   // res = { words: [{ text, start, end }] in seconds, device, language, languageProb }
+ *   await detectLanguage(audio, { model, device })            // { code, prob, ranked: [[code, p], …] }
+ *   languageName('pt')                                       // 'Portuguese'
  *
  * Models are the onnx-community "_timestamped" Whisper exports (they carry alignment heads, which
  * word timestamps need). transformers.js stores downloads in Cache Storage ("transformers-cache"),
@@ -16,6 +19,8 @@
  * On WASM, onnxruntime's extended graph optimizations break the q8 merged decoder ("Missing required
  * scale … TransposeDQWeightsForMatMulNBits"), so WASM sessions use graphOptimizationLevel 'basic'.
  * Long audio is cut into ≤30 s windows at the quietest moment, so no word is split and progress is real.
+ * Language: transformers.js silently assumes English when no language is given, so `transcribe` detects it
+ * first (one decoder step on the first speech window, softmax over Whisper's language tokens).
  */
 import { LIBS } from './cdn.js';
 
@@ -45,6 +50,15 @@ export const WHISPER_LANGUAGES = [
   ['cs', 'Czech'], ['el', 'Greek'], ['he', 'Hebrew'], ['hu', 'Hungarian'], ['ro', 'Romanian'], ['ca', 'Catalan'],
   ['ms', 'Malay'], ['tl', 'Tagalog'], ['fa', 'Persian'], ['bn', 'Bengali'], ['ta', 'Tamil'], ['ur', 'Urdu'],
 ];
+
+const NAMES = typeof Intl !== 'undefined' && Intl.DisplayNames ? new Intl.DisplayNames(['en'], { type: 'language' }) : null;
+/** English name for a Whisper language code ('haw' → 'Hawaiian'). */
+export function languageName(code) {
+  if (!code) return 'Auto-detect';
+  const known = WHISPER_LANGUAGES.find(([c]) => c === code);
+  if (known) return known[1];
+  try { return NAMES?.of(code === 'jw' ? 'jv' : code) || code; } catch { return code; }
+}
 
 const repo = (model) => `onnx-community/whisper-${model}_timestamped`;
 
@@ -209,10 +223,64 @@ export async function loadModel(model, device, { onDownload, signal } = {}) {
   }
 }
 
-/** Transcribe 16 kHz mono samples. Returns words with absolute times (seconds). */
-export async function transcribe(audio, { model = 'base', device = 'wasm', language = null, onDownload, onProgress, onWords, signal } = {}) {
+/**
+ * Whisper (tiny especially) sometimes loops: "la anteriormente, la anteriormente, …" dozens of times.
+ * Keep at most 2 consecutive copies of any repeated 1–8 word phrase.
+ */
+export function dropLoops(words, keep = 2) {
+  const key = (w) => w.text.toLowerCase().replace(/[^\p{L}\p{N}']/gu, '');
+  const out = [];
+  for (const w of words) {
+    out.push(w);
+    for (let n = 1; n <= 8; n++) {
+      let reps = 1;
+      while (out.length >= n * (reps + 1)) {
+        const end = out.length - n * reps;
+        let same = true;
+        for (let i = 0; i < n && same; i++) same = key(out[end - n + i]) === key(out[out.length - n + i]);
+        if (!same) break;
+        reps++;
+      }
+      if (reps > keep) { out.length -= n; break; }
+    }
+  }
+  return out;
+}
+
+/** The first ~30 s of speech (skipping silent windows), for language detection. */
+function speechSample(audio, windows = splitAudio(audio)) {
+  const win = windows.find((w) => !w.silent) || windows[0];
+  return win ? audio.slice(win.start, Math.min(win.end, win.start + 30 * SAMPLE_RATE)) : audio.slice(0, 30 * SAMPLE_RATE);
+}
+
+/** Detect the spoken language. Resolves { code, prob, ranked: [[code, p], …] }. */
+export async function detectLanguage(audio, { model = 'base', device = 'wasm', onDownload, signal } = {}) {
+  await loadModel(model, device, { onDownload, signal });
+  const id = ++seq;
+  const chunk = speechSample(audio);
+  const res = await request({ type: 'detect', id, audio: chunk }, (d) => d.type === 'language' && d.id === id, null, signal, [chunk.buffer]);
+  const [code, prob] = res.ranked[0] || ['en', 0];
+  return { code, prob, ranked: res.ranked };
+}
+
+/** Transcribe (or translate into English) 16 kHz mono samples. Returns words with absolute times (seconds). */
+export async function transcribe(audio, { model = 'base', device = 'wasm', language = null, task = 'transcribe', onDownload, onProgress, onWords, onLanguage, signal } = {}) {
   const used = await loadModel(model, device, { onDownload, signal });
   const windows = splitAudio(audio);
+  let languageProb = 1;
+  if (!language) {
+    try {
+      const det = await detectLanguage(audio, { model, device: used, signal });
+      language = det.code;
+      languageProb = det.prob;
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      console.warn('Language detection failed; assuming English', err);
+      language = 'en';
+      languageProb = 0;
+    }
+  }
+  onLanguage?.(language, languageProb);
   const total = windows.reduce((s, w) => s + (w.end - w.start), 0) || 1;
   let done = 0;
   const words = [];
@@ -222,16 +290,16 @@ export async function transcribe(audio, { model = 'base', device = 'wasm', langu
     if (!win.silent) {
       const id = ++seq;
       const chunk = audio.slice(win.start, win.end);
-      const res = await request({ type: 'run', id, audio: chunk, language: language || null }, (d) => d.type === 'result' && d.id === id, null, signal, [chunk.buffer]);
+      const res = await request({ type: 'run', id, audio: chunk, language, task }, (d) => d.type === 'result' && d.id === id, null, signal, [chunk.buffer]);
       const offset = win.start / SAMPLE_RATE;
-      const got = res.words.map((w) => ({ text: w.text, start: +(w.start + offset).toFixed(3), end: +(w.end + offset).toFixed(3) }));
+      const got = dropLoops(res.words).map((w) => ({ text: w.text, start: +(w.start + offset).toFixed(3), end: +(w.end + offset).toFixed(3) }));
       words.push(...got);
       onWords?.(got);
     }
     done += win.end - win.start;
     onProgress?.(done / total);
   }
-  return { words, device: used };
+  return { words, device: used, language, languageProb };
 }
 
 /** Stop the worker (frees the model's memory). The next call starts a fresh one. */

@@ -1,0 +1,19 @@
+/* Audio Trimmer + Fade: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+
+.tr-view button { flex: none; padding: 5px 14px; }
+#wave-help kbd { font: 11px var(--font-mono); padding: 1px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-elev); }
+
+.tr-times { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tr-times label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted); min-width: 0; }
+.tr-times input { font-family: var(--font-mono); font-size: 13px; padding: 6px 8px; }
+.tr-times input[readonly] { color: var(--text-muted); }
+.tr-time-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.tr-parts { display: grid; gap: 6px; }
+.tr-part { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); font-size: 13px; }
+.tr-part.is-off { opacity: .55; }
+.tr-part .mono { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-part input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+.tr-part .btn { width: 28px; height: 28px; padding: 0; }
+.tr-part .btn svg { width: 14px; height: 14px; }
+.tr-parts-empty { font-size: 12px; color: var(--text-faint); }

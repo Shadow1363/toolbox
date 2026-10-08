@@ -1,0 +1,57 @@
+/* Audio Extractor + Transcript: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+
+.ex-queue { display: grid; gap: 6px; margin-top: 10px; }
+.ex-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
+.ex-item:hover { border-color: var(--border-strong); }
+.ex-item[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.ex-item strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ex-item .ex-state { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.ex-item .ex-state.is-error { color: var(--danger); }
+.ex-item .ex-state.is-done { color: var(--success); }
+.ex-item .progress { grid-column: 1 / -1; margin-top: 4px; height: 4px; }
+.ex-item .ex-remove { width: 24px; height: 24px; padding: 0; }
+.ex-item .ex-remove svg { width: 13px; height: 13px; }
+.ex-item-sub { grid-column: 1 / -1; font-size: 11px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ex-batch { display: grid; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.ex-batch .btn { width: 100%; }
+
+.ex-method { font-size: 12px; color: var(--text-muted); padding: 3px 8px; border-radius: 999px; background: var(--bg-elev); border: 1px solid var(--border); }
+.ex-method:empty { display: none; }
+#loaded { display: flex; flex-direction: column; gap: 12px; }
+#loaded[hidden] { display: none; }
+.ex-info { grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr); }
+@media (max-width: 640px) { .ex-info { grid-template-columns: max-content minmax(0, 1fr); } }
+.ex-trim { font-size: 13px; justify-content: flex-start; gap: 12px; }
+.ex-trim[hidden] { display: none; }
+.ex-send { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted); }
+
+.ex-model-info { font-size: 12px; color: var(--text-muted); display: grid; gap: 2px; }
+.ex-model-info .is-cached { color: var(--success); }
+.ex-run { width: 100%; }
+
+.ex-lang { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+.ex-lang select { width: auto; padding-top: 5px; padding-bottom: 5px; font-size: 13px; }
+.ex-detected { font-size: 12px; color: var(--text-faint); }
+.ex-tools { display: flex; align-items: center; gap: 10px; }
+.ex-search { margin-top: 0; flex: 1; max-width: none; }
+.ex-search input[type="search"] { padding-top: 8px; padding-bottom: 8px; }
+.ex-count { font: 12px var(--font-mono); color: var(--text-muted); white-space: nowrap; }
+.ex-lines { display: grid; gap: 2px; max-height: 460px; overflow-y: auto; padding-right: 2px; scrollbar-width: thin; }
+.ex-note { color: var(--text-muted); font-size: 14px; padding: 18px 0; text-align: center; }
+.ex-line { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid transparent; }
+.ex-line.is-active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.ex-line[hidden] { display: none; }
+.ex-time { font: 12px var(--font-mono); color: var(--text-muted); background: none; border: 0; padding: 7px 4px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.ex-time:hover { color: var(--accent); background: var(--bg-elev); }
+.ex-line textarea { min-height: 0; resize: none; overflow: hidden; padding: 6px 8px; font-size: 14px; line-height: 1.45; background: transparent; border-color: transparent; }
+.ex-line textarea:hover { border-color: var(--border); }
+.ex-line textarea:focus { background: var(--bg-elev); }
+.ex-line mark { background: color-mix(in srgb, var(--warning) 35%, transparent); color: inherit; }
+.ex-tx-export { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); }
+.ex-tx-export .spacer { flex: 1; }
+.ex-tx-export .toggle { font-size: 13px; gap: 8px; }
+@media (max-width: 560px) {
+  .ex-line { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ex-time { justify-self: start; padding: 2px 4px; }
+  .ex-tools { flex-wrap: wrap; }
+}

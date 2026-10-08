@@ -63,6 +63,10 @@ body:
         - Meta Tag Previewer
         - Fake Data Generator
         - Password, UUID & API Key Generator
+        - Audio Extractor + Transcript
+        - Audio Trimmer + Fade
+        - Waveform Video
+        - Noise Reduction + Normalizer
         - Other / not sure
   - type: textarea
     id: what

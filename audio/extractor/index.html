@@ -1,0 +1,66 @@
+<!doctype html>
+<!-- Audio Extractor + Transcript · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Audio Extractor + Transcript · Toolbox</title>
+  <meta name="description" content="Extract audio from MP4, MOV, MKV, AVI or WebM as WAV, MP3, OGG or the original stream, and transcribe it with Whisper (auto language detection, translation, SRT/VTT/JSON). Batch to ZIP. Nothing is uploaded.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="extractor">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section">
+          <h3>Files</h3>
+          <div id="upload"></div>
+          <div class="ex-queue" id="queue"></div>
+          <div class="ex-batch" id="batch" hidden></div>
+        </section>
+        <div id="controls"></div>
+      </aside>
+      <div class="audio-main">
+        <section class="panel audio-panel" aria-label="Audio">
+          <div class="audio-panel-head">
+            <h2 id="audio-title">Audio</h2>
+            <span class="ex-method" id="method"></span>
+          </div>
+          <div id="empty" class="audio-empty">Drop one or more video or audio files on the left (or here): MP4, MOV, MKV, AVI, WebM, M4A, MP3, WAV, FLAC…</div>
+          <div id="loaded" hidden>
+            <dl class="kv ex-info" id="info"></dl>
+            <div id="wave"></div>
+            <div id="player"></div>
+            <label class="toggle ex-trim"><span>Export only the selection <span class="muted" id="trim-range"></span></span><input type="checkbox" id="trim" role="switch"></label>
+            <div id="export"></div>
+            <div class="ex-send" id="send"></div>
+          </div>
+        </section>
+        <section class="panel audio-panel ex-transcript" aria-label="Transcript">
+          <div class="audio-panel-head">
+            <h2>Transcript</h2>
+            <label class="ex-lang">Language <select id="lang" aria-label="Spoken language"></select></label>
+            <span class="ex-detected" id="detected"></span>
+          </div>
+          <div class="ex-tools">
+            <div class="search ex-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="search" placeholder="Search the transcript" aria-label="Search the transcript"></div>
+            <span class="ex-count" id="count"></span>
+          </div>
+          <div class="ex-lines" id="lines"><p class="ex-note">No transcript yet. Load a file, then press <strong>Transcribe</strong>.</p></div>
+          <div class="ex-tx-export" id="tx-export"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

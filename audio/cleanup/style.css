@@ -1,0 +1,10 @@
+/* Noise Reduction + Volume Normalizer: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+
+.cu-ab button { flex: none; padding: 5px 12px; }
+.cu-ab button[data-v="b"][aria-pressed="true"] { color: var(--accent); }
+.cu-status { font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
+.cu-status .spinner { width: 14px; height: 14px; border-width: 2px; }
+.audio-stat em { font-style: normal; font-size: 12px; color: var(--text-muted); margin-left: 4px; }
+.audio-stat .is-up { color: var(--success); }
+.audio-stat .is-warn { color: var(--warning); }
+.waveform-label[hidden] { display: none; }

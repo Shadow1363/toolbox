@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- Audio Trimmer + Fade · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Audio Trimmer + Fade · Toolbox</title>
+  <meta name="description" content="Trim audio on a waveform, add fade in and fade out, split into parts or make a 30-second ringtone. Export WAV, MP3, OGG or WebM. Runs in your browser; nothing is uploaded.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="trimmer">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Audio</h3><div id="upload"></div></section>
+        <div id="controls"></div>
+      </aside>
+      <div class="audio-main">
+        <section class="panel audio-panel" aria-label="Waveform">
+          <div class="audio-panel-head">
+            <h2>Waveform</h2>
+            <div class="segmented tr-view" role="group" aria-label="Show">
+              <button type="button" data-v="edit" aria-pressed="true">Edit</button>
+              <button type="button" data-v="result" aria-pressed="false">Result</button>
+            </div>
+          </div>
+          <div id="empty" class="audio-empty">Drop an audio or video file on the left (or here) to start.</div>
+          <div id="wave"></div>
+          <p class="ctrl-hint" id="wave-help">Drag on the waveform to select, drag the edges to adjust, click to move the playhead. <kbd>Space</kbd> plays, <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + wheel zooms.</p>
+          <div id="player"></div>
+          <div id="export"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

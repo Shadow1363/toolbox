@@ -25,7 +25,7 @@ assets/
   js/lib/                Shared modules (see below)
   img/                   16:10 card thumbnails (SVG) + favicon
 _template/               Copy-paste starters: category/, tool/, canvas-tool/
-<category>/index.html    Category hub, e.g. video-effects/, convert/, image/
+<category>/index.html    Category hub, e.g. video-effects/, convert/, image/, audio/
 <category>/<tool>/       index.html + script.js (+ style.css, + tool-only modules)
 ```
 
@@ -51,7 +51,10 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 | `gif.js`                  | `loadGifenc`, `quantizeFrame` (Bayer dither + palette, 1-bit alpha), `frameOptions`, `gifDelay`, `gifDelays`                                                                                 |
 | `vision.js`               | MediaPipe Tasks Vision (lazy, one WASM fileset, GPU→CPU): `loadSegmenter`/`segmentFrame`, `loadFaceLandmarker`/`detectFace`, `loadPoseLandmarker`/`detectPose`, `nextTimestamp`              |
 | `person-mask.js`          | `createPersonMask(prefix)` (smoothing → threshold/softness → feathered alpha canvas) and `drawPersonCutout`                                                                                  |
-| `whisper.js` (+ `whisper-worker.js`) | Speech to text with Whisper (transformers.js in a module worker, WebGPU → WASM): `transcribe` (word timestamps), `decodeAudio`, `modelBytes`, `isCached`, `pickDevice`, language list |
+| `whisper.js` (+ `whisper-worker.js`) | Speech to text with Whisper (transformers.js in a module worker, WebGPU → WASM): `transcribe` (word timestamps, auto language detection, `task: 'translate'`), `detectLanguage`, `languageName`, `decodeAudio`, `modelBytes`, `isCached`, `pickDevice`, language list |
+| `transcript.js` / `captions.js` | Timed transcript lines (`buildLines`, `retime`, `timeline`, `pageAt`, `toSRT`, `toVTT`) and the animated caption renderer `drawCaption` (Auto Captions, Audio Extractor, Waveform Video) |
+| `audio-io.js` / `audio-waveform.js` / `audio-player.js` / `audio-export.js` | Audio tools: probe + decode any audio/video (`loadAudio`, browser → WebCodecs → ffmpeg), waveform view with zoom/selection, AudioBuffer player (Space, loop selection), offline render + WAV/MP3/OGG/WebM export bar. Details in [audio/AGENTS.md](audio/AGENTS.md) |
+| `ffmpeg.js` | ffmpeg.wasm fallback: `ffmpegRun`, `ffmpegProbe`, `parseStreams` (the file converter keeps its own copy) |
 | `showcase-frame.js`       | Screen Showcase styling shared with Zoom on Click: `backgroundSection`/`frameSection` panel specs, `drawShowcaseBackground`, `fitInFrame`, `buildFrameCard`, `drawCardShadow`        |
 | `handoff.js`              | Pass a file + JSON metadata to another tool through IndexedDB: `sendFile(toolId, file, meta)`, `takeFile(toolId)`, `peekFile`, `clearFile`                                            |
 | `head-tracking.js`        | `trackHead` (offline pass, face then body), `smoothTrack` (One Euro, hold + fade), `sampleTrack(t)`; `OneEuro`                                                                               |
@@ -107,7 +110,7 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 
 ## Conventions
 
-- **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Pins live in `assets/js/lib/cdn.js` (`LIBS`); add new libraries there and load them with `loadLib()` (workers import the `LIBS` URL directly, as `whisper-worker.js` does with `transformers`). ML model weights come from huggingface.co / storage.googleapis.com and are cached by the browser; show the download size before fetching them. Exception: CodeMirror comes from esm.sh with pinned `?deps=` because jsDelivr's `+esm` bundles duplicate `@codemirror/state` (see the comment in `cdn.js`). Older pins still inline: `@mediapipe/tasks-vision@1.1.0` (`vision.js`), `gifenc@1.0.3` (`gif.js`), `jszip@3.10.1` (Text Match Cut). Fail gracefully with a `toast()` when the network is blocked.
+- **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Pins live in `assets/js/lib/cdn.js` (`LIBS`); add new libraries there and load them with `loadLib()` (workers import the `LIBS` URL directly, as `whisper-worker.js` does with `transformers`). ML model weights come from huggingface.co / storage.googleapis.com and are cached by the browser; show the download size before fetching them. Exception: CodeMirror comes from esm.sh with pinned `?deps=` because jsDelivr's `+esm` bundles duplicate `@codemirror/state` (see the comment in `cdn.js`). Audio: mediabunny (probe, WebCodecs decode, Opus, stream copy), lamejs (MP3, in a worker), RNNoise WASM. Older pins still inline: `@mediapipe/tasks-vision@1.1.0` (`vision.js`), `gifenc@1.0.3` (`gif.js`), `jszip@3.10.1` (Text Match Cut). Fail gracefully with a `toast()` when the network is blocked.
 - **Privacy:** no backend, no analytics, no uploads.
 - **Names:** made-up names for generated sites, papers and people; no real brands or logos in UI, thumbnails or generated content.
 - **Errors:** bad files go through `loadMedia` → `MediaError` → `toast(message, 'error')`. Feature-detect (`canRecord()`, `supportsCanvasFilter`, `createPerspective()` returning `null`) and show a hint instead of failing.
@@ -131,4 +134,5 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 - [Video Effects](video-effects/AGENTS.md): canvas effects for video, images and animated text, plus captions, background removal, zooms, progress overlays, retro looks and speed ramps.
 - [Convert & Encode](convert/AGENTS.md): file converter (documents, data, images, audio/video), Base64, encoders, hashes, JSON, colors, timestamps, case, QR.
 - [Image](image/AGENTS.md): device mockups, code screenshots, social images, favicons, before/after sliders, compression, palettes, a whiteboard and a pixel art editor.
+- [Audio](audio/AGENTS.md): audio extractor + Whisper transcript (batch, original-stream copy), trimmer with fades and splits, waveform videos (audiograms), noise reduction and loudness normalization.
 - [Dev](dev/AGENTS.md): regex tester, diff checker, cron builder, CSS generators (gradient, shadow, glass, clip-path, cubic-bezier), SVG optimizer, meta tag previewer, fake data, and password/UUID/API key generators.
