@@ -44,6 +44,14 @@ body:
         - Palette Extractor
         - Whiteboard
         - Pixel Art Editor
+        - Regex Tester
+        - Diff Checker
+        - Cron Expression Builder
+        - CSS Generators
+        - SVG Optimizer
+        - Meta Tag Previewer
+        - Fake Data Generator
+        - Password, UUID & API Key Generator
         - Home page / site-wide
         - Other / not sure
     validations:

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fake Data Generator · Toolbox</title>
+  <meta name="description" content="Generate mock data from a schema you build: names, emails, addresses, dates, numbers and more, as JSON, CSV, SQL INSERTs or TypeScript. Seeded, repeatable, and lorem ipsum too.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="fake-data">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="panel io-options" id="options"></div>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Schema">
+        <div class="io-head"><h2 id="in-title">Fields</h2><span id="in-actions"></span></div>
+        <div id="schema" class="fd-schema"></div>
+        <div id="lorem" class="fd-lorem" hidden></div>
+      </section>
+      <section class="panel io-panel" aria-label="Output">
+        <div class="io-head"><h2>Output</h2><span id="out-actions"></span></div>
+        <div class="io-status" id="status"></div>
+        <textarea id="output" readonly spellcheck="false" aria-label="Generated data"></textarea>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

@@ -89,7 +89,7 @@ function card({ href, name, description, thumbnail, meta, status }) {
       meta && h('div', { class: 'card-meta' }, meta)));
 }
 
-const toolCard = (t) => card({ ...t, href: toolUrl(t), meta: t.category && body.dataset.grid !== 'category' ? getCategory(t.category)?.name : null });
+const toolCard = (t) => card({ ...t, href: toolUrl(t), meta: t.category && t.category !== category?.id ? getCategory(t.category)?.name : null });
 
 function renderGrids() {
   document.querySelectorAll('[data-grid]').forEach((el) => {
@@ -115,9 +115,13 @@ function searchInput(placeholder, onQuery) {
   if (search) search.replaceChildren(h('div', { class: 'search', html: icon('search') }, input));
 }
 
-/** Hub page: one grid, or one per section when the category lists `sections`; plus a search box. */
+/**
+ * Hub page: one grid, or one per section when the category lists `sections`; plus a search box.
+ * `related` tool ids (from other categories) get their own section at the end and are searchable too.
+ */
 function renderCategory(el) {
   const list = category ? toolsIn(category.id) : [];
+  const related = (category?.related || []).map(getTool).filter(Boolean);
   if (!list.length) return el.replaceChildren(h('p', { class: 'empty' }, 'No tools here yet.'));
   const sections = category.sections || [];
   const browse = sections.length
@@ -126,14 +130,20 @@ function renderCategory(el) {
       return items.length > 0 && h('section', { class: 'hub-section' },
         h('h2', { class: 'section-title' }, name || 'More'), h('div', { class: 'card-grid' }, items.map(toolCard)));
     }))
-    : h('div', { class: 'card-grid' }, list.map(toolCard));
+    : h('div', {}, h('div', { class: 'card-grid' }, list.map(toolCard)));
+  if (related.length) {
+    const homes = [...new Set(related.map((t) => getCategory(t.category)?.name).filter(Boolean))];
+    browse.append(h('section', { class: 'hub-section hub-related' },
+      h('h2', { class: 'section-title' }, `Also useful${homes.length === 1 ? ` (in ${homes[0]})` : ''}`),
+      h('div', { class: 'card-grid' }, related.map(toolCard))));
+  }
   const results = h('div', { class: 'card-grid' });
   const resultsWrap = h('div', { hidden: true }, h('h2', { class: 'section-title' }, 'Matching tools'), results);
   searchInput(`Search ${list.length} tools or formats (pdf, base64…)`, (q, raw) => {
     browse.hidden = !!q;
     resultsWrap.hidden = !q;
     if (!q) return;
-    const hits = list.filter((t) => matches(t, q));
+    const hits = [...list, ...related].filter((t) => matches(t, q));
     results.replaceChildren(...(hits.length ? hits.map(toolCard) : [h('p', { class: 'empty' }, `No tools match “${raw}”.`)]));
   });
   el.replaceChildren(browse, resultsWrap);

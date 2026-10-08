@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diff Checker · Toolbox</title>
+  <meta name="description" content="Compare two texts or JSON documents side by side or inline, with word and character highlights, and export a unified .patch file. Runs in your browser.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="diff">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="panel io-options" id="options"></div>
+    <div class="io-grid df-inputs">
+      <section class="panel io-panel" aria-label="Original text">
+        <div class="io-head"><h2 id="a-title">Original</h2><span id="a-actions"></span></div>
+        <div id="a-editor" class="df-editor"></div>
+        <div class="io-status" id="a-status" hidden></div>
+      </section>
+      <section class="panel io-panel" aria-label="Changed text">
+        <div class="io-head"><h2 id="b-title">Changed</h2><span id="b-actions"></span></div>
+        <div id="b-editor" class="df-editor"></div>
+        <div class="io-status" id="b-status" hidden></div>
+      </section>
+    </div>
+    <section class="panel io-panel df-result" aria-label="Differences">
+      <div class="io-head"><h2>Differences</h2><span class="df-stats" id="stats"></span><span id="out-actions"></span></div>
+      <div class="io-note" id="note" hidden></div>
+      <div id="out" class="df-out"></div>
+    </section>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

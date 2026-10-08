@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SVG Optimizer · Toolbox</title>
+  <meta name="description" content="Optimize SVG files with SVGO in your browser: batch files, toggle each optimization, compare before and after, and export minified SVG, a data URI or a React component.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="svg-optimizer">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="panel io-options" id="options"></div>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Input">
+        <div id="drop"></div>
+        <ul class="so-files" id="files"></ul>
+        <div class="io-head"><h2 id="src-title">SVG code</h2><span id="in-actions"></span></div>
+        <div id="editor" class="so-editor"></div>
+        <details class="so-plugins" id="plugins-wrap">
+          <summary>Optimizations <span class="muted" id="plugin-count"></span></summary>
+          <div id="plugins"></div>
+        </details>
+      </section>
+      <section class="panel io-panel" aria-label="Result">
+        <div class="so-compare">
+          <figure><div class="so-view checker"><img id="before" alt="Original"></div><figcaption>Original <b id="before-size"></b></figcaption></figure>
+          <figure><div class="so-view checker"><img id="after" alt="Optimized"></div><figcaption>Optimized <b id="after-size"></b></figcaption></figure>
+        </div>
+        <div class="io-status" id="status"></div>
+        <div class="io-head">
+          <div class="segmented" id="formats" role="group" aria-label="Output format"></div>
+          <span class="so-spacer"></span>
+          <span id="out-actions"></span>
+        </div>
+        <textarea id="output" readonly spellcheck="false" aria-label="Optimized output"></textarea>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

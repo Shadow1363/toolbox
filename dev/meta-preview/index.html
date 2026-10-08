@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meta Tag Previewer · Toolbox</title>
+  <meta name="description" content="Preview how a link looks in search results and when shared on X, LinkedIn, Facebook, Slack and Discord. Find missing or too-long tags and generate the full set of meta tags.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="meta-preview">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="panel io-options" id="options"></div>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Input">
+        <div class="io-head"><h2 id="in-title">Page HTML</h2><span id="in-actions"></span></div>
+        <p class="io-banner" id="fetch-note">Why not just enter a URL? Browsers block web pages from reading other sites (CORS), and this tool has no server to fetch it for you. Open the page, view its source (Ctrl/⌘+U), and paste it here. Only the &lt;head&gt; is needed.</p>
+        <div id="editor" class="mp-editor"></div>
+        <form id="form" class="mp-form" hidden></form>
+        <div id="found" class="mp-found"></div>
+      </section>
+      <section class="panel io-panel" aria-label="Previews and checks">
+        <div class="io-head"><h2>Checks</h2><span class="mp-score" id="score"></span></div>
+        <ul class="mp-checks" id="checks"></ul>
+        <div class="io-head"><h2>Previews</h2></div>
+        <p class="io-note">Look-alike cards for each platform. Real previews change with platform updates, so treat these as close approximations. Images load from their URL.</p>
+        <div id="previews" class="mp-previews"></div>
+        <div class="io-head"><h2>Generated tags</h2><span id="out-actions"></span></div>
+        <pre class="io-out mp-code" id="code"></pre>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

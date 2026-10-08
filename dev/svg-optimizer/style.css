@@ -1,0 +1,25 @@
+/* SVG Optimizer */
+.so-editor { display: flex; --editor-min: 220px; --editor-max: 50vh; }
+.so-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+.so-files li { display: flex; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); }
+.so-files li.is-sel { border-color: var(--accent); background: var(--accent-soft); }
+.so-files .icon-btn { width: 30px; height: 30px; flex: none; }
+.so-file { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 0; background: none; color: inherit; font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.so-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.so-size { font: 12px var(--font-mono); color: var(--text-muted); white-space: nowrap; }
+.so-save { font: 600 12px var(--font-mono); color: var(--success); min-width: 3.5em; text-align: right; }
+.so-plugins summary { cursor: pointer; font-size: 13px; font-weight: 600; padding: 4px 0; }
+.so-plugins[open] summary { margin-bottom: 8px; }
+.so-plugins #plugins { display: grid; gap: 10px; }
+.so-plugin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 18px; }
+.so-plugin { font-size: 12.5px; font-weight: 400; }
+.so-plugin small { display: block; color: var(--text-faint); font-size: 11px; }
+.so-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.so-compare figure { margin: 0; display: grid; gap: 6px; }
+.so-compare figcaption { font-size: 12.5px; color: var(--text-muted); display: flex; justify-content: space-between; gap: 6px; }
+.so-compare figcaption b { font: 600 12px var(--font-mono); color: var(--text); }
+.so-view { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; }
+.so-view img { position: absolute; inset: 12px; width: calc(100% - 24px); height: calc(100% - 24px); object-fit: contain; }
+.so-spacer { flex: 1; }
+.io-head .segmented { flex: none; }
+#output { min-height: 240px; }

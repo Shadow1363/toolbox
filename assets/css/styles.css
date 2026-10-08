@@ -360,6 +360,7 @@ input[type="color"]::-moz-color-swatch { border: 0; border-radius: 5px; }
 .kv > dt { color: var(--text-muted); }
 .kv > dd { margin: 0; font-family: var(--font-mono); overflow-wrap: anywhere; }
 .hub-section + .hub-section { margin-top: 8px; }
+.hub-related { margin-top: 28px; }
 
 .dropzone.is-compact { flex-direction: row; justify-content: flex-start; text-align: left; gap: 10px; padding: 10px 12px; }
 .dropzone.is-compact svg { width: 20px; height: 20px; flex: none; }
@@ -410,3 +411,40 @@ input[type="color"]::-moz-color-swatch { border: 0; border-radius: 5px; }
 .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .kbd-help { font-size: 12px; color: var(--text-faint); line-height: 1.7; }
 .kbd-help kbd { font: 11px var(--font-mono); padding: 1px 5px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-elev); color: var(--text-muted); }
+
+/* 14. Dev tools (shared by /dev/*) ------------------------------------------- */
+/* Syntax colors for lib/editor.js (`classHighlighter` → .tok-*). */
+:root { --tok-keyword: #ad3da4; --tok-string: #c41a16; --tok-number: #1c00cf; --tok-comment: #707f8c; --tok-tag: #0b6bcb; --tok-attr: #836c28; --tok-prop: #3e7d88; --tok-punct: #6e6e73; --tok-invalid: #ff3b30; }
+[data-theme="dark"] { --tok-keyword: #ff7ab2; --tok-string: #ff8170; --tok-number: #d9c97c; --tok-comment: #7f8c98; --tok-tag: #6bdfff; --tok-attr: #d0a8ff; --tok-prop: #67b7a4; --tok-punct: #a1a1a6; --tok-invalid: #ff6961; }
+.code-editor { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: var(--editor-min, 280px); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); overflow: hidden; transition: border-color .15s; }
+.code-editor:focus-within, .code-editor.is-over { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.code-editor > .code-fallback { flex: 1; min-height: var(--editor-min, 280px); border: 0; border-radius: 0; background: transparent; box-shadow: none; resize: none; font: 13px/1.5 var(--font-mono); }
+.code-editor > .code-fallback:focus { box-shadow: none; }
+.code-editor .cm-editor { flex: 1; min-height: var(--editor-min, 280px); max-height: var(--editor-max, 70vh); font-size: 13px; background: transparent; color: var(--text); }
+.code-editor .cm-editor.cm-focused { outline: none; }
+.code-editor .cm-scroller { font-family: var(--font-mono); line-height: 1.5; overflow: auto; }
+.code-editor .cm-gutters { background: transparent; border-right: 1px solid var(--border); color: var(--text-faint); }
+.code-editor .cm-activeLine { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.code-editor .cm-activeLineGutter { background: transparent; color: var(--text-muted); }
+.code-editor .cm-content { caret-color: var(--accent); }
+.code-editor .cm-cursor { border-left-color: var(--accent); }
+.code-editor .cm-selectionBackground { background: color-mix(in srgb, var(--accent) 28%, transparent) !important; }
+.code-editor .cm-placeholder { color: var(--text-faint); }
+.code-editor .cm-matchingBracket { background: var(--accent-soft); color: inherit; }
+.tok-keyword, .tok-bool, .tok-atom { color: var(--tok-keyword); }
+.tok-string, .tok-string2, .tok-literal, .tok-url { color: var(--tok-string); }
+.tok-number { color: var(--tok-number); }
+.tok-comment, .tok-meta { color: var(--tok-comment); font-style: italic; }
+.tok-typeName, .tok-className, .tok-namespace, .tok-macroName { color: var(--tok-tag); }
+.tok-propertyName { color: var(--tok-prop); }
+.tok-variableName, .tok-labelName { color: var(--tok-attr); }
+.tok-punctuation, .tok-operator { color: var(--tok-punct); }
+.tok-invalid { color: var(--tok-invalid); }
+.tok-heading, .tok-strong { font-weight: 700; }
+
+/* Tabs over a tool (CSS Generators, Generators): a wide .segmented that scrolls on phones. */
+.dev-tabs { margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+.dev-tabs .segmented { flex-wrap: nowrap; width: max-content; min-width: 100%; }
+.dev-tabs .segmented button { flex: 1 0 auto; padding: 7px 14px; }
+.io-panel .io-sub { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+.io-panel .code-out { min-height: 0; flex: none; }

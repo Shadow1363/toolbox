@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Generators · Toolbox</title>
+  <meta name="description" content="Generate CSS gradients, box shadows, glassmorphism, clip-path shapes and cubic-bezier easings with a live preview, copy-ready CSS and Tailwind classes.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="css">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <nav class="dev-tabs" aria-label="Generator"><div class="segmented" id="tabs" role="group" aria-label="Generator"></div></nav>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel cg-result" aria-label="Preview and code">
+        <div id="preview" class="cg-preview"></div>
+        <div class="cg-code">
+          <div class="io-head"><h2>CSS</h2><span id="css-actions"></span></div>
+          <pre class="io-out cg-pre" id="css-out"></pre>
+        </div>
+        <div class="cg-code">
+          <div class="io-head"><h2>Tailwind</h2><span id="tw-actions"></span></div>
+          <pre class="io-out cg-pre" id="tw-out"></pre>
+          <div class="io-note" id="tw-note"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

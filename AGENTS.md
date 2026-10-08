@@ -33,7 +33,7 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 
 - Folder routing: `/<category>/<tool>/index.html` serves `/<category>/<tool>/`. A tool without a category lives at `/<tool>/` (e.g. a future `/regex/`).
 - `assets/js/tools.js` is the single source of truth for what is listed.
-  - `categories[]`: `{ id, name, description, thumbnail }`
+  - `categories[]`: `{ id, name, description, thumbnail, sections?, related? }`. `related` lists tool ids from other categories to show (and search) at the end of the hub.
   - `tools[]`: `{ id, category?, name, description, thumbnail, status?, tags? }`. `status` is `'new' | 'beta' | 'soon'` (`soon` renders a disabled card); `tags` feed home search.
   - Helpers: `getTool`, `getCategory`, `toolsIn`, `standaloneTools`, `toolUrl`, `categoryUrl`.
 - `site.js` reads `<body data-tool="…">` or `<body data-category="…">` and fills placeholders:
@@ -65,7 +65,8 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 | `webm-duration.js`        | Used by the exporter; writes duration into MediaRecorder WebM                                                                                                                                |
 | `cdn.js` | `LIBS` (every pinned CDN library) + `loadLib(name)` (lazy, once) + `workerUrl()` for CDN workers |
 | `codecs.js` | CSV/TSV, JSON (line/column errors), YAML, XML, TOML parse/stringify; table helpers |
-| `text-tool.js` | Input → output tools: `remember` (persisted options), copy/download buttons, `debounce` |
+| `text-tool.js` | Input → output tools: `remember` (persisted options), `rememberInput` (persisted input text), copy/download buttons, `debounce`, `dropFiles` (any element as a drop target) |
+| `editor.js` | `createEditor(el, { value, lang, onChange, … })`: a textarea at once, upgraded to CodeMirror 6 (JSON/HTML/XML/CSS highlighting, `setMarks` for highlighted ranges); stays a textarea if the CDN fails |
 | `image-io.js` | Image tools: `createImageDrop` (dropzone + Ctrl/⌘+V + Paste button), `onPasteImages`, `createImageExport` (PNG/JPG/WebP/SVG + scale + quality, Download and Copy), `copyCanvas`/`copyBlob`, `canEncode`, `downloadZip`, `pickFile` |
 | `palette.js` | `samplePixels`, `kmeans` (Lab, seeded), `medianCut`; `hex`/`parseHex`/`rgbToHsl`, WCAG `contrastRatio`/`wcag`/`readableOn` |
 | `kv.js` | IndexedDB key-value store (`kvGet`/`kvSet`) and a debounced `autosaver(key, get)`; falls back to localStorage |
@@ -106,7 +107,7 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 
 ## Conventions
 
-- **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Pins live in `assets/js/lib/cdn.js` (`LIBS`); add new libraries there and load them with `loadLib()` (workers import the `LIBS` URL directly, as `whisper-worker.js` does with `transformers`). ML model weights come from huggingface.co / storage.googleapis.com and are cached by the browser; show the download size before fetching them. Older pins still inline: `@mediapipe/tasks-vision@1.1.0` (`vision.js`), `gifenc@1.0.3` (`gif.js`), `jszip@3.10.1` (Text Match Cut). Fail gracefully with a `toast()` when the network is blocked.
+- **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Pins live in `assets/js/lib/cdn.js` (`LIBS`); add new libraries there and load them with `loadLib()` (workers import the `LIBS` URL directly, as `whisper-worker.js` does with `transformers`). ML model weights come from huggingface.co / storage.googleapis.com and are cached by the browser; show the download size before fetching them. Exception: CodeMirror comes from esm.sh with pinned `?deps=` because jsDelivr's `+esm` bundles duplicate `@codemirror/state` (see the comment in `cdn.js`). Older pins still inline: `@mediapipe/tasks-vision@1.1.0` (`vision.js`), `gifenc@1.0.3` (`gif.js`), `jszip@3.10.1` (Text Match Cut). Fail gracefully with a `toast()` when the network is blocked.
 - **Privacy:** no backend, no analytics, no uploads.
 - **Names:** made-up names for generated sites, papers and people; no real brands or logos in UI, thumbnails or generated content.
 - **Errors:** bad files go through `loadMedia` → `MediaError` → `toast(message, 'error')`. Feature-detect (`canRecord()`, `supportsCanvasFilter`, `createPerspective()` returning `null`) and show a hint instead of failing.
@@ -122,9 +123,12 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 - Canvas text measured before a web font loads uses fallback widths. Wait with `ensureFont(family, weight, cb)` or re-layout on `document.fonts` `loadingdone` (see Text Match Cut).
 - `scratch(name, w, h)` canvases are shared by name and resize in place. Use a distinct name per size or use (e.g. `` `tmc-sharp-${W}x${H}` ``).
 - Inside render code, use seeded `rng`/`hash`, never `Math.random`. Otherwise preview and export differ.
+- `el.replaceChildren(a, null)` inserts the text "null" (unlike `h()`, which skips null children). Filter first.
+- Control specs hold `showIf` functions, so `structuredClone` on them throws; copy with spreads. If you set `panel.state` values after `createControls`, call `panel.refresh()` so `showIf` sections update.
 
 ## Categories
 
 - [Video Effects](video-effects/AGENTS.md): canvas effects for video, images and animated text, plus captions, background removal, zooms, progress overlays, retro looks and speed ramps.
 - [Convert & Encode](convert/AGENTS.md): file converter (documents, data, images, audio/video), Base64, encoders, hashes, JSON, colors, timestamps, case, QR.
 - [Image](image/AGENTS.md): device mockups, code screenshots, social images, favicons, before/after sliders, compression, palettes, a whiteboard and a pixel art editor.
+- [Dev](dev/AGENTS.md): regex tester, diff checker, cron builder, CSS generators (gradient, shadow, glass, clip-path, cubic-bezier), SVG optimizer, meta tag previewer, fake data, and password/UUID/API key generators.

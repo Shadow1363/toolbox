@@ -1,0 +1,19 @@
+/* Password, UUID & API Key Generator */
+.gn-safe { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-muted); margin: -4px 0 16px; }
+.gn-safe svg { width: 15px; height: 15px; flex: none; margin-top: 2px; color: var(--success); }
+.gn-safe code { font: 12px var(--font-mono); }
+.gn-controls .ctrl-section { padding: 0; border: 0; }
+.gn-meter { display: grid; gap: 6px; }
+.gn-bar { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.gn-bar > div { height: 100%; border-radius: 99px; transition: width .2s, background .2s; background: var(--danger); }
+.gn-bar > div[data-level="1"] { background: #ff6b3d; }
+.gn-bar > div[data-level="2"] { background: var(--warning); }
+.gn-bar > div[data-level="3"] { background: #8bc34a; }
+.gn-bar > div[data-level="4"] { background: var(--success); }
+.gn-meter-text { font-size: 12.5px; color: var(--text-muted); }
+.gn-meter-text b { color: var(--text); }
+.gn-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 70vh; overflow: auto; }
+.gn-list li { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); }
+.gn-list code { flex: 1; min-width: 0; font: 14px/1.5 var(--font-mono); overflow-wrap: anywhere; user-select: all; }
+.gn-list .icon-btn { width: 32px; height: 32px; flex: none; }
+.gn-list .gn-more { justify-content: center; color: var(--text-muted); font-size: 13px; padding: 8px; }

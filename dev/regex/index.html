@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Regex Tester · Toolbox</title>
+  <meta name="description" content="Test JavaScript regular expressions with live highlighting, capture groups, a plain-English explanation, replace preview and a library of common patterns. Runs in your browser.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="regex">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="panel io-options rx-options">
+      <div class="ctrl">
+        <span class="ctrl-label">Flags</span>
+        <div class="chips" id="flags" role="group" aria-label="Flags"></div>
+      </div>
+      <div class="ctrl rx-lib">
+        <label class="ctrl-label" for="library">Common patterns</label>
+        <select id="library"><option value="">Insert a pattern…</option></select>
+      </div>
+    </div>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Input">
+        <div class="io-head"><h2>Pattern</h2><span id="pattern-actions"></span></div>
+        <div class="rx-pattern">
+          <span aria-hidden="true">/</span>
+          <input type="text" id="pattern" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Regular expression pattern">
+          <span aria-hidden="true">/<b id="flags-view"></b></span>
+        </div>
+        <div class="io-status" id="pattern-status" hidden></div>
+        <div class="ctrl" id="replace-wrap" hidden>
+          <label class="ctrl-label" for="replacement">Replace with</label>
+          <input type="text" id="replacement" class="mono" spellcheck="false" autocomplete="off">
+          <div class="ctrl-hint"><code>$1</code> group 1 · <code>$&lt;name&gt;</code> named group · <code>$&amp;</code> whole match · <code>$`</code> / <code>$'</code> text before / after · <code>$$</code> a dollar sign</div>
+        </div>
+        <div class="io-head"><h2>Test text</h2><span id="in-actions"></span></div>
+        <div id="editor" class="rx-editor"></div>
+      </section>
+      <section class="panel io-panel" aria-label="Result">
+        <div class="io-head">
+          <div class="segmented" id="views" role="group" aria-label="View">
+            <button type="button" data-v="matches">Matches</button>
+            <button type="button" data-v="replace">Replace</button>
+            <button type="button" data-v="explain">Explain</button>
+          </div>
+          <span class="rx-spacer"></span>
+          <span id="out-actions"></span>
+        </div>
+        <div class="io-status" id="status"></div>
+        <div id="out" class="rx-out"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

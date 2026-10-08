@@ -15,6 +15,10 @@
  *   status:  'new' | 'beta' | 'soon'   ('soon' renders a disabled card)
  *   tags:    extra words for search (home page and hub); list file formats here
  *   section: heading the tool is grouped under on its hub (category `sections` sets the order)
+ *
+ * Optional category fields:
+ *   sections: hub headings, in order
+ *   related:  ids of tools in other categories to link from this hub (and include in its search)
  */
 
 export const categories = [
@@ -37,6 +41,14 @@ export const categories = [
     description: "Mockups, code screenshots, social images, favicons, compression, palettes, whiteboards and pixel art.",
     thumbnail: "/assets/img/image.svg",
     sections: ["Create", "Optimize", "Draw"],
+  },
+  {
+    id: "dev",
+    name: "Dev",
+    description: "Regex tester, diff checker, CSS generators, cron builder, fake data, SVG optimizer, meta tags and secure generators.",
+    thumbnail: "/assets/img/dev.svg",
+    sections: ["Code & text", "Web", "Generate"],
+    related: ["json-tools", "encode-decode", "base64", "hash", "timestamp", "color", "case", "qr-code"],
   },
 ];
 
@@ -347,6 +359,86 @@ export const tools = [
     thumbnail: "/assets/img/pixel-art.svg",
     status: "new",
     tags: ["pixel art", "sprite", "sprite sheet", "8-bit", "animation", "gif", "onion skin", "palette", "16x16", "32x32", "editor"],
+  },
+  {
+    id: "regex",
+    category: "dev",
+    section: "Code & text",
+    name: "Regex Tester",
+    description: "Live match highlighting, capture groups, a plain-English explanation, replace preview and a pattern library.",
+    thumbnail: "/assets/img/regex.svg",
+    status: "new",
+    tags: ["regex", "regexp", "regular expression", "pattern", "match", "replace", "capture group", "named group", "javascript", "explain", "test"],
+  },
+  {
+    id: "diff",
+    category: "dev",
+    section: "Code & text",
+    name: "Diff Checker",
+    description: "Compare two texts or JSON files side by side or inline, with word-level highlights. Export a .patch.",
+    thumbnail: "/assets/img/diff.svg",
+    status: "new",
+    tags: ["diff", "compare", "difference", "changes", "patch", "unified diff", "json", "text", "merge", "side by side"],
+  },
+  {
+    id: "cron",
+    category: "dev",
+    section: "Code & text",
+    name: "Cron Expression Builder",
+    description: "Build or paste a cron schedule, read it in plain English and see the next runs in any time zone.",
+    thumbnail: "/assets/img/cron.svg",
+    status: "new",
+    tags: ["cron", "crontab", "schedule", "job", "timer", "time zone", "timezone", "next run", "explain"],
+  },
+  {
+    id: "css",
+    category: "dev",
+    section: "Web",
+    name: "CSS Generators",
+    description: "Gradients, box shadows, glassmorphism, clip-path shapes and cubic-bezier easings, with Tailwind classes.",
+    thumbnail: "/assets/img/css.svg",
+    status: "new",
+    tags: ["css", "gradient", "linear-gradient", "radial", "conic", "box-shadow", "shadow", "neumorphism", "glassmorphism", "glass", "backdrop-filter", "clip-path", "polygon", "cubic-bezier", "easing", "animation", "tailwind"],
+  },
+  {
+    id: "svg-optimizer",
+    category: "dev",
+    section: "Web",
+    name: "SVG Optimizer",
+    description: "Shrink SVG files with SVGO: batch, per-plugin toggles, before/after preview, data URI and React output.",
+    thumbnail: "/assets/img/svg-optimizer.svg",
+    status: "new",
+    tags: ["svg", "svgo", "optimize", "minify", "compress", "icon", "data uri", "react", "jsx", "component", "zip"],
+  },
+  {
+    id: "meta-preview",
+    category: "dev",
+    section: "Web",
+    name: "Meta Tag Previewer",
+    description: "See how a link looks in search results and social shares, catch missing tags and generate them.",
+    thumbnail: "/assets/img/meta-preview.svg",
+    status: "new",
+    tags: ["meta tags", "open graph", "og", "og:image", "twitter card", "seo", "social", "link preview", "unfurl", "html"],
+  },
+  {
+    id: "fake-data",
+    category: "dev",
+    section: "Generate",
+    name: "Fake Data Generator",
+    description: "Mock rows from a schema you build, as JSON, CSV, SQL or TypeScript, plus lorem ipsum. Seeded and repeatable.",
+    thumbnail: "/assets/img/fake-data.svg",
+    status: "new",
+    tags: ["fake", "mock", "faker", "test data", "dummy", "seed", "json", "csv", "sql", "insert", "typescript", "lorem ipsum", "placeholder"],
+  },
+  {
+    id: "generators",
+    category: "dev",
+    section: "Generate",
+    name: "Password, UUID & API Key Generator",
+    description: "Strong passwords and passphrases, UUID v4/v7 and API tokens from your browser's secure random generator.",
+    thumbnail: "/assets/img/generators.svg",
+    status: "new",
+    tags: ["password", "passphrase", "diceware", "uuid", "guid", "v4", "v7", "api key", "token", "secret", "random", "strength", "bulk"],
   },
 ];
 

@@ -1,0 +1,35 @@
+/* Diff Checker */
+:root { --df-add-bg: #e6f7ea; --df-add-hi: #a8e6b6; --df-del-bg: #fdecec; --df-del-hi: #f7b8b8; --df-add-fg: #1a7f37; --df-del-fg: #cf222e; }
+[data-theme="dark"] { --df-add-bg: rgba(46, 160, 67, .16); --df-add-hi: rgba(46, 160, 67, .45); --df-del-bg: rgba(248, 81, 73, .14); --df-del-hi: rgba(248, 81, 73, .45); --df-add-fg: #56d364; --df-del-fg: #ff7b72; }
+
+.df-editor { display: flex; flex: 1; --editor-min: 220px; --editor-max: 45vh; }
+.df-result { margin-top: 20px; }
+.df-stats { font: 600 13px var(--font-mono); margin-right: auto; }
+.io-head h2 + .df-stats { margin-left: 4px; }
+.io-head:has(.df-stats) h2 { margin-right: 0; }
+.df-plus { color: var(--df-add-fg); }
+.df-minus { color: var(--df-del-fg); }
+.df-out { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); min-height: 80px; }
+.df-out > p { padding: 16px; margin: 0; }
+.df-same { display: flex; align-items: center; gap: 8px; color: var(--success); }
+.df-same svg { width: 16px; height: 16px; }
+
+.df-table { width: 100%; border-collapse: collapse; table-layout: fixed; font: 12.5px/1.55 var(--font-mono); }
+.df-table.is-split { min-width: 640px; }
+.df-col-n { width: 46px; }
+.df-col-sign { width: 18px; }
+.df-n { padding: 0 8px; text-align: right; color: var(--text-faint); user-select: none; vertical-align: top; border-right: 1px solid var(--border); }
+.df-sign { text-align: center; color: var(--text-faint); user-select: none; vertical-align: top; }
+.df-code { padding: 0 10px; white-space: pre-wrap; overflow-wrap: anywhere; vertical-align: top; }
+.df-table.is-split .df-code:nth-child(2) { border-right: 1px solid var(--border); }
+.df-code.is-add, tr.is-add .df-sign { background: var(--df-add-bg); }
+.df-code.is-del, tr.is-del .df-sign { background: var(--df-del-bg); }
+tr.is-add .df-n, tr.is-del .df-n { background: color-mix(in srgb, var(--bg-elev) 60%, transparent); }
+tr.is-add .df-sign { color: var(--df-add-fg); }
+tr.is-del .df-sign { color: var(--df-del-fg); }
+.df-code.is-empty { background: repeating-linear-gradient(-45deg, transparent 0 6px, var(--border) 6px 7px); }
+.df-add { background: var(--df-add-hi); border-radius: 2px; }
+.df-del { background: var(--df-del-hi); border-radius: 2px; }
+.df-fold td { padding: 0; background: var(--surface-2); border-block: 1px solid var(--border); }
+.df-fold-btn { width: 100%; padding: 4px 12px; border: 0; background: none; color: var(--text-muted); font: 12px var(--font-mono); text-align: left; cursor: pointer; }
+.df-fold-btn:hover { color: var(--accent); }

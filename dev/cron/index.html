@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cron Expression Builder · Toolbox</title>
+  <meta name="description" content="Build or paste a cron expression, read it in plain English, catch mistakes and see the next 10 run times in any time zone. Runs in your browser.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="cron">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Schedule">
+        <div class="io-head"><h2>Expression</h2><span id="in-actions"></span></div>
+        <input type="text" id="expr" class="cr-expr" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Cron expression" aria-describedby="expr-status">
+        <div class="cr-fields" id="fields" aria-hidden="true"></div>
+        <div class="io-status" id="expr-status"></div>
+        <div class="io-sub">Presets</div>
+        <div class="chips" id="presets"></div>
+        <div class="io-sub">Builder</div>
+        <div id="builder" class="cr-builder"></div>
+      </section>
+      <section class="panel io-panel" aria-label="Meaning and next runs">
+        <div class="io-head"><h2>Runs</h2><span id="out-actions"></span></div>
+        <p class="cr-desc" id="desc"></p>
+        <div class="io-banner" id="note" hidden></div>
+        <div class="ctrl cr-zone">
+          <label class="ctrl-label" for="zone">Time zone</label>
+          <select id="zone"></select>
+        </div>
+        <div class="io-sub">Next 10 runs</div>
+        <ol class="cr-runs" id="runs"></ol>
+        <div class="io-sub">Field by field</div>
+        <dl class="cr-table" id="table"></dl>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

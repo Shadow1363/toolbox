@@ -9,6 +9,8 @@
  * jsDelivr's `/+esm` endpoint serves npm packages that only ship CommonJS as ES modules.
  */
 const NPM = 'https://cdn.jsdelivr.net/npm';
+const CM_DEPS = '@codemirror/state@6.7.6,@codemirror/view@6.43.14,@codemirror/language@6.13.1,@lezer/common@1.5.3,@lezer/highlight@1.2.5,@lezer/lr@1.4.11';
+const cm = (pkg, deps = CM_DEPS) => `https://esm.sh/${pkg}${deps ? `?deps=${deps}` : ''}`;
 
 export const LIBS = {
   // Documents
@@ -45,6 +47,29 @@ export const LIBS = {
   rough: { kind: 'esm', url: `${NPM}/roughjs@4.6.6/bundled/rough.esm.js` },
   pako: { kind: 'script', url: `${NPM}/pako@1.0.11/dist/pako.min.js`, global: 'pako' },
   upng: { kind: 'script', url: `${NPM}/upng-js@2.1.0/UPNG.min.js`, global: 'UPNG' }, // needs pako loaded first
+  // Dev category. CodeMirror comes from esm.sh, not jsDelivr: jsDelivr's `+esm` builds pin a different
+  // @codemirror/state per package (two copies → "Unrecognized extension value"). `?deps=` makes every
+  // package share one copy of the core. esm.sh encodes a package's own dependency subset in its URL, so the
+  // shared core packages are requested with exactly that subset (state and view: none / state only), which
+  // gives the same URL the language packages import. Bumping a version means updating CM_DEPS and these.
+  // Load them through lib/editor.js, never directly.
+  cmState: { kind: 'esm', url: cm('@codemirror/state@6.7.6', '') },
+  cmView: { kind: 'esm', url: cm('@codemirror/view@6.43.14', '@codemirror/state@6.7.6') },
+  cmHighlight: { kind: 'esm', url: cm('@lezer/highlight@1.2.5', '@lezer/common@1.5.3') },
+  cmCommands: { kind: 'esm', url: cm('@codemirror/commands@6.11.1') },
+  cmLanguage: { kind: 'esm', url: cm('@codemirror/language@6.13.1') },
+  cmJson: { kind: 'esm', url: cm('@codemirror/lang-json@6.0.2') },
+  cmHtml: { kind: 'esm', url: cm('@codemirror/lang-html@6.4.12') },
+  cmXml: { kind: 'esm', url: cm('@codemirror/lang-xml@6.1.0') },
+  cmCss: { kind: 'esm', url: cm('@codemirror/lang-css@6.3.1') },
+  diff: { kind: 'esm', url: `${NPM}/diff@9.0.0/+esm` },
+  svgo: { kind: 'esm', url: `${NPM}/svgo@4.1.0/dist/svgo.browser.js` },
+  croner: { kind: 'esm', url: `${NPM}/croner@10.0.1/dist/croner.js` },
+  cronstrue: { kind: 'esm', url: `${NPM}/cronstrue@3.30.0/+esm` },
+  // Faker: one ES module per locale (`dist/locale/<code>.js` exports `faker`); see dev/fake-data.
+  faker: { kind: 'url', url: `${NPM}/@faker-js/faker@10.6.0/dist/locale/` },
+  // EFF long wordlist (7776 words, CC BY 3.0) as a JSON array, for passphrases.
+  effWords: { kind: 'url', url: `${NPM}/@wordlist/english-eff@1.0.1/dist/data/long.json` },
   // Machine learning (bundles onnxruntime-web, which fetches its WASM from jsDelivr). Loaded inside workers by lib/whisper.js.
   transformers: { kind: 'esm', url: `${NPM}/@huggingface/transformers@4.2.0/dist/transformers.min.js` },
 };

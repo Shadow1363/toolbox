@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Password, UUID &amp; API Key Generator · Toolbox</title>
+  <meta name="description" content="Generate strong passwords, passphrases, UUID v4 and v7, and API keys with your browser's secure random generator. Bulk generation, strength meter, nothing stored or sent.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="generators">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <nav class="dev-tabs" aria-label="Generator"><div class="segmented" id="tabs" role="group" aria-label="Generator"></div></nav>
+    <p class="gn-safe" id="safe"></p>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Options">
+        <div class="io-head"><h2>Options</h2></div>
+        <div id="controls" class="gn-controls"></div>
+      </section>
+      <section class="panel io-panel" aria-label="Results">
+        <div class="io-head"><h2 id="out-title">Results</h2><span id="out-actions"></span></div>
+        <div class="gn-meter" id="meter" hidden>
+          <div class="gn-bar"><div id="meter-fill"></div></div>
+          <div class="gn-meter-text" id="meter-text"></div>
+        </div>
+        <div class="io-status" id="status"></div>
+        <ol class="gn-list" id="list"></ol>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

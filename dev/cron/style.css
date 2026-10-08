@@ -1,0 +1,20 @@
+/* Cron Expression Builder */
+input.cr-expr { font: 600 22px var(--font-mono); padding: 12px 14px; letter-spacing: .02em; }
+.cr-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 6px; }
+.cr-fields span { display: grid; gap: 2px; text-align: center; font-size: 11px; color: var(--text-faint); padding: 6px 4px; border-radius: 8px; background: var(--bg-elev); }
+.cr-fields code { font: 600 14px var(--font-mono); color: var(--accent); overflow-wrap: anywhere; }
+.cr-builder .ctrl-section { padding: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px 16px; }
+.cr-builder .ctrl { margin: 0; }
+.cr-builder .ctrl:has(.chips) { grid-column: 1 / -1; }
+.cr-builder input[type="time"] { font: inherit; font-size: 14px; color: var(--text); background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; }
+.cr-desc { font-size: 20px; font-weight: 650; line-height: 1.35; margin: 0; }
+.cr-zone { margin: 0; max-width: 340px; }
+.cr-runs { margin: 0; padding: 0; list-style: none; counter-reset: run; display: grid; gap: 4px; }
+.cr-runs li { counter-increment: run; display: flex; gap: 10px; align-items: baseline; padding: 6px 10px; border-radius: 8px; background: var(--bg-elev); font: 13px var(--font-mono); }
+.cr-runs li::before { content: counter(run); color: var(--text-faint); min-width: 1.5em; }
+.cr-rel { margin-left: auto; color: var(--text-faint); font-family: var(--font); font-size: 12px; white-space: nowrap; }
+.cr-table { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: 13px; align-items: baseline; }
+.cr-table dt { color: var(--text-muted); }
+.cr-table dd { margin: 0; }
+.cr-table code { font: 13px var(--font-mono); color: var(--accent); }
+@media (max-width: 480px) { .cr-runs li { flex-wrap: wrap; } .cr-rel { margin-left: 2.2em; } }

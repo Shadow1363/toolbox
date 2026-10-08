@@ -61,3 +61,32 @@ export async function readText(file) {
   if (buf.includes(0)) throw new Error(`“${file.name}” looks like a binary file, not text.`);
   return file.text();
 }
+
+/**
+ * Persist a tool's input text (not just its options). `save` is debounced and skips texts over `max`
+ * characters, so a huge paste never fills localStorage; the last small input is kept instead.
+ *   const saved = rememberInput('regex:text', SAMPLE);   editor.value = saved.value;   saved.save(editor.value);
+ */
+export function rememberInput(key, fallback = '', max = 200_000) {
+  const k = `input:${key}`;
+  const value = store.get(k, null);
+  const write = debounce((text) => { if (text.length <= max) store.set(k, text); }, 400);
+  return { value: typeof value === 'string' ? value : fallback, save: write };
+}
+
+/** Make any element a drop target for files (adds `.is-over` while dragging). */
+export function dropFiles(el, onFiles) {
+  let depth = 0;
+  const has = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
+  el.addEventListener('dragenter', (e) => { if (!has(e)) return; e.preventDefault(); depth++; el.classList.add('is-over'); });
+  el.addEventListener('dragover', (e) => { if (has(e)) e.preventDefault(); });
+  el.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; el.classList.remove('is-over'); } });
+  el.addEventListener('drop', (e) => {
+    if (!has(e)) return;
+    e.preventDefault();
+    depth = 0;
+    el.classList.remove('is-over');
+    const files = [...e.dataTransfer.files];
+    if (files.length) onFiles(files);
+  });
+}
