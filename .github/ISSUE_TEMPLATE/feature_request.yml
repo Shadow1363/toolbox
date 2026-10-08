@@ -30,6 +30,15 @@ body:
         - Nametag Tracker
         - Text Match Cut
         - Cinematic Transitions
+        - Universal File Converter
+        - QR Code
+        - JSON Tools
+        - Timestamp Converter
+        - Base64
+        - Encode / Decode
+        - Hash Generator
+        - Color Converter
+        - Case Converter
         - Other / not sure
   - type: textarea
     id: what

@@ -12,8 +12,9 @@
  * (copy /video-effects/index.html and change data-category).
  *
  * Optional tool fields:
- *   status: 'new' | 'beta' | 'soon'   ('soon' renders a disabled card)
- *   tags:   extra words for the home-page search
+ *   status:  'new' | 'beta' | 'soon'   ('soon' renders a disabled card)
+ *   tags:    extra words for search (home page and hub); list file formats here
+ *   section: heading the tool is grouped under on its hub (category `sections` sets the order)
  */
 
 export const categories = [
@@ -22,6 +23,13 @@ export const categories = [
     name: "Video Effects",
     description: "Animated text, paper looks, polished screen demos and more.",
     thumbnail: "/assets/img/video-effects.svg",
+  },
+  {
+    id: "convert",
+    name: "Convert & Encode",
+    description: "Convert files and data between formats, encode, decode and hash.",
+    thumbnail: "/assets/img/convert.svg",
+    sections: ["Files", "Data", "Encoding", "Developer"],
   },
 ];
 
@@ -89,6 +97,89 @@ export const tools = [
     thumbnail: "/assets/img/transitions.svg",
     status: "new",
     tags: ["transition", "webgl", "zoom", "whip pan", "glitch", "light leak", "edit", "gif"],
+  },
+  {
+    id: "file-converter",
+    category: "convert",
+    section: "Files",
+    name: "Universal File Converter",
+    description: "Documents, spreadsheets, images, audio and video: drop files, pick a format, download.",
+    thumbnail: "/assets/img/file-converter.svg",
+    status: "new",
+    tags: ["pdf", "docx", "word", "markdown", "md", "html", "txt", "text", "csv", "tsv", "json", "yaml", "xml", "xlsx", "excel", "spreadsheet",
+      "png", "jpg", "jpeg", "webp", "bmp", "ico", "icon", "svg", "heic", "image", "mp4", "webm", "mov", "gif", "mp3", "wav", "ogg", "audio", "video", "zip"],
+  },
+  {
+    id: "qr-code",
+    category: "convert",
+    section: "Files",
+    name: "QR Code",
+    description: "Turn text or a link into a QR code (PNG or SVG), or read one from an image.",
+    thumbnail: "/assets/img/qr-code.svg",
+    tags: ["qr", "barcode", "scan", "png", "svg", "link", "url", "wifi"],
+  },
+  {
+    id: "json-tools",
+    category: "convert",
+    section: "Data",
+    name: "JSON Tools",
+    description: "Format, minify and validate JSON; convert to YAML, TOML or XML; generate TypeScript types.",
+    thumbnail: "/assets/img/json-tools.svg",
+    tags: ["json", "yaml", "yml", "toml", "xml", "typescript", "ts", "types", "interface", "format", "prettify", "minify", "validate", "lint"],
+  },
+  {
+    id: "timestamp",
+    category: "convert",
+    section: "Data",
+    name: "Timestamp Converter",
+    description: "Unix time, ISO 8601 and human-readable dates, in any time zone.",
+    thumbnail: "/assets/img/timestamp.svg",
+    tags: ["unix", "epoch", "date", "time", "iso", "iso 8601", "utc", "time zone", "timezone", "milliseconds"],
+  },
+  {
+    id: "base64",
+    category: "convert",
+    section: "Encoding",
+    name: "Base64",
+    description: "Text or files to Base64 and data URIs, and Base64 back to files with a preview.",
+    thumbnail: "/assets/img/base64.svg",
+    tags: ["base64", "base64url", "data uri", "data url", "encode", "decode", "image", "file"],
+  },
+  {
+    id: "encode-decode",
+    category: "convert",
+    section: "Encoding",
+    name: "Encode / Decode",
+    description: "URL encoding, HTML entities, Unicode escapes, hex, binary and JWT decoding.",
+    thumbnail: "/assets/img/encode-decode.svg",
+    tags: ["url", "percent", "uri", "html entities", "escape", "unescape", "unicode", "hex", "binary", "jwt", "token", "encode", "decode"],
+  },
+  {
+    id: "hash",
+    category: "convert",
+    section: "Encoding",
+    name: "Hash Generator",
+    description: "MD5, SHA-1, SHA-256 and SHA-512 checksums for text or files.",
+    thumbnail: "/assets/img/hash.svg",
+    tags: ["hash", "md5", "sha", "sha1", "sha-1", "sha256", "sha-256", "sha512", "sha-512", "checksum", "digest", "verify"],
+  },
+  {
+    id: "color",
+    category: "convert",
+    section: "Developer",
+    name: "Color Converter",
+    description: "HEX, RGB, HSL and OKLCH with a picker, live preview and contrast check.",
+    thumbnail: "/assets/img/color.svg",
+    tags: ["color", "colour", "hex", "rgb", "hsl", "oklch", "css", "picker", "contrast"],
+  },
+  {
+    id: "case",
+    category: "convert",
+    section: "Developer",
+    name: "Case Converter",
+    description: "camelCase, snake_case, kebab-case, PascalCase, Title Case, UPPER and lower.",
+    thumbnail: "/assets/img/case.svg",
+    tags: ["case", "camel", "camelcase", "snake", "snake_case", "kebab", "pascal", "title", "upper", "lower", "slug", "text"],
   },
 ];
 

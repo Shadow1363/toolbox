@@ -25,7 +25,7 @@ assets/
   js/lib/                Shared modules (see below)
   img/                   16:10 card thumbnails (SVG) + favicon
 _template/               Copy-paste starters: category/, tool/, canvas-tool/
-<category>/index.html    Category hub, e.g. video-effects/
+<category>/index.html    Category hub, e.g. video-effects/, convert/
 <category>/<tool>/       index.html + script.js (+ style.css, + tool-only modules)
 ```
 
@@ -45,7 +45,7 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 | Module (`assets/js/lib/`) | Use it for                                                                                                                                                                                   |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `controls.js`             | `createControls(root, sections, { onChange })`: declarative settings panel with a live `state`, `showIf`, presets, swatches                                                                  |
-| `upload.js` / `media.js`  | `createDropzone(...)` and `loadMedia(file)`: drag-drop + picker, type/size validation, `MediaError` messages; `audioGraph`/`mixTrack` route video audio for export                           |
+| `upload.js` / `media.js` | `createDropzone(...)` and `loadMedia(file)`: drag-drop + picker, type/size validation, `MediaError` messages; `createFilePicker` for any file type; `audioGraph`/`mixTrack` route video audio for export |
 | `stage.js`                | `createStage({ canvas, transport, render(t), getDuration, getVideo })`: preview loop + play/scrub/mute bar; `renderFrame(t)`/`release()` for frame-by-frame export                           |
 | `exporter.js`             | `createExportBar(...)`: the standard **Export video / Export GIF / Export PNG** bar every media tool uses; `recordStage`, `recordStageGif`, `progressModal`, `exportPNG`, `TRANSPARENT_HINT` |
 | `gif.js`                  | `loadGifenc`, `quantizeFrame` (Bayer dither + palette, 1-bit alpha), `frameOptions`, `gifDelay`, `gifDelays`                                                                                 |
@@ -60,6 +60,9 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 | `easing.js`, `random.js`  | Easings (+ `cubicBezier`); seeded `rng`/`hash`/noise so preview and export match                                                                                                             |
 | `dom.js`                  | `h()` element builder, `icon()`, `toast()`, `downloadBlob`, `formatBytes`, `store` (safe localStorage)                                                                                       |
 | `webm-duration.js`        | Used by the exporter; writes duration into MediaRecorder WebM                                                                                                                                |
+| `cdn.js` | `LIBS` (every pinned CDN library) + `loadLib(name)` (lazy, once) + `workerUrl()` for CDN workers |
+| `codecs.js` | CSV/TSV, JSON (line/column errors), YAML, XML, TOML parse/stringify; table helpers |
+| `text-tool.js` | Input → output tools: `remember` (persisted options), copy/download buttons, `debounce` |
 
 New helpers that two or more tools need go in `assets/js/lib/`; anything single-use stays in the tool folder.
 
@@ -91,13 +94,13 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 ## Add a category
 
 1. Copy `_template/category/index.html` to `/<id>/index.html` and set `data-category="<id>"`, title and intro.
-2. Add `{ id, name, description, thumbnail }` to `categories[]` in `tools.js`, plus a thumbnail.
+2. Add `{ id, name, description, thumbnail, sections? }` to `categories[]` in `tools.js`, plus a thumbnail. With `sections`, the hub groups tools by their `section`; add `<div data-search>` to the hub for a search box.
 3. Create `/<id>/AGENTS.md` (purpose, tool list, shared patterns) and `/<id>/CLAUDE.md` containing `@AGENTS.md`.
 4. Link it in the index below.
 
 ## Conventions
 
-- **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Current pins: `@mediapipe/tasks-vision@1.1.0`, `gifenc@1.0.3`, `jszip@3.10.1`. Fail gracefully with a `toast()` when the network is blocked.
+- **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Pins live in `assets/js/lib/cdn.js` (`LIBS`); add new libraries there and load them with `loadLib()`. Older pins still inline: `@mediapipe/tasks-vision@1.1.0` (`vision.js`), `gifenc@1.0.3` (`gif.js`), `jszip@3.10.1` (Text Match Cut). Fail gracefully with a `toast()` when the network is blocked.
 - **Privacy:** no backend, no analytics, no uploads.
 - **License and attribution:** GPL-3.0-or-later plus section 7 attribution terms (`LICENSE`, `NOTICE`). Every `.js`/`.css`/`.html`/`.svg` file starts with the attribution header containing the fingerprint `tm1363-c339e3ad`; copy it into new files (the `_template/` files already have it). Pages also carry the `author`/`copyright` meta tags. Never remove the header, the meta tags, the footer credit (`AUTHOR` in `site.js`) or the console signature.
 - **Names:** made-up names for generated sites, papers and people; no real brands or logos in UI, thumbnails or generated content.
@@ -115,3 +118,4 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 ## Categories
 
 - [Video Effects](video-effects/AGENTS.md): canvas effects for video, images and animated text.
+- [Convert & Encode](convert/AGENTS.md): file converter (documents, data, images, audio/video), Base64, encoders, hashes, JSON, colors, timestamps, case, QR.

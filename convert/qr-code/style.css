@@ -1,0 +1,4 @@
+/* QR code: tool-only styles. */
+.qr-preview { display: grid; place-items: center; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); }
+.qr-preview canvas { width: min(100%, 320px); height: auto; image-rendering: pixelated; }
+#create .ctrl-section, #style .ctrl-section { padding: 0; border: 0; }

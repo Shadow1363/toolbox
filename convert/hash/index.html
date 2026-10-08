@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hash Generator · Toolbox</title>
+  <meta name="description" content="MD5, SHA-1, SHA-256 and SHA-512 checksums for text or files, computed in your browser. Verify downloads against a known hash.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="hash">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="panel io-options" id="options"></div>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Input">
+        <div class="io-head"><h2 id="in-title">Text</h2><span id="in-actions"></span></div>
+        <textarea id="input" spellcheck="false" placeholder="Type or paste text… (hashed as UTF-8)"></textarea>
+        <div id="in-file"></div>
+        <div id="drop"></div>
+      </section>
+      <section class="panel io-panel" aria-label="Hashes">
+        <div class="io-head"><h2>Hashes</h2></div>
+        <div class="io-status" id="status"></div>
+        <div class="io-rows" id="rows"></div>
+        <div class="ctrl">
+          <label class="ctrl-label" for="compare">Compare with a known hash</label>
+          <input type="text" id="compare" spellcheck="false" placeholder="Paste a checksum to verify the file">
+        </div>
+        <div class="io-status" id="match"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

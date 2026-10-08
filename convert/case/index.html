@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Case Converter · Toolbox</title>
+  <meta name="description" content="Convert text to camelCase, snake_case, kebab-case, PascalCase, CONSTANT_CASE, Title Case, UPPER or lower case.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="case">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="panel io-options" id="options"></div>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Input">
+        <div class="io-head"><h2>Text</h2><span id="in-actions"></span></div>
+        <textarea id="input" spellcheck="false" placeholder="Type or paste text, e.g. getUserName or Hello world"></textarea>
+      </section>
+      <section class="panel io-panel" aria-label="Cases">
+        <div class="io-head"><h2>Cases</h2></div>
+        <div class="io-rows" id="rows"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

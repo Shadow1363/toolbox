@@ -338,3 +338,46 @@ input[type="color"]::-moz-color-swatch { border: 0; border-radius: 5px; }
 .muted { color: var(--text-muted); }
 [hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation-duration: .01ms !important; } }
+
+/* 12. Input → output tools (Convert & Encode) -------------------------------- */
+.io-options { padding: 14px 18px; margin-bottom: 20px; }
+.io-options .ctrl-section { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: flex-end; padding: 0; border: 0; }
+.io-options .ctrl-section + .ctrl-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.io-options .ctrl-section > h3 { width: 100%; margin: 0; }
+.io-options .ctrl { min-width: 160px; margin: 0; }
+.io-options .ctrl:has(.toggle) { min-width: 0; }
+.io-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
+@media (max-width: 860px) { .io-grid { grid-template-columns: minmax(0, 1fr); } }
+.io-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px; min-width: 0; }
+.io-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 32px; }
+.io-head h2 { font-size: 14px; font-weight: 600; margin-right: auto; }
+.io-panel textarea, .io-panel .io-out { flex: 1; min-height: 280px; font: 13px/1.5 var(--font-mono); }
+.io-out { margin: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); overflow: auto; white-space: pre-wrap; word-break: break-word; }
+.io-error { color: var(--danger); }
+.io-note { font-size: 12px; color: var(--text-faint); }
+.mono { font-family: var(--font-mono); }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; font-size: 13px; }
+.kv > dt { color: var(--text-muted); }
+.kv > dd { margin: 0; font-family: var(--font-mono); overflow-wrap: anywhere; }
+.hub-section + .hub-section { margin-top: 8px; }
+
+.dropzone.is-compact { flex-direction: row; justify-content: flex-start; text-align: left; gap: 10px; padding: 10px 12px; }
+.dropzone.is-compact svg { width: 20px; height: 20px; flex: none; }
+.dropzone.is-compact span:not([style]) { display: none; }
+.io-file { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); font-size: 13px; min-width: 0; }
+.io-file strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.io-file span { color: var(--text-faint); white-space: nowrap; }
+.io-file .btn { margin-left: auto; }
+.io-preview-img { max-width: 100%; max-height: 260px; align-self: flex-start; border-radius: 6px; border: 1px solid var(--border); }
+.io-status { font-size: 12.5px; color: var(--text-muted); display: flex; gap: 6px; align-items: center; min-height: 18px; }
+.io-status.is-ok { color: var(--success); }
+.io-status.is-error { color: var(--danger); }
+.io-status svg { width: 14px; height: 14px; flex: none; }
+.io-banner { font-size: 12.5px; padding: 8px 10px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--warning) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); color: var(--text); }
+.io-rows { display: grid; gap: 8px; align-content: start; }
+.io-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); }
+.io-row > span:first-child { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.io-row > code { font: 13px/1.45 var(--font-mono); overflow-wrap: anywhere; color: var(--text); background: none; }
+.io-row.is-match { border-color: var(--success); box-shadow: 0 0 0 2px color-mix(in srgb, var(--success) 25%, transparent); }
+@media (max-width: 560px) { .io-row { grid-template-columns: minmax(0, 1fr) auto; } .io-row > span:first-child { grid-column: 1 / -1; } }
+.io-options .segmented button { flex: none; }

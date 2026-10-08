@@ -82,3 +82,34 @@ export function createDropzone(root, { accept = ['video', 'image'], label, limit
 
   return { clear, get media() { return current; }, load: handle };
 }
+
+/**
+ * Generic drop zone for any file type: the caller handles validation and lists the files.
+ *
+ *   createFilePicker(root, {
+ *     multiple: true,
+ *     accept: '.csv,.json',      // <input accept>, optional
+ *     label: 'Drop files',
+ *     hint: 'Any document, image, data or media file',
+ *     onFiles: (files) => {...}, // File[]
+ *   });
+ */
+export function createFilePicker(root, { multiple = false, accept = '', label, hint, onFiles } = {}) {
+  const input = h('input', { type: 'file', multiple, accept: accept || null, 'aria-label': label || 'Choose files' });
+  const zone = h('div', { class: 'dropzone', tabindex: '-1' },
+    h('span', { html: icon('upload'), style: 'display:contents' }),
+    h('strong', {}, label || (multiple ? 'Drop files here' : 'Drop a file here')),
+    h('span', {}, `or click to browse${hint ? ` · ${hint}` : ''}`),
+    input);
+  root.append(zone);
+  const take = (list) => {
+    const files = [...(list || [])];
+    if (files.length) onFiles?.(multiple ? files : files.slice(0, 1));
+    input.value = '';
+  };
+  input.addEventListener('change', () => take(input.files));
+  ['dragenter', 'dragover'].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.add('is-over'); }));
+  ['dragleave', 'drop'].forEach((ev) => zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.remove('is-over'); }));
+  zone.addEventListener('drop', (e) => take(e.dataTransfer.files));
+  return { el: zone, open: () => input.click() };
+}

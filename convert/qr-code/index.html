@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR Code Generator & Reader · Toolbox</title>
+  <meta name="description" content="Make QR codes for links, text, Wi-Fi and email (PNG or SVG), or read a QR code from an image. Runs in your browser.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="qr-code">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="panel io-options" id="mode"></div>
+    <div class="io-grid" id="create">
+      <section class="panel io-panel" aria-label="Content">
+        <div class="io-head"><h2>Content</h2></div>
+        <div id="fields"></div>
+      </section>
+      <section class="panel io-panel" aria-label="QR code">
+        <div class="io-head"><h2>QR code</h2><span id="qr-actions"></span></div>
+        <div class="io-status" id="qr-status"></div>
+        <div class="qr-preview checker"><canvas id="qr" width="256" height="256" aria-label="QR code preview"></canvas></div>
+        <div id="style"></div>
+      </section>
+    </div>
+    <div class="io-grid" id="read" hidden>
+      <section class="panel io-panel" aria-label="Image">
+        <div class="io-head"><h2>Image</h2></div>
+        <div id="read-drop"></div>
+        <p class="io-note">You can also paste a screenshot (Ctrl/Cmd + V).</p>
+        <img id="read-img" class="io-preview-img" alt="" hidden>
+      </section>
+      <section class="panel io-panel" aria-label="Decoded">
+        <div class="io-head"><h2>Decoded</h2><span id="read-actions"></span></div>
+        <div class="io-status" id="read-status"></div>
+        <textarea id="read-out" readonly spellcheck="false"></textarea>
+        <div id="read-extra"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+/* Color converter: tool-only styles. */
+.cc-input { display: flex; gap: 10px; align-items: center; }
+.cc-input input[type="color"] { width: 46px; height: 40px; padding: 2px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); cursor: pointer; flex: none; }
+.cc-input input[type="text"] { flex: 1; min-width: 0; font: 14px var(--font-mono); }
+.cc-swatch { height: 150px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.cc-swatch > div { height: 100%; }
+.cc-contrast { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cc-contrast > div { border-radius: var(--radius-sm); padding: 12px; display: grid; gap: 4px; font-size: 13px; border: 1px solid var(--border); }
+.cc-contrast strong { font-size: 18px; }
+.cc-contrast .badge { justify-self: start; }
+/* The badge sits on arbitrary colours here, so it inherits the text colour on a neutral tint. */
+.cc-contrast .badge { background: rgba(128, 128, 128, .22); color: inherit; }

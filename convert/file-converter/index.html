@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Universal File Converter · Toolbox</title>
+  <meta name="description" content="Convert documents (Markdown, HTML, Word, PDF), spreadsheets (CSV, JSON, Excel, YAML, XML), images (PNG, JPG, WebP, HEIC, SVG) and audio/video in your browser. Nothing is uploaded.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="file-converter">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout fc-layout">
+      <aside class="panel controls-panel" aria-label="Files and options">
+        <section class="ctrl-section">
+          <h3>Files</h3>
+          <div id="upload"></div>
+          <details class="fc-paste">
+            <summary>Or paste text</summary>
+            <textarea id="paste" rows="6" spellcheck="false" placeholder="Paste Markdown, HTML, CSV, JSON, YAML, XML or plain text…"></textarea>
+            <button id="paste-add" class="btn btn-sm" type="button">Add as a file</button>
+          </details>
+        </section>
+        <section class="ctrl-section" id="queue-section" hidden>
+          <h3>Queue</h3>
+          <ul id="queue" class="fc-queue"></ul>
+          <div id="bulk" class="fc-bulk"></div>
+        </section>
+        <div id="options"></div>
+      </aside>
+      <section class="panel preview-panel fc-preview-panel" aria-label="Preview">
+        <div class="fc-preview-head" id="preview-head"></div>
+        <div class="fc-preview" id="preview"></div>
+        <div class="export-bar" id="actions"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>
