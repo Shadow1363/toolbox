@@ -21,6 +21,7 @@ import {
   buildPage,
   resetMeasurements,
 } from "./pages.js";
+import { LANG_OPTIONS } from "./lang.js";
 
 const JSZIP_URL = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
 const SIZES = {
@@ -130,6 +131,14 @@ const panel = createControls(
           rows: 3,
           placeholder:
             "Paste sentences that use your keyword. Leave empty to generate filler text.",
+        },
+        {
+          id: "lang",
+          type: "segmented",
+          label: "Page language",
+          value: "en",
+          options: LANG_OPTIONS,
+          hint: "Language of the generated pages: filler text, headlines, menus and dates.",
         },
       ],
     },
@@ -402,11 +411,11 @@ function frameAt(t) {
 let fontVersion = 0;
 const pageCache = new Map();
 function pageFor(f) {
-  const key = `${f.seed}|${f.template}|${keyword()}|${s.context}|${fontVersion}`;
+  const key = `${f.seed}|${f.template}|${keyword()}|${s.context}|${s.lang}|${fontVersion}`;
   let p = pageCache.get(key);
   if (!p) {
     if (pageCache.size > 120) pageCache.clear();
-    p = buildPage(f.template, f.seed, keyword(), s.context);
+    p = buildPage(f.template, f.seed, keyword(), s.context, s.lang);
     pageCache.set(key, p);
   }
   return p;

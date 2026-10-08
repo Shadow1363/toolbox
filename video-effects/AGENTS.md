@@ -87,8 +87,9 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Output "Tag only" clears the video for a transparent tag (PNG/WebM/GIF).
 
 ### text-match-cut: keyword pinned while pages flicker
-- Files: `script.js`, `pages.js`, `style.css`.
-- `pages.js`: `buildPage(template, seed, keyword, context)` returns a display list (`ops`) plus `key` (the keyword's rect). `flow()` wraps text with `measureText` and keeps the keyword as one unbreakable token. There are six `TEMPLATES`; `textSource` generates filler text. Call `resetMeasurements()` after fonts load.
+- Files: `script.js`, `pages.js`, `lang.js`, `style.css`.
+- `pages.js`: `buildPage(template, seed, keyword, context, lang)` returns a display list (`ops`) plus `key` (the keyword's rect). `flow()` wraps text with `measureText` and keeps the keyword as one unbreakable token. There are six `TEMPLATES`; `textSource` generates filler text. Call `resetMeasurements()` after fonts load.
+- `lang.js`: `LANGS` (`en`, `pt` = Brazilian Portuguese) holds everything a page says: filler sentences, keyword sentences and titles, names, places, dates, numbers and each template's labels (mastheads, menus, bylines, search tabs). Templates read it as `txt.L`, so no page text is hard-coded in `pages.js`. The "Page language" control (`s.lang`) is part of the page cache key. Portuguese subjects carry their number so verbs agree, and `KEY` never follows an article (no gender agreement needed). To add a language, copy `en`, translate every field, and add it to `LANGS` and `LANG_OPTIONS`.
 - `script.js`:
   - Data: the `frames[]` model (`page` or `image` frames, `locked`); `delays()`/`rebuildTimeline()` map `t` to a frame index.
   - Drawing: `renderFrame()` = `drawContent` (page transformed so the keyword sits at the centre, highlight drawn after the text) → three blur levels masked by `maskEllipse` → texture → vignette. It redraws only when the frame index or `version` changes.
