@@ -14,8 +14,8 @@
  *     primary: 'video',                   // which button is primary: 'video' | 'gif' | 'png'
  *     hint: 'Text…',                      // small note next to the buttons
  *     hasAudio: () => bool,               // show the Audio toggle (default: getVideo() returns a video)
- *     actions: [{ label, icon, onClick }],  // extra buttons placed after the standard three (e.g. ZIP)
- *     beforeExport, afterExport,          // optional hooks, run around video and built-in GIF exports (async ok)
+ *     actions: [{ label, icon, onClick, show? }],  // extra buttons after the standard three (e.g. ZIP); show: bool or () => bool
+ *     beforeExport, afterExport,          // optional hooks, run around video and built-in GIF exports (async ok); get 'video' | 'gif'
  *   });
  */
 import { h, icon, toast, downloadBlob, formatTime, formatBytes, store } from './dom.js';
@@ -89,7 +89,7 @@ export async function recordStage({ stage, getVideo, getAudio, includeAudio = tr
 
   stage.pause();
   stage.seek(0);
-  if (video) await seekVideo(video, 0);
+  if (video) await seekVideo(video, stage.videoTime?.(0) ?? 0);
 
   const onTick = (e) => onProgress?.(e.detail.t / stage.duration);
   stage.events.addEventListener('tick', onTick);
@@ -258,7 +258,7 @@ export async function recordStageGif({ stage, getVideo, fps = 15, width = '480',
     for (let i = 0; i < n; i++) {
       if (signal?.aborted) return null;
       const t = Math.min(dur - 0.001, start + i / fps);
-      if (video) await seekVideo(video, t);
+      if (video) await seekVideo(video, stage.videoTime?.(t) ?? t);
       stage.renderFrame(t);
       cx.clearRect(0, 0, w, hh);
       cx.drawImage(stage.canvas, 0, 0, w, hh);
@@ -302,7 +302,7 @@ export function createExportBar(root, opts) {
   let lockedOut = false;
 
   /** Shared wrapper: one export at a time, transport locked, hooks run, errors toasted. */
-  async function run(title, message, work) {
+  async function run(kind, title, message, work) {
     if (busy) return;
     busy = true;
     const ctrl = new AbortController();
@@ -310,7 +310,7 @@ export function createExportBar(root, opts) {
     stage.setTransportDisabled(true);
     setDisabled(true);
     try {
-      await beforeExport?.();
+      await beforeExport?.(kind);
       modal = progressModal(title, () => ctrl.abort(), message);
       const saved = await work(ctrl.signal, modal.set);
       if (saved) toast(`Saved ${saved}`, 'success');
@@ -321,7 +321,7 @@ export function createExportBar(root, opts) {
     } finally {
       modal?.close();
       stage.setTransportDisabled(false);
-      await afterExport?.();
+      await afterExport?.(kind);
       busy = false;
       setDisabled(false);
     }
@@ -331,7 +331,7 @@ export function createExportBar(root, opts) {
     // The audio graph must be resumed synchronously inside the click, so recordStage starts here.
     const onHidden = () => document.hidden && toast('Export paused while the tab is hidden. Come back to finish it.', 'warning');
     document.addEventListener('visibilitychange', onHidden);
-    run('Exporting video…', undefined, async (signal, onProgress) => {
+    run('video', 'Exporting video…', undefined, async (signal, onProgress) => {
       try {
         const result = await recordStage({ stage, getVideo, getAudio, includeAudio: audioToggle.checked, signal, onProgress });
         if (!result) return null;
@@ -350,7 +350,7 @@ export function createExportBar(root, opts) {
     stage.pause();
     const choice = await gifDialog(stage);
     if (!choice) return;
-    run('Encoding GIF…', 'Rendering and compressing every frame. Longer clips take a while.', async (signal, onProgress) => {
+    run('gif', 'Encoding GIF…', 'Rendering and compressing every frame. Longer clips take a while.', async (signal, onProgress) => {
       const blob = await recordStageGif({ stage, getVideo, ...choice, signal, onProgress });
       if (!blob) return null;
       const name = `${filename()}.gif`;
@@ -374,7 +374,7 @@ export function createExportBar(root, opts) {
     videoBtn.disabled = d || !recordable || !want(opts.video ?? true);
     gifBtn.disabled = d || !want(opts.gif ?? true);
     pngBtn.disabled = d || !want(opts.png ?? true);
-    actions.forEach((b) => { b.disabled = d; });
+    actions.forEach((b, i) => { b.disabled = d; b.hidden = !want(opts.actions[i].show ?? true); });
   }
 
   function refresh() {

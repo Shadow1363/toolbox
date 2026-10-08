@@ -10,6 +10,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 `createDropzone` → `media` → `createControls` state → `createStage({ render(t) })` → `createExportBar`.
 - `render(t)` is the only drawing path. Preview, PNG, GIF and video export all call it, so the export is the preview.
 - Clock: when `getVideo()` returns a `<video>`, its `currentTime` drives `t`; otherwise the stage uses the wall clock and loops over `getDuration()`.
+- Trim: pass `getVideoOffset: () => trimIn` and a trimmed `getDuration()`; stage `t = 0` is then that video time. `stage.videoTime(t)` converts back, and the exporter uses it when seeking (Shape Crop).
 - Scale convention: `k = Math.min(W, H) / 1080`. Sliders are authored for a 1080px short side, so multiply sizes by `k`.
 - Output size: `outputSize(w, h, 1920)` caps the long side at 1920 with even dimensions (video encoders need them).
 - Determinism: seed every random choice (`rng`, `hash(step, n)`) from stable inputs (frame/step index, a seed slider).
@@ -26,9 +27,9 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - Every tool exports **video, GIF and PNG** from one `createExportBar`, always in that order with those labels. Keep all three; a still source still exports a clip of the stage duration.
 - `createExportBar(root, { stage, filename, getVideo, getAudio, hasAudio, video, gif, png, onGif, primary, hint, actions, beforeExport, afterExport })`.
   - `video`/`gif`/`png` enable each button (bool or function; disabled buttons stay visible, e.g. before an upload). `hint` may be a function. Call `exportBar.refresh()` when any of them would change.
-  - `primary` picks the highlighted button (`'video'` by default; Text Match Cut uses `'gif'`). `actions` adds extra buttons after the three (Text Match Cut's ZIP).
+  - `primary` picks the highlighted button (`'video'` by default; Text Match Cut uses `'gif'`). `actions` adds extra buttons after the three (Text Match Cut's ZIP, Shape Crop's SVG); an action's `show` (bool or function) hides it, re-checked on `refresh()`.
   - Multi-clip tools pass `getAudio: () => mixTrack(videos)` instead of `getVideo`.
-  - `beforeExport`/`afterExport` run around video and built-in GIF exports; throw from `beforeExport` to refuse with a toast.
+  - `beforeExport(kind)`/`afterExport(kind)` run around video and built-in GIF exports (`kind` is `'video'` or `'gif'`); throw from `beforeExport` to refuse with a toast.
 - **Video:** `recordStage` plays the stage once in real time and records `canvas.captureStream(30)` with MediaRecorder.
   - MIME is picked from VP9 → VP8 → WebM → MP4 (Safari records MP4). Bitrate scales with pixel count (4–20 Mbps).
   - `fixWebmDuration` patches the missing duration in Chrome WebM.
@@ -109,6 +110,23 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 3. `params` are `createControls` specs (helpers: `direction`, `axis`, `range`, `percent`, `seed`, `textParams`). Avoid ids `duration`, `easing`, `bezier`, `slotColor`. `uniforms` maps params to uniforms (numbers or 2–4 element arrays). `env` = `{ W, H, k, p, raw, duration, mask, refresh }`.
 4. Import it in `transitions/index.js` and add it to `TRANSITIONS`. It then appears in the gallery and the editor.
 5. Check the WebGL and 2D paths at p = 0, 0.5 and 1: p = 0 must look like A and p = 1 like B.
+
+### shape-crop: crop media to a shape
+- Files: `script.js` (UI, views, render, dragging, SVG export), `custom.js` (SVG sanitizing, PNG masks, raster cache, "My shapes" in localStorage), `shapes/*.js` (one file per built-in shape; `index.js` registry, `_geom.js` helpers), `style.css`.
+- Model, all in source pixels: the shape box `{ x, y (centre), w, h, rot }`, optional `keys[]` (the same plus `t` in source seconds, linearly interpolated by `boxAt(t)`), the media offset `mt` + zoom. With keyframes, every edit goes to the keyframe at the playhead (`commitBox` adds one when needed).
+- Views map that space onto a canvas: `{ cw, ch, sc, fx, fy }`. `resultView(t)` is the export (Fit shape: the largest bounding box over all keyframes, plus room for outline/shadow/feather, centred on the current box, so the size never changes mid-clip; Original frame; Custom size + padding). `editView()` is the whole source plus a margin.
+- `composite(ctx, slot, view, t, edit)` is the only drawing path: media → background (transparent / colour / blurred, drawn wider than the frame so the blur doesn't fade) → cut-out layer (media `destination-in` mask, plus outline) → drawn with the shadow and the scale animation. `render(t)` draws the result into `#preview` (exported) and, in Edit view, the dimmed whole frame + handles into `#editor` (never exported). Exports switch to Result view in `beforeExport`.
+- Masks: `buildMask` caches per slot (`'res'`, `'edit'`) on a key of view + box + animation + shape + feather/invert; it draws the hard shape (Path2D, or the custom raster), then feathers with `drawBlurred` and inverts with `destination-out`. Outlines: vector shapes stroke the path (clipped inside/outside); raster shapes dilate/erode the hard mask by stamping it on three rings (`rasterOutline`, cached with the mask). Invert swaps inside/outside.
+- Custom shapes: `sanitizeSvg` parses with `DOMParser`, drops scripts, `foreignObject`, animation elements, `on*` attributes, `javascript:` values and external `href`/`url()`; normalizes `viewBox`/`width`/`height` and sets `preserveAspectRatio="none"`. One plain filled `<path>` with no transforms becomes a vector shape (`path: { d, rule, vb }`); anything else (text, groups, strokes) loads through `<img>` and its alpha is the mask (`rasterMask`, sizes bucketed to 64 px). PNG/WebP masks are downscaled to 1024 px; a fully opaque one uses brightness (`lum`).
+- Animation (`animAt`): scale in/out scales the whole cut-out; reveal scales only the mask from 0; rotate spins the mask (duration = one turn).
+- Exports: GIF pre-blends soft edges with the matte colour on the GPU (`matteEdges`) so the 1-bit alpha has no dark fringe. Video keeps alpha in Chromium WebM (VP9 alpha); elsewhere (`videoAlpha` false) a transparent background is recorded on the matte colour, with a warning. SVG (images only): the original file embedded once, clipped by a vector `clipPath` (or a white-on-clear `mask` image when feathered, inverted or a raster shape), with stroke, `feDropShadow` and background filters.
+
+#### Add a built-in shape
+1. Create `shape-crop/shapes/<id>.js` exporting `{ id, name, aspect?, params, path(w, h, p) }`. `path` returns SVG path data filling a w×h box with (0, 0) at the top-left; the tool turns it into a `Path2D`, the picker icon and the SVG export. `heart.js` and `diamond.js` are small examples.
+2. `params` are `createControls` specs with local ids (the panel stores them as `<shape id>.<param id>`, shown only while the shape is selected). Add `seed: true` to a range for a Randomize button. `_geom.js` has `polygonD(points, cornerRadius)`, `smoothClosedD`, `fitPoints`, `circlePoints`, `ellipseD`, `roundRectD`, `regularShape(id, name, sides)` and the shared `roundingParam`.
+3. `aspect` (w / h, usually 1) makes picking the shape snap the box to that ratio and lock it. Leave it out for shapes that stretch well.
+4. Import it in `shapes/index.js` and add it to `SHAPES` (the order is the picker order).
+5. Check it at extreme box ratios and with every param at its min and max; it must stay inside its box.
 
 ## Performance
 - Rendering at 1080–1920px is the cost centre. Rebuild only what changed: Text Match Cut caches pages by seed and font version, and Paper Effect caches textures.

@@ -7,9 +7,11 @@
  *     render: (t) => {...},         // draw the frame for time t (seconds)
  *     getDuration: () => 5,         // total length in seconds
  *     getVideo: () => videoOrNull,  // when a video is returned it drives the clock
+ *     getVideoOffset: () => 0,      // optional trim: stage t = 0 is this video time (getDuration() = trimmed length)
  *   });
  *   stage.invalidate();             // redraw after a settings change
  *   stage.renderFrame(t);           // draw t right now (frame-by-frame export); stage.release() resumes the loop
+ *   stage.videoTime(t);             // the video time for stage time t (adds the trim offset)
  *
  * Without a video the clock is the wall clock, looping over getDuration().
  * Events (stage.events): 'tick' {t}, 'ended'.
@@ -17,7 +19,7 @@
 import { h, icon, formatTime } from './dom.js';
 import { setPreviewMuted, isPreviewMuted } from './media.js';
 
-export function createStage({ canvas, transport, render, getDuration, getVideo = () => null }) {
+export function createStage({ canvas, transport, render, getDuration, getVideo = () => null, getVideoOffset = () => 0 }) {
   const events = new EventTarget();
   let playing = false;
   let loop = true;
@@ -32,7 +34,8 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
 
   const video = () => getVideo();
   const duration = () => Math.max(0.01, getDuration() || 0);
-  const time = () => (video() ? video().currentTime : clock);
+  const offset = () => (video() ? getVideoOffset() || 0 : 0);
+  const time = () => (video() ? video().currentTime - offset() : clock);
 
   function frame(now) {
     rafId = requestAnimationFrame(frame);
@@ -40,7 +43,7 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
     const v = video();
     if (playing) {
       if (v) {
-        if (v.ended || v.currentTime >= duration() - 0.001) onEnd();
+        if (v.ended || time() >= duration() - 0.001 || time() < -0.25) onEnd();
       } else {
         clock += (now - lastWall) / 1000;
         if (clock >= duration()) onEnd();
@@ -50,7 +53,7 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
     }
     if (!dirty) return;
     dirty = false;
-    const t = Math.min(time(), duration());
+    const t = Math.max(0, Math.min(time(), duration()));
     try { render(t); } catch (err) { console.error(err); }
     ui?.sync(t);
     events.dispatchEvent(new CustomEvent('tick', { detail: { t } }));
@@ -74,7 +77,7 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
     lastWall = performance.now();
     const v = video();
     if (v) {
-      if (v.currentTime >= duration() - 0.05) v.currentTime = 0;
+      if (time() >= duration() - 0.05 || time() < 0) v.currentTime = offset();
       return v.play().catch((err) => { playing = false; ui?.sync(time()); throw err; });
     }
     if (clock >= duration()) clock = 0;
@@ -92,7 +95,7 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
     t = Math.max(0, Math.min(t, duration()));
     clock = t;
     const v = video();
-    if (v) v.currentTime = t;
+    if (v) v.currentTime = t + offset();
     dirty = true;
   }
 
@@ -159,6 +162,7 @@ export function createStage({ canvas, transport, render, getDuration, getVideo =
     get playing() { return playing; },
     get time() { return time(); },
     get duration() { return duration(); },
+    videoTime: (t) => t + offset(),
     /** Call after the media source changes. */
     reset() { pause(); clock = 0; watchVideo(); seek(0); },
     setTransportDisabled(d) { ui?.setDisabled(d); },

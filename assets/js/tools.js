@@ -99,6 +99,16 @@ export const tools = [
     tags: ["transition", "webgl", "zoom", "whip pan", "glitch", "light leak", "edit", "gif"],
   },
   {
+    id: "shape-crop",
+    category: "video-effects",
+    name: "Shape Crop",
+    description:
+      "Crop a video or image to a circle, heart, star or your own SVG, with a transparent background.",
+    thumbnail: "/assets/img/shape-crop.svg",
+    status: "new",
+    tags: ["crop", "mask", "circle", "heart", "star", "svg", "png", "transparent", "cutout", "shape", "keyframes", "gif"],
+  },
+  {
     id: "file-converter",
     category: "convert",
     section: "Files",

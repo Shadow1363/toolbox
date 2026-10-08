@@ -1,0 +1,56 @@
+/* Shape Crop: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+
+/* Edit / Result switch above the preview */
+.sc-viewbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.sc-viewbar .segmented { flex: none; }
+.sc-view-hint { font-size: 12px; color: var(--text-faint); min-width: 0; }
+
+/* The editor canvas takes pointer input (drag, resize, rotate, wheel zoom) */
+.preview-stage canvas.sc-editor { touch-action: none; cursor: crosshair; }
+
+/* Shape picker */
+.sc-shapes { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; }
+.sc-shape {
+  width: 100%; aspect-ratio: 1; display: grid; place-items: center; padding: 7px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev);
+  color: var(--text-muted); cursor: pointer; transition: border-color .15s, background .15s, color .15s;
+}
+.sc-shape:hover { border-color: var(--border-strong); color: var(--text); }
+.sc-shape[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.sc-shape svg { width: 100%; height: 100%; }
+.sc-mask-icon {
+  width: 100%; height: 100%; background: currentColor;
+  -webkit-mask: var(--src) center / contain no-repeat; mask: var(--src) center / contain no-repeat;
+}
+.sc-mask-icon.is-lum { mask-mode: luminance; }
+.sc-shape-wrap { position: relative; }
+.sc-del {
+  position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; padding: 3px; display: none;
+  border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer;
+}
+.sc-del svg { width: 100%; height: 100%; }
+.sc-del:hover { color: var(--text); }
+.sc-shape-wrap:hover .sc-del, .sc-shape-wrap:focus-within .sc-del { display: block; }
+@media (hover: none) { .sc-del { display: block; } }
+.sc-empty { grid-column: 1 / -1; font-size: 12px; color: var(--text-faint); }
+
+/* Custom shape inputs */
+.sc-custom { display: grid; gap: 10px; }
+.sc-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sc-row .btn svg { width: 15px; height: 15px; }
+.sc-paste summary { cursor: pointer; font-size: 13px; color: var(--text-muted); }
+.sc-paste[open] { display: grid; gap: 8px; }
+.sc-paste textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+/* Numeric position: X/Y and W/H pairs, then rotation */
+.sc-pos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sc-pos-field { display: grid; gap: 4px; font-size: 12px; color: var(--text-muted); min-width: 0; }
+.sc-pos-field input { width: 100%; min-width: 0; }
+
+/* Keyframes */
+.sc-keyframes { display: grid; gap: 10px; }
+.sc-keys:empty { display: none; }
+.sc-key { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px 2px 10px; }
+.sc-key button { font: inherit; font-size: 13px; color: inherit; background: none; border: 0; padding: 2px; cursor: pointer; }
+.sc-key .sc-key-x { width: 20px; height: 20px; display: grid; place-items: center; color: var(--text-muted); }
+.sc-key .sc-key-x svg { width: 13px; height: 13px; }

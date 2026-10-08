@@ -1,0 +1,31 @@
+<!-- Shape Crop thumbnail · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <pattern id="chk" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#e9e9ef"/><path d="M0 0h8v8H0zM8 8h8v8H8z" fill="#d3d3dc"/></pattern>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset=".55" stop-color="#e0748b"/><stop offset="1" stop-color="#f6c48a"/></linearGradient>
+    <clipPath id="heart"><path d="M160 172C160 172 92 128 92 82C92 58 108 42 128 42C143 42 154 51 160 64C166 51 177 42 192 42C212 42 228 58 228 82C228 128 160 172 160 172Z"/></clipPath>
+    <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1d1633" flood-opacity=".45"/></filter>
+  </defs>
+  <rect width="320" height="200" fill="url(#chk)"/>
+  <g filter="url(#sh)">
+    <g clip-path="url(#heart)">
+      <rect x="80" y="30" width="160" height="150" fill="url(#sky)"/>
+      <circle cx="186" cy="104" r="20" fill="#ffe6a8"/>
+      <path d="M80 130Q120 110 160 124T240 120V180H80Z" fill="#6b3d73"/>
+      <path d="M80 148Q125 132 170 146T240 142V180H80Z" fill="#3e2756"/>
+      <path d="M80 164Q130 152 180 162T240 160V180H80Z" fill="#1d1633"/>
+    </g>
+    <path d="M160 172C160 172 92 128 92 82C92 58 108 42 128 42C143 42 154 51 160 64C166 51 177 42 192 42C212 42 228 58 228 82C228 128 160 172 160 172Z" fill="none" stroke="#fff" stroke-width="4"/>
+  </g>
+  <g fill="none" stroke="#7c6cff" stroke-width="1.5">
+    <rect x="88" y="38" width="144" height="138" stroke-dasharray="5 4"/>
+    <path d="M160 38V22"/>
+  </g>
+  <circle cx="160" cy="19" r="4.5" fill="#fff" stroke="#7c6cff" stroke-width="2"/>
+  <g fill="#fff" stroke="#7c6cff" stroke-width="1.5">
+    <rect x="84" y="34" width="8" height="8"/><rect x="228" y="34" width="8" height="8"/><rect x="84" y="172" width="8" height="8"/><rect x="228" y="172" width="8" height="8"/>
+  </g>
+  <g fill="#5b5b66" opacity=".85">
+    <circle cx="34" cy="40" r="14"/><path d="M276 26l7 14 15 2-11 10 3 15-14-7-14 7 3-15-11-10 15-2z"/><path d="M22 150h28l-14 26z"/><path d="M272 150h30v24h-18l-8 8v-8h-4z"/>
+  </g>
+</svg>
