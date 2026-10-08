@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- Image Compressor · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Image Compressor · Toolbox</title>
+  <meta name="description" content="Compress and resize many images at once in your browser: JPG, WebP, AVIF or PNG, quality control, metadata removal, before/after comparison and a ZIP download.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="compressor">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Images</h3><div id="upload"></div></section>
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Results">
+        <div class="cmp-viewer" id="viewer">
+          <div class="cmp-stage" id="stage">
+            <div class="cmp-canvas" id="wrap">
+              <img id="before" alt="Original">
+              <img id="after" alt="Compressed">
+              <div class="cmp-handle"><span></span></div>
+            </div>
+          </div>
+          <div class="cmp-tag left" id="tag-before"></div>
+          <div class="cmp-tag right" id="tag-after"></div>
+          <div class="preview-overlay" id="empty"><div><strong>Drop, choose or paste images</strong><br>Many at once is fine: JPG, PNG, WebP, AVIF, GIF, BMP, SVG.</div></div>
+          <div class="cmp-tools">
+            <div class="segmented" id="zoom"><button type="button" data-v="fit" aria-pressed="true">Fit</button><button type="button" data-v="1">100%</button><button type="button" data-v="2">200%</button></div>
+            <span class="io-note">Drag the divider to compare.</span>
+          </div>
+        </div>
+        <div class="cmp-summary" id="summary"></div>
+        <ul class="cmp-list" id="list"></ul>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

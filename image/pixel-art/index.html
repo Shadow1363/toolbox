@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- Pixel Art Editor · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Pixel Art Editor · Toolbox</title>
+  <meta name="description" content="Draw pixel art and sprites in your browser: pencil, fill, shapes, mirror drawing, palettes, layers and animation frames with onion skinning. Export crisp PNGs, sprite sheets and animated GIFs.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="pixel-art">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="editor-layout px-layout">
+      <section class="panel editor-main" aria-label="Canvas">
+        <div class="toolbar" id="toolbar"></div>
+        <div class="editor-viewport px-viewport" id="viewport" tabindex="0" aria-label="Pixel canvas">
+          <canvas id="view"></canvas>
+          <div class="px-pos" id="pos"></div>
+        </div>
+        <div class="px-frames-bar">
+          <div class="btn-row" id="frame-actions"></div>
+          <div class="px-frames" id="frames"></div>
+        </div>
+        <div id="export"></div>
+      </section>
+      <aside class="panel editor-side" aria-label="Colors and layers">
+        <section class="ctrl-section"><h3>Colors</h3><div id="colors"></div></section>
+        <section class="ctrl-section"><h3>Palette</h3><div id="palette"></div></section>
+        <section class="ctrl-section"><h3>Layers</h3><div id="layers"></div></section>
+        <section class="ctrl-section"><h3>Animation</h3><div id="anim"></div></section>
+        <section class="ctrl-section"><h3>Canvas</h3><div id="canvas-size"></div></section>
+        <section class="ctrl-section"><h3>Project</h3><div class="btn-row" id="project"></div></section>
+      </aside>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

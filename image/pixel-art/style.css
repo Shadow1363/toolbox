@@ -1,0 +1,32 @@
+/* Pixel Art Editor: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+.px-viewport { height: max(420px, calc(100vh - 380px)); outline: none; }
+.px-viewport:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.px-viewport canvas { width: 100%; height: 100%; }
+.px-pos { position: absolute; right: 8px; bottom: 8px; font: 11px var(--font-mono); color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; pointer-events: none; }
+.px-pos:empty { display: none; }
+.px-layout .editor-side { max-height: calc(100vh - var(--header-h) - 32px); overflow-y: auto; position: sticky; top: calc(var(--header-h) + 16px); }
+@media (max-width: 960px) { .px-layout .editor-side { max-height: none; position: static; } }
+.px-frames-bar { display: grid; gap: 8px; }
+.px-frames { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 8px; }
+.px-frame { flex: none; display: grid; gap: 3px; justify-items: center; padding: 4px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elev); cursor: pointer; font: 10.5px var(--font-mono); color: var(--text-muted); }
+.px-frame.is-active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); color: var(--text); }
+.px-frame canvas { width: 56px; height: 56px; image-rendering: pixelated; object-fit: contain; }
+.px-colors { display: flex; align-items: center; gap: 10px; }
+.px-colors .slot { position: relative; display: grid; gap: 2px; justify-items: center; font-size: 11px; color: var(--text-faint); }
+.px-colors input[type="color"] { width: 44px; height: 44px; }
+.px-pal { display: grid; grid-template-columns: repeat(auto-fill, minmax(22px, 1fr)); gap: 3px; margin: 8px 0; }
+.px-pal button { aspect-ratio: 1; border: 1px solid var(--border-strong); border-radius: 4px; padding: 0; cursor: pointer; }
+.px-pal button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+.px-layer { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-size: 13px; }
+.px-layer:hover { background: var(--bg-elev); }
+.px-layer.is-active { border-color: var(--accent); background: var(--accent-soft); }
+.px-layer .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.px-layer input[type="text"] { padding: 2px 6px; font-size: 13px; }
+.px-layer .btn { padding: 4px 6px; }
+.px-layer .btn svg { width: 14px; height: 14px; }
+.px-layer .btn.is-off { opacity: .35; }
+.px-list { display: grid; gap: 2px; margin-bottom: 8px; }
+.px-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; font-size: 13px; }
+.px-row input[type="number"] { width: 72px; padding: 5px 8px; }
+.px-row select { width: auto; }
+.px-row .grow { flex: 1; }

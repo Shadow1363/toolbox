@@ -1,0 +1,37 @@
+/* Favicon Generator: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+.fav-previews { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 14px; align-items: start; }
+@media (max-width: 640px) { .fav-previews { grid-template-columns: minmax(0, 1fr); justify-items: center; } .fav-tabs { width: 100%; } }
+.fav-tabs { display: grid; gap: 12px; }
+.fav-window { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); font-family: var(--font); }
+.fav-window.light { --w-bar: #dfe1e5; --w-tab: #ffffff; --w-text: #202124; --w-muted: #5f6368; --w-page: #ffffff; --w-url: #f1f3f4; }
+.fav-window.dark { --w-bar: #1f2023; --w-tab: #35363a; --w-text: #e8eaed; --w-muted: #9aa0a6; --w-page: #202124; --w-url: #282a2d; }
+.fav-strip { display: flex; align-items: flex-end; gap: 2px; padding: 8px 10px 0; background: var(--w-bar); min-width: 0; }
+.fav-dots { display: flex; gap: 6px; align-self: center; margin: 0 10px 6px 2px; }
+.fav-dots i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; } .fav-dots i:nth-child(2) { background: #febc2e; } .fav-dots i:nth-child(3) { background: #28c840; }
+.fav-tab { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; min-width: 0; max-width: 230px; flex: 1; border-radius: 9px 9px 0 0; font-size: 12.5px; color: var(--w-muted); }
+.fav-tab.is-active { background: var(--w-tab); color: var(--w-text); }
+.fav-tab img, .fav-tab .ph { width: 16px; height: 16px; flex: none; image-rendering: auto; }
+.fav-tab .ph { border-radius: 4px; background: var(--w-muted); opacity: .45; }
+.fav-tab span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.fav-bar { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--w-tab); }
+.fav-url { flex: 1; min-width: 0; height: 28px; border-radius: 14px; background: var(--w-url); display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 12.5px; color: var(--w-text); overflow: hidden; white-space: nowrap; }
+.fav-url img { width: 16px; height: 16px; }
+.fav-page { height: 46px; background: var(--w-page); }
+.fav-phone { width: 210px; height: 400px; border-radius: 34px; padding: 10px; background: #111; box-shadow: var(--shadow-lg), inset 0 0 0 2px #333; }
+.fav-screen { position: relative; width: 100%; height: 100%; border-radius: 26px; overflow: hidden; padding: 44px 14px 14px; display: grid; grid-template-columns: repeat(4, 1fr); align-content: start; gap: 14px 8px;
+  background: linear-gradient(160deg, #5b6cff 0%, #b05bd6 45%, #ff8a6b 100%); }
+.fav-screen::before { content: "9:41"; position: absolute; top: 12px; left: 22px; font: 600 12px var(--font); color: #fff; }
+.fav-screen::after { content: ""; position: absolute; top: 10px; left: 50%; width: 64px; height: 18px; margin-left: -32px; border-radius: 10px; background: #000; }
+.fav-app { display: grid; justify-items: center; gap: 4px; min-width: 0; }
+.fav-app .ic { width: 38px; height: 38px; border-radius: 22.5%; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.fav-app img.ic { background: #fff; }
+.fav-app span { font: 9.5px var(--font); color: #fff; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.fav-app.is-ours .ic { outline: 2px solid rgba(255,255,255,.85); outline-offset: 2px; }
+.fav-sizes { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; padding-top: 12px; border-top: 1px solid var(--border); }
+.fav-size { display: grid; justify-items: center; gap: 6px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); font-size: 11.5px; color: var(--text-muted); cursor: pointer; }
+.fav-size:hover { border-color: var(--border-strong); }
+.fav-size .checker { display: grid; place-items: center; border-radius: 4px; }
+.fav-size img { display: block; }
+.fav-size b { color: var(--text); font-weight: 600; font-family: var(--font-mono); font-size: 11px; }
+.fav-block { display: grid; gap: 8px; }
+.fav-code { min-height: 0; max-height: 220px; font-size: 12px; }

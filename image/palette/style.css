@@ -1,0 +1,26 @@
+/* Palette Extractor: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+.pal-top { display: grid; gap: 10px; }
+.pal-image { position: relative; border-radius: var(--radius); overflow: hidden; display: grid; place-items: center; min-height: 200px; }
+.pal-image img { max-height: 360px; width: auto; max-width: 100%; }
+.pal-note { position: absolute; left: 10px; bottom: 10px; font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; color: var(--text-muted); }
+.pal-note:empty { display: none; }
+.pal-strip { display: flex; height: 44px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.pal-strip button { border: 0; padding: 0; min-width: 6px; cursor: pointer; }
+.pal-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.pal-swatch { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-elev); text-align: left; padding: 0; font: inherit; color: var(--text); cursor: pointer; transition: border-color .15s, transform .15s; }
+.pal-swatch:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+.pal-chip { height: 72px; display: flex; align-items: flex-end; justify-content: space-between; padding: 6px 8px; font: 600 12px var(--font-mono); }
+.pal-info { padding: 8px 10px; display: grid; gap: 2px; font: 12px/1.5 var(--font-mono); color: var(--text-muted); }
+.pal-info b { color: var(--text); font-size: 13px; }
+.pal-block { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pal-block .io-head h2 { margin-right: 8px; }
+.pal-block .io-note { flex: 1 1 260px; }
+.pal-matrix-wrap { overflow-x: auto; }
+.pal-matrix { border-collapse: separate; border-spacing: 3px; font: 11px var(--font-mono); }
+.pal-matrix th { font-weight: 500; color: var(--text-faint); }
+.pal-matrix th span { display: inline-block; width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--border); vertical-align: middle; }
+.pal-matrix td { width: 66px; height: 42px; text-align: center; border-radius: 6px; line-height: 1.25; }
+.pal-matrix td.self { background: transparent !important; color: var(--text-faint) !important; }
+.pal-matrix td small { display: block; font-size: 9.5px; opacity: .85; }
+.pal-matrix td.fail small { text-decoration: line-through; }
+.pal-code { min-height: 140px; max-height: 260px; }

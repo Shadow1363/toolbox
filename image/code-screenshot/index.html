@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- Code Screenshot · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Code Screenshot · Toolbox</title>
+  <meta name="description" content="Turn code into a beautiful image: syntax highlighting with automatic language detection, themes, window frames, line numbers, highlighted lines and gradient backgrounds. Export PNG (up to 4×) or SVG, or copy it.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="code-screenshot">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section">
+          <h3>Code</h3>
+          <div class="ctrl">
+            <textarea id="code" class="cs-code" rows="11" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code"></textarea>
+          </div>
+          <div class="cs-lang">
+            <select id="lang" aria-label="Language"></select>
+            <span class="ctrl-hint" id="detected"></span>
+          </div>
+        </section>
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Preview">
+        <div class="preview-stage cs-stage" id="stage">
+          <canvas id="preview" width="800" height="500" title="Click a line to highlight it"></canvas>
+          <div class="preview-overlay" id="overlay" hidden></div>
+        </div>
+        <p class="io-note">Click a line in the preview to highlight it.</p>
+        <div id="export"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

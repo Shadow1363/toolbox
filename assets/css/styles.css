@@ -381,3 +381,32 @@ input[type="color"]::-moz-color-swatch { border: 0; border-radius: 5px; }
 .io-row.is-match { border-color: var(--success); box-shadow: 0 0 0 2px color-mix(in srgb, var(--success) 25%, transparent); }
 @media (max-width: 560px) { .io-row { grid-template-columns: minmax(0, 1fr) auto; } .io-row > span:first-child { grid-column: 1 / -1; } }
 .io-options .segmented button { flex: none; }
+
+/* 13. Image tools (shared by /image/*) --------------------------------------- */
+.segmented button:disabled { opacity: .4; cursor: not-allowed; }
+.img-paste-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.img-export .segmented { flex-wrap: nowrap; }
+.img-export .segmented button { flex: none; padding: 5px 10px; }
+.img-export-quality { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+.img-export-quality input { width: 110px; }
+.img-export-quality .ctrl-value { min-width: 24px; }
+
+/* Editors (Whiteboard, Pixel Art, Social Image): toolbar · canvas · properties */
+.editor-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.editor-layout > * { min-width: 0; }
+@media (max-width: 960px) { .editor-layout { grid-template-columns: minmax(0, 1fr); } }
+.editor-main { display: flex; flex-direction: column; gap: 10px; padding: 10px; }
+.editor-side { padding: 6px 0; }
+.toolbar { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.toolbar .sep { width: 1px; align-self: stretch; background: var(--border); margin: 2px 4px; }
+.tool-btn { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; color: var(--text); cursor: pointer; padding: 0; position: relative; }
+.tool-btn:hover { background: var(--surface-2); }
+.tool-btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.tool-btn:disabled { opacity: .4; cursor: not-allowed; }
+.tool-btn svg { width: 18px; height: 18px; }
+.tool-btn kbd { position: absolute; right: 2px; bottom: 0; font: 9px var(--font-mono); color: var(--text-faint); }
+.editor-viewport { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--bg-elev); touch-action: none; user-select: none; -webkit-user-select: none; }
+.editor-viewport canvas { display: block; max-width: none; }
+.btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.kbd-help { font-size: 12px; color: var(--text-faint); line-height: 1.7; }
+.kbd-help kbd { font: 11px var(--font-mono); padding: 1px 5px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-elev); color: var(--text-muted); }

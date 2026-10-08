@@ -62,6 +62,7 @@ const paths = {
   up: '<path d="m6 15 6-6 6 6"/>',
   down: '<path d="m6 9 6 6 6-6"/>',
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
   wand: '<path d="m15 4 5 5L9 20l-5-5zM12 7l5 5"/><path d="M5 3v4M3 5h4M19 15v4M17 17h4"/>',
 };
 export function icon(name) {

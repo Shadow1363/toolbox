@@ -46,6 +46,15 @@ body:
         - Hash Generator
         - Color Converter
         - Case Converter
+        - Mockup Generator
+        - Code Screenshot
+        - Social Image Maker
+        - Favicon Generator
+        - Before/After Slider
+        - Image Compressor
+        - Palette Extractor
+        - Whiteboard
+        - Pixel Art Editor
         - Other / not sure
   - type: textarea
     id: what

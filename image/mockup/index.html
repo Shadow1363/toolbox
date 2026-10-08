@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Mockup Generator · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Mockup Generator · Toolbox</title>
+  <meta name="description" content="Put screenshots into generic phone, tablet, laptop, monitor and browser frames. Several devices side by side, tilt and shadow, gradient or transparent backgrounds. Export PNG, JPG or WebP, or copy it.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="mockup">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section">
+          <h3>Devices</h3>
+          <ul class="mk-devices" id="devices"></ul>
+          <div class="mk-add" id="add"></div>
+        </section>
+        <section class="ctrl-section" id="device-editor"></section>
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Preview">
+        <div class="preview-stage" id="stage">
+          <canvas id="preview" width="1600" height="1000"></canvas>
+        </div>
+        <p class="io-note">Click a device in the preview to select it. Drop or paste (Ctrl/⌘+V) a screenshot to put it on the selected device.</p>
+        <div id="export"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

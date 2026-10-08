@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Social Image Maker · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Social Image Maker · Toolbox</title>
+  <meta name="description" content="Make thumbnails, Open Graph images, posts, banners and stories at the right size. A layered editor with text, images and shapes, safe-area guides, and designs you can save and reopen.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="social-image">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="editor-layout">
+      <section class="panel editor-main" aria-label="Canvas">
+        <div class="toolbar" id="toolbar"></div>
+        <div class="editor-viewport si-viewport" id="viewport" tabindex="0" aria-label="Design canvas">
+          <div class="si-board" id="board">
+            <canvas id="doc"></canvas>
+            <canvas id="overlay" class="si-overlay"></canvas>
+          </div>
+        </div>
+        <div class="si-status" id="status"></div>
+        <div id="export"></div>
+      </section>
+      <aside class="panel editor-side" aria-label="Properties">
+        <section class="ctrl-section"><h3>Template</h3><div id="template"></div></section>
+        <section class="ctrl-section" id="props"></section>
+        <section class="ctrl-section"><h3>Layers</h3><ul class="si-layers" id="layers"></ul></section>
+        <section class="ctrl-section"><h3>Designs</h3><div id="designs"></div></section>
+      </aside>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

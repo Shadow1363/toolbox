@@ -12,6 +12,7 @@ Project docs live in the AGENTS.md files:
 
 - [AGENTS.md](AGENTS.md): structure, tool registry, shared code, design rules, templates, how to add a tool or category.
 - [video-effects/AGENTS.md](video-effects/AGENTS.md): how each video tool works, import/export details, performance.
+- [image/AGENTS.md](image/AGENTS.md): the image tools (mockups, code screenshots, editors, compression…), shared image helpers, libraries and limitations.
 
 ## Contributing
 

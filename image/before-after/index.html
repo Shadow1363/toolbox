@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- Before/After Slider · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Before/After Slider · Toolbox</title>
+  <meta name="description" content="Compare two images with a before/after slider: auto-aligned and size-matched, horizontal or vertical, with labels. Export an animated GIF or video, or copy embeddable HTML.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="before-after">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Before</h3><div id="upload-a"></div></section>
+        <section class="ctrl-section"><h3>After</h3><div id="upload-b"></div></section>
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Preview">
+        <div class="preview-stage">
+          <canvas id="preview" width="1280" height="720" class="ba-canvas"></canvas>
+          <div class="preview-overlay is-note" id="note"><div>Demo images. Drop, choose or paste your own (Ctrl/⌘+V fills the next empty slot).</div></div>
+        </div>
+        <div id="transport"></div>
+        <p class="io-note">Drag on the preview to move the divider. Press play to see the animation the GIF and video use.</p>
+        <div id="export"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

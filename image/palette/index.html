@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- Palette Extractor · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Palette Extractor · Toolbox</title>
+  <meta name="description" content="Extract the main colors from any image with k-means or median cut. HEX, RGB, HSL, coverage, WCAG contrast checks, and export as CSS variables, Tailwind, SCSS, JSON or a PNG strip.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="palette">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Image</h3><div id="upload"></div></section>
+        <div id="controls"></div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Palette">
+        <div class="pal-top">
+          <div class="pal-image checker"><img id="source" alt="Source image"><p class="pal-note" id="note"></p></div>
+          <div class="pal-strip" id="strip" aria-label="Palette strip"></div>
+        </div>
+        <div class="pal-swatches" id="swatches"></div>
+        <div class="pal-block">
+          <div class="io-head"><h2>Contrast (WCAG 2)</h2><span class="io-note">Text color on background color. AA needs 4.5:1 for body text, 3:1 for large text; AAA needs 7:1.</span></div>
+          <div class="pal-matrix-wrap"><table class="pal-matrix" id="matrix"></table></div>
+        </div>
+        <div class="pal-block">
+          <div class="io-head"><h2>Export</h2><div class="segmented" id="fmt"></div></div>
+          <pre class="io-out pal-code" id="code"></pre>
+          <div class="btn-row" id="code-actions"></div>
+        </div>
+        <div id="export"></div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

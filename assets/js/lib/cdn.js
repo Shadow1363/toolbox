@@ -38,6 +38,13 @@ export const LIBS = {
   qrcode: { kind: 'esm', url: `${NPM}/qrcode-generator@2.0.4/+esm` },
   jsqr: { kind: 'esm', url: `${NPM}/jsqr@1.4.0/+esm` },
   hashWasm: { kind: 'esm', url: `${NPM}/hash-wasm@4.12.0/+esm` },
+  // Image category. Set `window.Prism = { manual: true }` before loading the Prism core (image/code-screenshot does).
+  prism: { kind: 'script', url: `${NPM}/prismjs@1.30.0/components/prism-core.min.js`, global: 'Prism' },
+  prismAutoloader: { kind: 'script', url: `${NPM}/prismjs@1.30.0/plugins/autoloader/prism-autoloader.min.js`, global: 'Prism' },
+  prismComponents: { kind: 'url', url: `${NPM}/prismjs@1.30.0/components/` },
+  rough: { kind: 'esm', url: `${NPM}/roughjs@4.6.6/bundled/rough.esm.js` },
+  pako: { kind: 'script', url: `${NPM}/pako@1.0.11/dist/pako.min.js`, global: 'pako' },
+  upng: { kind: 'script', url: `${NPM}/upng-js@2.1.0/UPNG.min.js`, global: 'UPNG' }, // needs pako loaded first
   // Machine learning (bundles onnxruntime-web, which fetches its WASM from jsDelivr). Loaded inside workers by lib/whisper.js.
   transformers: { kind: 'esm', url: `${NPM}/@huggingface/transformers@4.2.0/dist/transformers.min.js` },
 };

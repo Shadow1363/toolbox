@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Whiteboard · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Whiteboard · Toolbox</title>
+  <meta name="description" content="An infinite whiteboard in your browser: shapes, arrows that stay connected, text, sticky notes and a pen, in a hand-drawn or clean style. Undo, autosave, JSON save/load, and PNG or SVG export.">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="whiteboard">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="editor-layout wb-layout">
+      <section class="panel editor-main" aria-label="Board">
+        <div class="toolbar" id="toolbar"></div>
+        <div class="editor-viewport wb-viewport" id="viewport" tabindex="0" aria-label="Whiteboard canvas">
+          <canvas id="board"></canvas>
+          <textarea id="editor" class="wb-editor" spellcheck="false" hidden aria-label="Edit text"></textarea>
+          <div class="wb-zoom" id="zoom"></div>
+          <div class="wb-hint" id="hint"></div>
+        </div>
+        <div class="wb-export-opts" id="export-opts"></div>
+        <div id="export"></div>
+      </section>
+      <aside class="panel editor-side" aria-label="Style">
+        <div id="props"></div>
+        <section class="ctrl-section"><h3>File</h3><div class="btn-row" id="file"></div></section>
+        <section class="ctrl-section"><h3>Shortcuts</h3><div class="kbd-help" id="help"></div></section>
+      </aside>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

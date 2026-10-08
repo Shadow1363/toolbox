@@ -25,7 +25,7 @@ assets/
   js/lib/                Shared modules (see below)
   img/                   16:10 card thumbnails (SVG) + favicon
 _template/               Copy-paste starters: category/, tool/, canvas-tool/
-<category>/index.html    Category hub, e.g. video-effects/, convert/
+<category>/index.html    Category hub, e.g. video-effects/, convert/, image/
 <category>/<tool>/       index.html + script.js (+ style.css, + tool-only modules)
 ```
 
@@ -66,6 +66,9 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 | `cdn.js` | `LIBS` (every pinned CDN library) + `loadLib(name)` (lazy, once) + `workerUrl()` for CDN workers |
 | `codecs.js` | CSV/TSV, JSON (line/column errors), YAML, XML, TOML parse/stringify; table helpers |
 | `text-tool.js` | Input → output tools: `remember` (persisted options), copy/download buttons, `debounce` |
+| `image-io.js` | Image tools: `createImageDrop` (dropzone + Ctrl/⌘+V + Paste button), `onPasteImages`, `createImageExport` (PNG/JPG/WebP/SVG + scale + quality, Download and Copy), `copyCanvas`/`copyBlob`, `canEncode`, `downloadZip`, `pickFile` |
+| `palette.js` | `samplePixels`, `kmeans` (Lab, seeded), `medianCut`; `hex`/`parseHex`/`rgbToHsl`, WCAG `contrastRatio`/`wcag`/`readableOn` |
+| `kv.js` | IndexedDB key-value store (`kvGet`/`kvSet`) and a debounced `autosaver(key, get)`; falls back to localStorage |
 
 New helpers that two or more tools need go in `assets/js/lib/`; anything single-use stays in the tool folder.
 
@@ -105,9 +108,9 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 
 - **Libraries:** CDN only, pinned to exact versions (jsDelivr preferred) and loaded lazily (dynamic `import()` or a script tag on first use). Pins live in `assets/js/lib/cdn.js` (`LIBS`); add new libraries there and load them with `loadLib()` (workers import the `LIBS` URL directly, as `whisper-worker.js` does with `transformers`). ML model weights come from huggingface.co / storage.googleapis.com and are cached by the browser; show the download size before fetching them. Older pins still inline: `@mediapipe/tasks-vision@1.1.0` (`vision.js`), `gifenc@1.0.3` (`gif.js`), `jszip@3.10.1` (Text Match Cut). Fail gracefully with a `toast()` when the network is blocked.
 - **Privacy:** no backend, no analytics, no uploads.
-- **License and attribution:** GPL-3.0-or-later plus section 7 attribution terms (`LICENSE`, `NOTICE`). Every `.js`/`.css`/`.html`/`.svg` file starts with the attribution header containing the fingerprint `tm1363-c339e3ad`; copy it into new files (the `_template/` files already have it). Pages also carry the `author`/`copyright` meta tags. Never remove the header, the meta tags, the footer credit (`AUTHOR` in `site.js`) or the console signature.
 - **Names:** made-up names for generated sites, papers and people; no real brands or logos in UI, thumbnails or generated content.
 - **Errors:** bad files go through `loadMedia` → `MediaError` → `toast(message, 'error')`. Feature-detect (`canRecord()`, `supportsCanvasFilter`, `createPerspective()` returning `null`) and show a hint instead of failing.
+- **Editors** (Whiteboard, Pixel Art, Social Image) use `.editor-layout` (canvas + 300px side panel), `.toolbar` and `.tool-btn` from `styles.css` §13, and autosave through `kv.js`.
 - **Responsive:** `.tool-layout > *` has `min-width: 0` so wide content scrolls inside its panel; keep it that way.
 
 ## Gotchas
@@ -124,3 +127,4 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 
 - [Video Effects](video-effects/AGENTS.md): canvas effects for video, images and animated text, plus captions, background removal, zooms, progress overlays, retro looks and speed ramps.
 - [Convert & Encode](convert/AGENTS.md): file converter (documents, data, images, audio/video), Base64, encoders, hashes, JSON, colors, timestamps, case, QR.
+- [Image](image/AGENTS.md): device mockups, code screenshots, social images, favicons, before/after sliders, compression, palettes, a whiteboard and a pixel art editor.

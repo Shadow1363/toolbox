@@ -1,0 +1,36 @@
+/* Image Compressor: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+.cmp-viewer { position: relative; display: grid; gap: 8px; }
+.cmp-stage { position: relative; height: min(58vh, 560px); min-height: 260px; border-radius: var(--radius); overflow: hidden; background: var(--bg-elev); cursor: ew-resize; touch-action: none; user-select: none; }
+.cmp-stage.is-zoomed { overflow: auto; cursor: default; }
+.cmp-canvas { position: relative; width: 100%; height: 100%; }
+.cmp-stage.is-zoomed .cmp-canvas { width: var(--zw); height: var(--zh); }
+.cmp-canvas img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; max-width: none; pointer-events: none; }
+.cmp-stage.is-zoomed img { image-rendering: pixelated; }
+.cmp-canvas #after { clip-path: inset(0 0 0 var(--split, 50%)); }
+.cmp-handle { position: absolute; top: 0; bottom: 0; left: var(--split, 50%); width: 0; pointer-events: none; }
+.cmp-handle::before { content: ""; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+.cmp-handle span { position: absolute; top: 50%; left: -16px; width: 32px; height: 32px; margin-top: -16px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+.cmp-handle span::before { content: "‹ ›"; position: absolute; inset: 0; display: grid; place-items: center; color: #333; font: 700 14px/1 var(--font); letter-spacing: 2px; }
+.cmp-tag { position: absolute; top: 10px; z-index: 2; font-size: 12px; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,.6); color: #fff; pointer-events: none; font-variant-numeric: tabular-nums; }
+.cmp-tag.left { left: 10px; } .cmp-tag.right { right: 10px; }
+.cmp-tag:empty { display: none; }
+.cmp-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cmp-tools .segmented button { flex: none; }
+.cmp-summary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; }
+.cmp-summary:empty { display: none; }
+.cmp-summary .spacer { flex: 1; }
+.cmp-summary .saved { color: var(--success); font-weight: 650; }
+.cmp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cmp-item { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); cursor: pointer; }
+.cmp-item.is-active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.cmp-item img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; background: var(--surface-2); }
+.cmp-item .meta { min-width: 0; display: grid; gap: 1px; font-size: 13px; }
+.cmp-item .meta strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-item .meta span { color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.cmp-item .delta { font-weight: 650; }
+.cmp-item .delta.good { color: var(--success); }
+.cmp-item .delta.bad { color: var(--warning); }
+.cmp-item .delta.err { color: var(--danger); }
+.cmp-item .acts { display: flex; gap: 2px; }
+.cmp-item .acts .btn { padding: 6px 8px; }
+@media (max-width: 560px) { .cmp-item { grid-template-columns: 40px minmax(0, 1fr); } .cmp-item img { width: 40px; height: 40px; } .cmp-item .acts { grid-column: 1 / -1; justify-content: flex-end; } }
