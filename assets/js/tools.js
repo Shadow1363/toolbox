@@ -62,6 +62,16 @@ export const tools = [
     tags: ["segmentation", "mediapipe", "ai", "mask"],
   },
   {
+    id: "nametag",
+    category: "video-effects",
+    name: "Nametag Tracker",
+    description:
+      "A blocky player nametag that floats above a person's head and follows them.",
+    thumbnail: "/assets/img/nametag.svg",
+    status: "new",
+    tags: ["face tracking", "mediapipe", "pixel", "game", "username", "overlay"],
+  },
+  {
     id: "text-match-cut",
     category: "video-effects",
     name: "Text Match Cut",

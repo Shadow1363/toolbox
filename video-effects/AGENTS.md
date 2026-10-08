@@ -35,11 +35,23 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
   - Audio: `audioGraph(video)` routes the element through Web Audio (once per element): source → `level` (clip volume/fades) → `monitor` (preview mute) → speakers, and `level` → recorder. After that, mute through `setPreviewMuted`, never `video.muted`.
   - The tab must stay visible: background tabs throttle `requestAnimationFrame` and the recording stalls.
 - **Transparency:** clear the canvas and add the `checker` class to the preview. Full alpha survives in PNG and Chromium WebM; GIF keeps 1-bit alpha (hard edges). Show `TRANSPARENT_HINT`.
-- **GIF, built in:** the GIF button opens a dialog (fps 10–24, width 320–800 or full; frame count, size estimate, warning over 180 frames; choice saved in `localStorage`), then `recordStageGif` steps through the stage: seeks `getVideo()` to each frame, calls `stage.renderFrame(t)` (pauses the live loop), downscales and encodes, then `stage.release()`s and restores the playhead. Frames are exact, so it needs no real-time playback and works in any browser.
+- **GIF, built in:** the GIF button opens a dialog (start/end range, fps 10–24, width 320–800 or full; frame count, size estimate, warning over 180 frames; choice saved in `localStorage`), then `recordStageGif` steps through the stage: seeks `getVideo()` to each frame, calls `stage.renderFrame(t)` (pauses the live loop), downscales and encodes, then `stage.release()`s and restores the playhead. Frames are exact, so it needs no real-time playback and works in any browser.
 - **GIF, custom:** tools whose frames aren't a plain function of the stage clock pass `onGif(btn)` and encode themselves (Text Match Cut: per-page holds; Transitions: multi-clip seeking).
 - **GIF encoding** (`lib/gif.js`): `gifenc` with a per-frame `quantize(256)` palette and a 4×4 Bayer dither before quantizing (prevents gradient banding). Frames with clear pixels switch to `rgba4444` + `oneBitAlpha`; spread `frameOptions(q)` into `writeFrame` to get the transparent index and `dispose: 2`. Delays are in 10 ms steps and at least 20 ms (browsers slow faster frames to 100 ms); `gifDelays(n, fps)` carries the rounding error forward so the GIF keeps time.
 - **Frames ZIP:** JSZip, `frame-001.png…` plus `timing.csv`.
 - Long jobs use `progressModal(title, onCancel, message)`, yield with `setTimeout(0)` between frames, and support cancel.
+
+## Following people (MediaPipe)
+Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
+- `vision.js`: lazy-loads `@mediapipe/tasks-vision@1.1.0` (jsDelivr) once, with models from `storage.googleapis.com`; each task is cached and tries the GPU delegate, then CPU. All tasks run in VIDEO mode, and `nextTimestamp()` keeps timestamps strictly increasing even after seeking back.
+  - Segmentation: `SEGMENT_MODELS` (square, landscape, multiclass), `segmentFrame` (copies the mask inside the callback, where it's valid), `looksLikePerson` (auto polarity).
+  - Landmarks: `detectFace` (478 face-mesh points) and `detectPose` (33 body points with `visibility`), both normalized 0..1.
+- `person-mask.js`: `createPersonMask(prefix)` → `update(segmenter, source, t, { model, smoothing, still })`, `full(W, H, { threshold, softness, polarity, feather })`; `drawPersonCutout(ctx, source, alpha)`. Temporal smoothing depends on frame order, so pass `smoothing: 0` when the export seeks frames (GIF) and must match the preview.
+- `head-tracking.js`: track once, then draw from stored data so playback is smooth and exports match the preview.
+  - `trackHead(media, { fps, mode: 'auto'|'face'|'body', onProgress, signal })` seeks every 1/fps s and stores `{ found, x, y, size, roll, via }` (y = top of head; size = head width / frame height). Face first (crown ≈ landmark 10 + 30% of the face height); body (ears, else shoulders) when the face is missing or tiny.
+  - `smoothTrack(track, { strength, hold, fadeOut, fadeIn })`: holds the last position through gaps, fades after `hold`, splits into segments wherever the head was fully hidden (no gliding across the frame), and smooths each segment with a zero-lag forward + backward One Euro pass. Cheap, so rerun it on slider changes.
+  - `sampleTrack(smooth, t)` interpolates between samples.
+- Draw debug overlays (landmarks, boxes) on a separate canvas stacked over the preview so no export can include them (Nametag's `#debug`).
 
 ## Tools
 
@@ -60,12 +72,18 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - Aspect presets come from `SIZES` (16:9, 9:16, 1:1, 4:5).
 
 ### text-behind-person: text between background and person
-- Files: `script.js`, `segmenter.js`.
-- `segmenter.js` lazy-loads `@mediapipe/tasks-vision@1.1.0` (jsDelivr) and models from `storage.googleapis.com` (`MODELS`: square, landscape, multiclass). It tries the GPU delegate first, then CPU.
-- VIDEO mode needs strictly increasing timestamps, which `segmentFrame` guarantees even after seeking back. Masks are copied inside the callback because they're only valid there.
-- Per frame: video → text (`drawAnimatedText` with `exit`) → person layer (video `destination-in` mask). The mask goes through `smoothstep` threshold/softness → temporal smoothing → upscale + `blur()` feather.
-- `looksLikePerson` auto-detects mask polarity (centre vs edges); users can override it.
+- Files: `script.js`. Segmentation and the mask pipeline come from `lib/vision.js` and `lib/person-mask.js` (see Following people).
+- Per frame: video → text (`drawAnimatedText` with `exit`) → `mask.update` (live, with the user's temporal smoothing) → `mask.full` → `drawPersonCutout`. "Show mask" tints the mask instead.
+- Mask polarity is auto-detected (`looksLikePerson`); users can override it.
 - `syncTimeRanges()` keeps "Start at" / "End at" within the clip, and "End at" follows the clip end until the user moves it.
+
+### nametag: player nametag that follows a head
+- Files: `script.js`, `pixel-font.js`, `style.css`.
+- Flow: upload → `trackHead` pass in a `progressModal` (reruns on detector or rate change) → `smoothTrack` (reruns on smoothing/hold/fade) → `render(t)` draws from `sampleTrack`. Exports are disabled until a track exists.
+- `pixel-font.js`: an original 8-row bitmap font (rows 0–6 above the baseline, row 7 descenders). Characters it lacks are rasterized from the system font at 8 px and thresholded, so "Allow any text" stays blocky. Never bundle the game's font.
+- Tag: `tagBitmap()` draws box + shadow + text at 1 px per tag pixel (cached); `drawTag` scales it with `imageSmoothingEnabled = false`, snapping to whole pixels when upright. Tag pixel size `u` = 5% of the head width × Size (fixed size uses the median head size). Offsets are in tag pixels, so they scale with the tag; dragging the tag on the preview edits them. `keepInFrame` slides the rotated box back inside the frame.
+- Hide behind person: `mask.update(…, { smoothing: 0 })` live per frame, then the person cut-out is drawn clipped to the tag's box (Tag only mode uses `destination-out` instead).
+- Output "Tag only" clears the video for a transparent tag (PNG/WebM/GIF).
 
 ### text-match-cut: keyword pinned while pages flicker
 - Files: `script.js`, `pages.js`, `style.css`.
@@ -102,6 +120,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - Object URLs are revoked by `media.dispose()`; tool code that creates its own URLs must revoke them too.
 
 ## Ideas for future tools
+- Face-following effects on `head-tracking.js`: speech bubbles, blur/pixelate a face, sticker hats, spotlight follow.
 - Kinetic captions from an SRT/VTT file, using `text-anim.js`.
 - Picture-in-picture webcam bubble over a screen recording.
 - Glitch / VHS / film-grain filters for video (the Glitch and Light leak shaders are a starting point).

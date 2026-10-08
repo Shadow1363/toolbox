@@ -5,10 +5,11 @@ import { createStage } from '/assets/js/lib/stage.js';
 import { createExportBar } from '/assets/js/lib/exporter.js';
 import { drawAnimatedText, ANIMATIONS, DEFAULT_EASING, EXIT_ANIMATIONS, EXIT_EASING } from '/assets/js/lib/text-anim.js';
 import { fontOptions, weightOptions, ensureFont } from '/assets/js/lib/fonts.js';
-import { easingOptions, smoothstep } from '/assets/js/lib/easing.js';
+import { easingOptions } from '/assets/js/lib/easing.js';
 import { outputSize, scratch, supportsCanvasFilter } from '/assets/js/lib/canvas.js';
 import { toast } from '/assets/js/lib/dom.js';
-import { MODELS, loadSegmenter, segmentFrame, looksLikePerson } from './segmenter.js';
+import { SEGMENT_MODELS as MODELS, loadSegmenter } from '/assets/js/lib/vision.js';
+import { createPersonMask, drawPersonCutout } from '/assets/js/lib/person-mask.js';
 
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
@@ -143,54 +144,8 @@ function showIntro() {
   showStatus('<strong>Drop a video of a person on the left.</strong><br>The person is detected in your browser and the text is placed behind them.');
 }
 
-/* ---------- Mask pipeline ---------- */
-const mask = {
-  raw: null,        // latest raw mask from the model
-  prev: null,       // smoothed mask (Float32Array)
-  time: -1,         // media time of `raw`
-  polarity: null,   // auto-detected: true = mask marks the person
-  canvas: null,     // low-res mask as alpha
-  reset() { this.raw = null; this.prev = null; this.time = -1; this.polarity = null; },
-};
-
-/** Run the model if the frame changed. Returns true if a mask is available. */
-function updateMask(source, t) {
-  if (!segmenter) return false;
-  const isVid = media.kind === 'video';
-  if (mask.raw && (!isVid || Math.abs(t - mask.time) < 1e-4)) return true;
-  let res;
-  try { res = segmentFrame(segmenter, source, s.model); } catch (err) { console.error(err); return !!mask.raw; }
-  if (!res) return !!mask.raw;
-  if (Math.abs(t - mask.time) > 0.5) mask.prev = null; // jumped: don't smooth across the seek
-  mask.raw = res;
-  mask.time = t;
-  if (mask.polarity == null) mask.polarity = looksLikePerson(res);
-
-  // temporal smoothing
-  const a = s.smoothing;
-  if (mask.prev && mask.prev.length === res.data.length && a > 0) {
-    for (let i = 0; i < res.data.length; i++) mask.prev[i] = mask.prev[i] * a + res.data[i] * (1 - a);
-  } else mask.prev = res.data.slice();
-  return true;
-}
-
-/** Turn the smoothed mask into a small alpha canvas, applying polarity and edge settings. */
-function maskToCanvas() {
-  const { width, height } = mask.raw;
-  const c = scratch('tbp-mask', width, height);
-  const mctx = c.getContext('2d');
-  const img = mctx.createImageData(width, height);
-  const invert = s.polarity === 'invert' || (s.polarity === 'auto' && mask.polarity === false);
-  const lo = s.threshold - s.softness / 2, hi = s.threshold + s.softness / 2;
-  const d = mask.prev;
-  for (let i = 0, j = 0; i < d.length; i++, j += 4) {
-    const v = invert ? 1 - d[i] : d[i];
-    img.data[j] = img.data[j + 1] = img.data[j + 2] = 255;
-    img.data[j + 3] = smoothstep(lo, hi, v) * 255;
-  }
-  mctx.putImageData(img, 0, 0);
-  return c;
-}
+/* ---------- Mask pipeline (shared: lib/person-mask.js) ---------- */
+const mask = createPersonMask('tbp');
 
 /* ---------- Rendering ---------- */
 function textOptions(W, H, k) {
@@ -220,17 +175,9 @@ function render(t) {
   ctx.restore();
 
   // 3. person on top, cut out with the mask
-  const haveMask = s.behind && updateMask(src, t);
+  const haveMask = s.behind && mask.update(segmenter, src, t, { model: s.model, smoothing: s.smoothing, still: media.kind !== 'video' });
   if (!haveMask) return;
-  const small = maskToCanvas();
-
-  const full = scratch('tbp-mask-full', W, H);
-  const fctx = full.getContext('2d');
-  fctx.clearRect(0, 0, W, H);
-  fctx.imageSmoothingQuality = 'high';
-  if (s.feather > 0 && supportsCanvasFilter) fctx.filter = `blur(${s.feather * k}px)`;
-  fctx.drawImage(small, 0, 0, W, H);
-  fctx.filter = 'none';
+  const full = mask.full(W, H, { threshold: s.threshold, softness: s.softness, polarity: s.polarity, feather: s.feather * k });
 
   if (s.showMask) {
     ctx.save();
@@ -249,15 +196,7 @@ function render(t) {
     return;
   }
 
-  const person = scratch('tbp-person', W, H);
-  const pctx = person.getContext('2d');
-  pctx.globalCompositeOperation = 'source-over';
-  pctx.clearRect(0, 0, W, H);
-  pctx.drawImage(src, 0, 0, W, H);
-  pctx.globalCompositeOperation = 'destination-in';
-  pctx.drawImage(full, 0, 0);
-  pctx.globalCompositeOperation = 'source-over';
-  ctx.drawImage(person, 0, 0);
+  drawPersonCutout(ctx, src, full, 'tbp-person');
 }
 
 const isVideo = () => media?.kind === 'video';

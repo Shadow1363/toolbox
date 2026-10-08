@@ -44,6 +44,9 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 | `stage.js` | `createStage({ canvas, transport, render(t), getDuration, getVideo })`: preview loop + play/scrub/mute bar; `renderFrame(t)`/`release()` for frame-by-frame export |
 | `exporter.js` | `createExportBar(...)`: the standard **Export video / Export GIF / Export PNG** bar every media tool uses; `recordStage`, `recordStageGif`, `progressModal`, `exportPNG`, `TRANSPARENT_HINT` |
 | `gif.js` | `loadGifenc`, `quantizeFrame` (Bayer dither + palette, 1-bit alpha), `frameOptions`, `gifDelay`, `gifDelays` |
+| `vision.js` | MediaPipe Tasks Vision (lazy, one WASM fileset, GPU→CPU): `loadSegmenter`/`segmentFrame`, `loadFaceLandmarker`/`detectFace`, `loadPoseLandmarker`/`detectPose`, `nextTimestamp` |
+| `person-mask.js` | `createPersonMask(prefix)` (smoothing → threshold/softness → feathered alpha canvas) and `drawPersonCutout` |
+| `head-tracking.js` | `trackHead` (offline pass, face then body), `smoothTrack` (One Euro, hold + fade), `sampleTrack(t)`; `OneEuro` |
 | `canvas.js` | `fit`, `outputSize`, `scratch`, `drawBlurred`, `roundRectPath`, `linearGradient` |
 | `text-anim.js` | `drawAnimatedText` with entrance (`ANIMATIONS`) and exit (`EXIT_ANIMATIONS`) |
 | `fonts.js` | `FONTS` list (Google Fonts, loaded on demand), `fontString`, `ensureFont` |

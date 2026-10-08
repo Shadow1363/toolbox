@@ -157,8 +157,9 @@ export function gifSize(canvas, width) {
 }
 
 /**
- * Settings dialog shown before the built-in GIF export. Resolves { fps, width } or null.
- * Shows the frame count and a size estimate from the current frame; remembers the choice.
+ * Settings dialog shown before the built-in GIF export. Resolves { fps, width, start, end } or null.
+ * Shows a start/end range (clips over 0.5 s), the frame count and a size estimate from the
+ * current frame; remembers fps and width.
  */
 function gifDialog(stage) {
   const saved = store.get('gif-export', {});
@@ -167,18 +168,30 @@ function gifDialog(stage) {
   const warn = h('p', { class: 'notice gif-dialog-warn', hidden: true });
   let estTimer = 0, perFrame = 0, lastSize = '';
 
+  const dur = stage.duration;
+  const ranged = dur >= 0.5;
+  const sec = (v) => `${v.toFixed(1)}s`;
   const controls = createControls(body, [{ controls: [
+    ranged && { id: 'start', type: 'range', label: 'Start', min: 0, max: dur, step: 0.1, value: 0, format: sec },
+    ranged && { id: 'end', type: 'range', label: 'End', min: 0, max: dur, step: 0.1, value: dur, format: sec },
     { id: 'fps', type: 'segmented', label: 'Frame rate (fps)', value: saved.fps || '15', options: GIF_FPS },
     { id: 'width', type: 'segmented', label: 'Width (px)', value: saved.width || '480', options: GIF_WIDTHS },
-  ] }], { onChange: update });
+  ].filter(Boolean) }], { onChange: (st, id) => {
+    // Keep at least 0.1 s between start and end, moving the handle the user didn't touch.
+    if (id === 'start' && st.end - st.start < 0.1) controls.set({ end: Math.min(dur, st.start + 0.1) }, { silent: true });
+    if (id === 'end' && st.end - st.start < 0.1) controls.set({ start: Math.max(0, st.end - 0.1) }, { silent: true });
+    update();
+  } });
   const s = controls.state;
+  const range = () => (ranged ? [s.start, Math.max(s.start + 0.1, s.end)] : [0, dur]);
 
   function update() {
-    const n = Math.max(1, Math.round(stage.duration * +s.fps));
+    const [a, b] = range();
+    const n = Math.max(1, Math.round((b - a) * +s.fps));
     const [w, hh] = gifSize(stage.canvas, s.width);
     const size = `${w}×${hh}`;
     if (size !== lastSize) { lastSize = size; perFrame = 0; clearTimeout(estTimer); estTimer = setTimeout(estimate, 200); }
-    info.textContent = `${n} frames · ${size} · ${stage.duration.toFixed(1)}s${perFrame ? ` · ≈ ${formatBytes(perFrame * n * 0.9)}` : ''}`;
+    info.textContent = `${n} frames · ${size} · ${(b - a).toFixed(1)}s${perFrame ? ` · ≈ ${formatBytes(perFrame * n * 0.9)}` : ''}`;
     warn.hidden = n <= GIF_WARN_FRAMES;
     warn.textContent = `Long GIFs get big and slow to encode. Lower the frame rate or width, or use Export video (much smaller).`;
   }
@@ -209,7 +222,7 @@ function gifDialog(stage) {
       resolve(v);
     };
     const onKey = (e) => { if (e.key === 'Escape') done(null); };
-    const go = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => done({ fps: +s.fps, width: s.width }) }, 'Export GIF');
+    const go = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => { const [start, end] = range(); done({ fps: +s.fps, width: s.width, start, end }); } }, 'Export GIF');
     const modal = h('div', { class: 'modal-backdrop', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Export GIF' },
       h('div', { class: 'modal' },
         h('h2', {}, 'Export GIF'),
@@ -225,14 +238,14 @@ function gifDialog(stage) {
 }
 
 /**
- * Render the stage from t=0 to the end frame by frame and encode an animated GIF.
- * Any video from getVideo() is seeked to each frame, so the result never drops frames.
+ * Render the stage from `start` to `end` (default: the whole clip) frame by frame and encode
+ * an animated GIF. Any video from getVideo() is seeked to each frame, so no frames drop.
  */
-export async function recordStageGif({ stage, getVideo, fps = 15, width = '480', onProgress, signal }) {
+export async function recordStageGif({ stage, getVideo, fps = 15, width = '480', start = 0, end, onProgress, signal }) {
   const lib = await loadGifenc();
   const video = getVideo?.() || null;
-  const dur = stage.duration;
-  const n = Math.max(1, Math.round(dur * fps));
+  const dur = Math.min(stage.duration, end ?? stage.duration);
+  const n = Math.max(1, Math.round((dur - start) * fps));
   const [w, hh] = gifSize(stage.canvas, width);
   const c = scratch(`gif-frame-${w}x${hh}`, w, hh);
   const cx = c.getContext('2d', { willReadFrequently: true });
@@ -244,7 +257,7 @@ export async function recordStageGif({ stage, getVideo, fps = 15, width = '480',
   try {
     for (let i = 0; i < n; i++) {
       if (signal?.aborted) return null;
-      const t = Math.min(dur - 0.001, i / fps);
+      const t = Math.min(dur - 0.001, start + i / fps);
       if (video) await seekVideo(video, t);
       stage.renderFrame(t);
       cx.clearRect(0, 0, w, hh);

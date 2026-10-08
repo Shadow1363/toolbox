@@ -1,0 +1,17 @@
+/* Nametag Tracker: tool-only styles, built on the shared tokens. */
+
+/* The tag can be dragged on the preview to fine-tune its offset. */
+#preview.nt-hover { cursor: grab; }
+#preview.nt-dragging { cursor: grabbing; }
+
+/* Tracking overlay: sits exactly on top of the preview canvas, never part of an export. */
+.preview-stage canvas.nt-debug {
+  position: absolute; max-width: none; max-height: none;
+  border-radius: 6px; box-shadow: none; background: transparent; pointer-events: none;
+}
+
+.nt-status { font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+.nt-status strong { color: var(--text); font-weight: 600; }
+.nt-status.is-warn { color: var(--text); padding: 8px 10px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--warning) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); }
+.nt-meter { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 6px; }
+.nt-meter > div { height: 100%; background: var(--accent); }
