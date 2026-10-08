@@ -15,9 +15,9 @@ import { loadMedia, LIMITS, MediaError } from './media.js';
 ['dragover', 'drop'].forEach((ev) => window.addEventListener(ev, (e) => e.preventDefault()));
 
 export function createDropzone(root, { accept = ['video', 'image'], label, limits = {}, onLoad, onClear } = {}) {
-  const mime = accept.map((k) => `${k}/*`).join(',');
+  const mime = [...accept.map((k) => `${k}/*`), ...(accept.includes('image') ? ['.heic', '.heif'] : [])].join(',');
   const max = Math.max(...accept.map((k) => limits[k] ?? LIMITS[k]));
-  const hint = `${accept.map((k) => (k === 'video' ? 'MP4, WebM, MOV' : 'PNG, JPG, WebP')).join(' · ')} — up to ${formatBytes(max)}`;
+  const hint = `${accept.map((k) => (k === 'video' ? 'MP4, WebM, MOV' : 'PNG, JPG, WebP, HEIC')).join(' · ')} — up to ${formatBytes(max)}`;
   let current = null;
 
   const input = h('input', { type: 'file', accept: mime, 'aria-label': label || 'Choose file' });

@@ -1,11 +1,16 @@
 /** Loading and validating user media (video / image) + audio routing for export. */
+import { loadLib } from './cdn.js';
 
 export const LIMITS = {
   video: 1024 * 1024 * 1024, // 1 GB
   image: 50 * 1024 * 1024,   // 50 MB
 };
 
-const IMAGE_EXT = /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i;
+const IMAGE_EXT = /\.(png|jpe?g|webp|gif|avif|bmp|svg|heic|heif)$/i;
+const HEIC_EXT = /\.(heic|heif)$/i;
+
+/** iPhone photos. Safari decodes them natively; elsewhere loadMedia converts them with heic-to. */
+export const isHeic = (file) => /^image\/hei[cf]/.test(file.type) || HEIC_EXT.test(file.name);
 const VIDEO_EXT = /\.(mp4|m4v|webm|mov|ogv|mkv)$/i;
 
 export class MediaError extends Error {}
@@ -34,14 +39,31 @@ export async function loadMedia(file, { accept = ['video', 'image'], limits = {}
     throw new MediaError(`That ${kind} is ${(file.size / 1024 ** 2).toFixed(0)} MB. The limit is ${(max / 1024 ** 2).toFixed(0)} MB.`);
   }
 
-  const url = URL.createObjectURL(file);
+  let url = URL.createObjectURL(file);
   const dispose = () => URL.revokeObjectURL(url);
   try {
-    const media = kind === 'video' ? await loadVideo(url, file) : await loadImage(url, file);
+    let media;
+    if (kind === 'video') media = await loadVideo(url, file);
+    else {
+      try { media = await loadImage(url, file); } catch (err) {
+        if (!isHeic(file)) throw err;
+        dispose();
+        url = URL.createObjectURL(await heicToJpeg(file));
+        media = await loadImage(url, file);
+      }
+    }
     return { ...media, kind, name: file.name, size: file.size, url, dispose };
   } catch (err) {
     dispose();
     throw err;
+  }
+}
+
+async function heicToJpeg(file) {
+  const { heicTo } = await loadLib('heic');
+  try { return await heicTo({ blob: file, type: 'image/jpeg', quality: 0.95 }); } catch (err) {
+    console.error(err);
+    throw new MediaError(`Couldn't decode the HEIC photo “${file.name}”.`);
   }
 }
 

@@ -5,9 +5,12 @@
  *   const seg = await loadSegmenter('general');   const m = segmentFrame(seg, video, 'general');
  *   const face = await loadFaceLandmarker();      const lm = detectFace(face, video);   // 478 points or null
  *   const pose = await loadPoseLandmarker();      const lm = detectPose(pose, video);   // 33 points or null
+ *   const faces = await loadFaceLandmarker({ numFaces: 5 });  detectFaces(faces, video);  // array, one per face
+ *   const still = await loadSegmenter('quality', { mode: 'IMAGE' });  segmentImage(still, img, 'quality');
  *
- * Landmarks are normalized (x, y in 0..1 of the source frame). All tasks run in VIDEO mode,
- * which needs strictly increasing timestamps; `nextTimestamp()` guarantees that even when
+ * Landmarks are normalized (x, y in 0..1 of the source frame). Tasks run in VIDEO mode unless
+ * created with { mode: 'IMAGE' } (one-off stills: no timestamps, no frame-to-frame tracking).
+ * VIDEO mode needs strictly increasing timestamps; `nextTimestamp()` guarantees that even when
  * the caller seeks backwards.
  */
 const VERSION = '1.1.0';
@@ -36,12 +39,12 @@ function vision() {
   return visionPromise;
 }
 
-/** Create a task once per key, trying the GPU delegate first. */
-function loadTask(key, className, options) {
+/** Create a task once per key, trying the GPU delegate first. mode: 'VIDEO' | 'IMAGE'. */
+function loadTask(key, className, options, mode = 'VIDEO') {
   if (!tasks.has(key)) {
     const p = (async () => {
       const { mp, fileset } = await vision();
-      const opts = (delegate) => ({ ...options, baseOptions: { ...options.baseOptions, delegate }, runningMode: 'VIDEO' });
+      const opts = (delegate) => ({ ...options, baseOptions: { ...options.baseOptions, delegate }, runningMode: mode });
       try {
         return await mp[className].createFromOptions(fileset, opts('GPU'));
       } catch (err) {
@@ -62,11 +65,21 @@ export function nextTimestamp() {
 }
 
 /* ---------- Person segmentation ---------- */
-export const loadSegmenter = (key = 'general') => loadTask(`seg:${key}`, 'ImageSegmenter', {
+export const loadSegmenter = (key = 'general', { mode = 'VIDEO' } = {}) => loadTask(`seg:${key}:${mode}`, 'ImageSegmenter', {
   baseOptions: { modelAssetPath: SEGMENT_MODELS[key].url },
   outputConfidenceMasks: true,
   outputCategoryMask: false,
-});
+}, mode);
+
+/** Copy the person probability out of a segmenter result (valid only inside the callback). */
+function personMask(result, key) {
+  const masks = result.confidenceMasks;
+  if (!masks?.length) return null;
+  const m = masks[0];
+  const data = m.getAsFloat32Array().slice();
+  if (SEGMENT_MODELS[key].multiclass) for (let i = 0; i < data.length; i++) data[i] = 1 - data[i];
+  return { data, width: m.width, height: m.height };
+}
 
 /**
  * Segment one frame. Returns { data: Float32Array, width, height } where data is
@@ -74,14 +87,14 @@ export const loadSegmenter = (key = 'general') => loadTask(`seg:${key}`, 'ImageS
  */
 export function segmentFrame(segmenter, source, key) {
   let out = null;
-  segmenter.segmentForVideo(source, nextTimestamp(), (result) => {
-    const masks = result.confidenceMasks;
-    if (!masks?.length) return;
-    const m = masks[0];
-    const data = m.getAsFloat32Array().slice(); // copy: the mask is only valid inside this callback
-    if (SEGMENT_MODELS[key].multiclass) for (let i = 0; i < data.length; i++) data[i] = 1 - data[i];
-    out = { data, width: m.width, height: m.height };
-  });
+  segmenter.segmentForVideo(source, nextTimestamp(), (result) => { out = personMask(result, key); });
+  return out;
+}
+
+/** Segment a still with a segmenter loaded in IMAGE mode. Same result shape as segmentFrame. */
+export function segmentImage(segmenter, source, key) {
+  let out = null;
+  segmenter.segment(source, (result) => { out = personMask(result, key); });
   return out;
 }
 
@@ -106,17 +119,17 @@ export function looksLikePerson({ data, width, height }) {
 }
 
 /* ---------- Landmarks ---------- */
-export const loadFaceLandmarker = () => loadTask('face', 'FaceLandmarker', {
+export const loadFaceLandmarker = ({ numFaces = 1 } = {}) => loadTask(`face:${numFaces}`, 'FaceLandmarker', {
   baseOptions: { modelAssetPath: FACE_MODEL },
-  numFaces: 1,
+  numFaces,
   minFaceDetectionConfidence: 0.5,
   minFacePresenceConfidence: 0.5,
   minTrackingConfidence: 0.5,
 });
 
-export const loadPoseLandmarker = () => loadTask('pose', 'PoseLandmarker', {
+export const loadPoseLandmarker = ({ numPoses = 1 } = {}) => loadTask(`pose:${numPoses}`, 'PoseLandmarker', {
   baseOptions: { modelAssetPath: POSE_MODEL },
-  numPoses: 1,
+  numPoses,
   minPoseDetectionConfidence: 0.5,
   minPosePresenceConfidence: 0.5,
   minTrackingConfidence: 0.5,
@@ -131,4 +144,15 @@ export function detectFace(landmarker, source) {
 export function detectPose(landmarker, source) {
   const lm = landmarker.detectForVideo(source, nextTimestamp()).landmarks?.[0];
   return lm ? lm.map((p) => ({ x: p.x, y: p.y, visibility: p.visibility ?? 1 })) : null;
+}
+
+/** Every face's 478 landmarks (empty array when none). */
+export function detectFaces(landmarker, source) {
+  return landmarker.detectForVideo(source, nextTimestamp()).faceLandmarks || [];
+}
+
+/** Every body's 33 landmarks with `visibility` (empty array when none). */
+export function detectPoses(landmarker, source) {
+  return (landmarker.detectForVideo(source, nextTimestamp()).landmarks || [])
+    .map((lm) => lm.map((p) => ({ x: p.x, y: p.y, visibility: p.visibility ?? 1 })));
 }

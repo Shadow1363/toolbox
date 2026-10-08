@@ -1,0 +1,30 @@
+/* Text Behind Person: tool-only styles, built on the shared tokens. */
+
+/* Selection handles and the brush cursor: on top of the preview canvas, never part of an export. */
+.preview-stage canvas.tbp-handles {
+  position: absolute; max-width: none; max-height: none;
+  border-radius: 6px; box-shadow: none; background: transparent; pointer-events: none;
+}
+#preview { touch-action: none; }
+#preview.tbp-dragging { cursor: grabbing; }
+#preview.tbp-brushing { cursor: crosshair; }
+
+/* Layer list: top row = drawn on top. */
+.tbp-layers { display: flex; flex-direction: column; gap: 10px; }
+.tbp-layer-list { display: flex; flex-direction: column; gap: 4px; }
+.tbp-layer {
+  display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 6px; min-width: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer;
+}
+.tbp-layer:hover { background: var(--surface-2); }
+.tbp-layer.is-selected { border-color: var(--accent); background: var(--accent-soft); }
+.tbp-layer:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tbp-thumb {
+  width: 28px; height: 28px; flex: none; border-radius: 4px; object-fit: contain;
+  background: repeating-conic-gradient(var(--surface-2) 0 25%, var(--surface) 0 50%) 0 0 / 8px 8px;
+}
+.tbp-thumb-text { display: inline-grid; place-items: center; font-weight: 800; font-size: 14px; color: var(--text-muted); background: var(--surface-2); }
+.tbp-layer-name { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbp-layer-name small { color: var(--text-muted); }
+.tool-btn.tbp-mini { width: 28px; height: 28px; flex: none; }
+.tool-btn.tbp-mini svg { width: 15px; height: 15px; }

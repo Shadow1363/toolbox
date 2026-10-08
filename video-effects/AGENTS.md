@@ -46,7 +46,8 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 
 ## Following people (MediaPipe)
 Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
-- `vision.js`: lazy-loads `@mediapipe/tasks-vision@1.1.0` (jsDelivr) once, with models from `storage.googleapis.com`; each task is cached and tries the GPU delegate, then CPU. All tasks run in VIDEO mode, and `nextTimestamp()` keeps timestamps strictly increasing even after seeking back.
+- `vision.js`: lazy-loads `@mediapipe/tasks-vision@1.1.0` (jsDelivr) once, with models from `storage.googleapis.com`; each task is cached per options and tries the GPU delegate, then CPU. Tasks run in VIDEO mode (`nextTimestamp()` keeps timestamps strictly increasing even after seeking back); `loadSegmenter(key, { mode: 'IMAGE' })` + `segmentImage` segment a still once with no timestamps.
+  - Several people: `loadFaceLandmarker({ numFaces })` / `loadPoseLandmarker({ numPoses })` (one cached task per count) with `detectFaces` / `detectPoses` (arrays).
   - Segmentation: `SEGMENT_MODELS` (square, landscape, multiclass), `segmentFrame` (copies the mask inside the callback, where it's valid), `looksLikePerson` (auto polarity; returns `null` when the frame has no clear person, e.g. a title card, so `createPersonMask` keeps asking instead of locking in a wrong guess).
   - Landmarks: `detectFace` (478 face-mesh points) and `detectPose` (33 body points with `visibility`), both normalized 0..1.
 - `person-mask.js`: `createPersonMask(prefix)` → `update(segmenter, source, t, { model, smoothing, still })`, `full(W, H, { threshold, softness, polarity, feather })`; `drawPersonCutout(ctx, source, alpha)`. Temporal smoothing depends on frame order, so pass `smoothing: 0` when the export seeks frames (GIF) and must match the preview. Setting `mask.prev = null` (to restart smoothing before an export) is safe: `small()` falls back to the raw mask.
@@ -54,6 +55,12 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
   - `trackHead(media, { fps, mode: 'auto'|'face'|'body', onProgress, signal })` seeks every 1/fps s and stores `{ found, x, y, size, roll, via }` (y = top of head; size = head width / frame height). Face first (crown ≈ landmark 10 + 30% of the face height); body (ears, else shoulders) when the face is missing or tiny.
   - `smoothTrack(track, { strength, hold, fadeOut, fadeIn })`: holds the last position through gaps, fades after `hold`, splits into segments wherever the head was fully hidden (no gliding across the frame), and smooths each segment with a zero-lag forward + backward One Euro pass. Cheap, so rerun it on slider changes.
   - `sampleTrack(smooth, t)` interpolates between samples.
+- `multi-track.js`: the same idea for several people; reuse it for any per-person effect (Auto Reframe, face blur, speech bubbles).
+  - `detectHeads(media, { fps, mode, maxPeople, maxSide, onProgress, signal })` stores every head on every frame (`frames[i] = [{ x, y, size, roll, via }]`). Face Landmarker runs with `numFaces = maxPeople`; Pose Landmarker (`numPoses`) adds heads turned away when fewer faces than people are in view, and every 10th frame for newcomers. Heads inside another head's box are duplicates (`sameHead`; faces win), so a body estimate never becomes an extra person. `maxSide` downscales frames before detection (faster, misses small faces). `onProgress(p, { people })`.
+  - `assignTracks(det, { count: 'auto' | n })` is cheap, so rerun it when the count changes. Auto = the most heads seen together for ≥ 0.3 s (`autoCount`, ignores one-frame false positives); a number keeps the n largest heads per frame. Each frame: predict each track from its EMA velocity (up to 0.7 s while hidden), cost = distance in head widths + 1.5 × |log size ratio|, gate that grows while a track is hidden, `hungarian` for the one-to-one match. Leftover heads start a new track while there are fewer than `count`, else reconnect to the nearest lost track anywhere in the frame (people leaving and coming back). Ids are 1..count by first appearance, then left to right.
+  - Output tracks have `samples` in `trackHead`'s shape, so `smoothTrack`/`sampleTrack` work per track unchanged.
+  - `applyEdits(res, [{ op: 'swap' | 'merge', a, b, from }])` returns a fixed copy (from = sample index). `trackThumbnails(media, res)` crops each track's largest face on a second `<video>`, so the preview playhead never moves.
+  - Unit-testable in Node (no DOM at import): synthetic crossing/leave-and-return detections → `assignTracks` → check each person keeps one id.
 - Draw debug overlays (landmarks, boxes) on a separate canvas stacked over the preview so no export can include them (Nametag's `#debug`).
 
 ## Speech (Whisper)
@@ -97,18 +104,27 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - `buildFrameCard()` (media + browser/phone chrome, radius, border) → `motion(t)` (intro zoom, fade, pan, tilt) → `drawCardShadow` (projected polygon) → card via `persp.draw` when tilted, plain `drawImage` otherwise.
 - Aspect presets come from `SIZES` (16:9, 9:16, 1:1, 4:5).
 
-### text-behind-person: text between background and person
-- Files: `script.js`. Segmentation and the mask pipeline come from `lib/vision.js` and `lib/person-mask.js` (see Following people).
-- Per frame: video → text (`drawAnimatedText` with `exit`) → `mask.update` (live, with the user's temporal smoothing) → `mask.full` → `drawPersonCutout`. "Show mask" tints the mask instead.
-- Mask polarity is auto-detected (`looksLikePerson`); users can override it.
-- `syncTimeRanges()` keeps "Start at" / "End at" within the clip, and "End at" follows the clip end until the user moves it.
+### text-behind-person: text and images between background and person
+- Files: `script.js` (layers, panel, render, on-canvas editing, exports), `still-mask.js` (photo mask: edge snapping + brush), `style.css`. Video segmentation uses `lib/vision.js` and `lib/person-mask.js` (see Following people).
+- Layers: `layers[]` of `{ type: 'text' | 'image', … }`, drawn in array order; `front: true` draws over the person. The panel edits the selected layer: `select()` copies its values into the panel (`LAYER_KEYS`), `onChange` writes them back. Text-only and image-only controls have their own ids (`anim`/`imgAnim`, `exitAnim`/`imgExit`, `imgWidth`); shared ids (position, rotation, opacity, timing) live in one section each, because duplicate ids break `createControls`. Image layers animate through `drawImageLayer` (same names as the text animations).
+- Per frame: source → layers behind → person cut-out (`personAlpha`) → layers in front. "Show mask" tints the mask instead.
+- Editing on the preview: `#handles` canvas over the preview (never exported) draws the selection box, corner (scale) and round (rotate, Shift snaps 15°) handles. Hit testing works on `layerBox()`, the layer's settled (un-animated) box.
+- Photos: the canvas is the photo at full size (up to 4096 px long side), the transport is hidden, and the preview shows the settled state (no animation). `detectStill()` runs the high-quality multiclass model once in IMAGE mode. `still-mask.js` upscales the raw 256² mask to a working size (≤ 1536 px), snaps it to the photo with a grey guided filter ("Snap edges to the photo"), applies threshold/softness/polarity, then brush layers: out = (base ∪ add) − erase. Strokes are stored; undo/redo replay them. `full()` caches the feathered full-size mask by version.
+- Photo exports: PNG = full-resolution still. GIF/video only when a layer has an entrance or exit animation; `beforeExport` sets `animating` (and shrinks the canvas to 1920 px for video), `afterExport` restores. "Play animation" plays once (`previewing`).
+- Video: mask polarity is auto-detected (`looksLikePerson`); users can override it. Temporal smoothing applies to video only.
+- `syncTimeRanges()` keeps every layer's "Start at" / "End at" within the clip, and "End at" follows the clip end (`endFollows`) until the user moves it.
 
-### nametag: player nametag that follows a head
+### nametag: player nametags that follow every head
 - Files: `script.js`, `pixel-font.js`, `style.css`.
-- Flow: upload → `trackHead` pass in a `progressModal` (reruns on detector or rate change) → `smoothTrack` (reruns on smoothing/hold/fade) → `render(t)` draws from `sampleTrack`. Exports are disabled until a track exists.
+- Flow: upload → `detectHeads` pass in a `progressModal` (reruns on detector, rate or resolution change, or when a manual count needs more faces than were detected) → `assignTracks` (reruns on people count) → `applyEdits` (swap/merge fixes) → `smoothTrack` per person (reruns on smoothing/hold/fade) → `render(t)` draws from `sampleTrack`. Exports are disabled until tracks exist.
+- People: "Everyone" (auto count) or "Set a number" (1–10, largest faces). `people` (Map by track id) holds name, enabled and the optional own style (`pColor`, `pBg`, `pSize`, `pOffsetX/Y` override `textColor`, `bgOpacity`, `size`, `offsetX/Y`); `styleOf(p)` picks own or shared. The Name field edits the selected person (person 1 starts with the name typed before upload). Clicking a head or tag on the preview selects that person and focuses Name.
+- Fixes: "Swap" / "Merge" with another person from the current frame on (`edits`, undoable). Thumbnails come from `trackThumbnails`.
+- Overlap: "Keep tags apart" (`separateTags`) keeps the lowest tag and moves the others up past it (or below it when there's no room above).
+- The `#debug` canvas is always shown: dashed outline on the selected tag (2+ people), plus per-track paths, boxes and ids when "Show tracking overlay" is on.
 - `pixel-font.js`: an original 8-row bitmap font (rows 0–6 above the baseline, row 7 descenders). Characters it lacks are rasterized from the system font at 8 px and thresholded, so "Allow any text" stays blocky. Never bundle the game's font.
 - Tag: `tagBitmap()` draws box + shadow + text at 1 px per tag pixel (cached); `drawTag` scales it with `imageSmoothingEnabled = false`, snapping to whole pixels when upright. Tag pixel size `u` = 5% of the head width × Size (fixed size uses the median head size). Offsets are in tag pixels, so they scale with the tag; dragging the tag on the preview edits them. `keepInFrame` slides the rotated box back inside the frame.
-- Hide behind person: `mask.update(…, { smoothing: 0 })` live per frame, then the person cut-out is drawn clipped to the tag's box (Tag only mode uses `destination-out` instead).
+- Hide behind person: `mask.update(…, { smoothing: 0 })` once per frame (the mask covers everyone), then the person cut-out is drawn clipped to each tag's box (Tag only mode uses `destination-out` instead).
+- Speed: each sampled frame costs one Face Landmarker run (plus Pose when people are missing). The modal warns on videos over 60 s and when 4+ people are in view; 15 / s and 720p/480p tracking resolution are the fixes.
 - Output "Tag only" clears the video for a transparent tag (PNG/WebM/GIF).
 
 ### text-match-cut: keyword pinned while pages flicker
@@ -235,7 +251,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Object URLs are revoked by `media.dispose()`; tool code that creates its own URLs must revoke them too.
 
 ## Ideas for future tools
-- Face-following effects on `head-tracking.js`: speech bubbles, blur/pixelate a face, sticker hats, spotlight follow.
+- Face-following effects on `head-tracking.js` / `multi-track.js`: Auto Reframe (crop that follows the active person), speech bubbles, blur/pixelate faces, sticker hats, spotlight follow.
 - Import SRT/VTT into Auto Captions (skip transcription), reusing `transcript.js`.
 - Screen Recorder (`getDisplayMedia`) that logs clicks and hands recording + clicks to Zoom on Click via `handoff.js`.
 - Picture-in-picture webcam bubble over a screen recording.

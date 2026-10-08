@@ -1,6 +1,6 @@
 /*
  * In-browser speech recognition with Whisper (transformers.js in a module worker).
- * © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad
+
  *
  *   const device = await pickDevice('auto');                  // 'webgpu' | 'wasm'
  *   modelBytes('base', device)                                // download size, for the UI
@@ -22,42 +22,88 @@
  * Language: transformers.js silently assumes English when no language is given, so `transcribe` detects it
  * first (one decoder step on the first speech window, softmax over Whisper's language tokens).
  */
-import { LIBS } from './cdn.js';
+import { LIBS } from "./cdn.js";
 
 export const SAMPLE_RATE = 16000;
 
 /** File sizes in MB (from the Hugging Face repos) per model and dtype. */
 const SIZES = {
-  tiny: { enc: { fp32: 32.9, fp16: 16.5, q8: 10.1 }, dec: { q4: 86.8, q8: 30.7 } },
-  base: { enc: { fp32: 82.5, fp16: 41.3, q8: 23.2 }, dec: { q4: 123.7, q8: 53.7 } },
-  small: { enc: { fp32: 352.8, fp16: 176.5, q8: 92.2 }, dec: { q4: 233.4, q8: 156.8 } },
+  tiny: {
+    enc: { fp32: 32.9, fp16: 16.5, q8: 10.1 },
+    dec: { q4: 86.8, q8: 30.7 },
+  },
+  base: {
+    enc: { fp32: 82.5, fp16: 41.3, q8: 23.2 },
+    dec: { q4: 123.7, q8: 53.7 },
+  },
+  small: {
+    enc: { fp32: 352.8, fp16: 176.5, q8: 92.2 },
+    dec: { q4: 233.4, q8: 156.8 },
+  },
 };
 const SHARED_MB = 3.4; // tokenizer + configs
-const SUFFIX = { fp32: '', fp16: '_fp16', q8: '_quantized', q4: '_q4' };
+const SUFFIX = { fp32: "", fp16: "_fp16", q8: "_quantized", q4: "_q4" };
 
 export const WHISPER_MODELS = [
-  ['tiny', 'Tiny (fastest)'],
-  ['base', 'Base (balanced)'],
-  ['small', 'Small (most accurate)'],
+  ["tiny", "Tiny (fastest)"],
+  ["base", "Base (balanced)"],
+  ["small", "Small (most accurate)"],
 ];
 
 /** Whisper's languages (the common ones), [code, name]. '' = auto-detect. */
 export const WHISPER_LANGUAGES = [
-  ['', 'Auto-detect'], ['en', 'English'], ['es', 'Spanish'], ['pt', 'Portuguese'], ['fr', 'French'], ['de', 'German'],
-  ['it', 'Italian'], ['nl', 'Dutch'], ['pl', 'Polish'], ['ru', 'Russian'], ['uk', 'Ukrainian'], ['tr', 'Turkish'],
-  ['ar', 'Arabic'], ['hi', 'Hindi'], ['ja', 'Japanese'], ['ko', 'Korean'], ['zh', 'Chinese'], ['id', 'Indonesian'],
-  ['vi', 'Vietnamese'], ['th', 'Thai'], ['sv', 'Swedish'], ['da', 'Danish'], ['no', 'Norwegian'], ['fi', 'Finnish'],
-  ['cs', 'Czech'], ['el', 'Greek'], ['he', 'Hebrew'], ['hu', 'Hungarian'], ['ro', 'Romanian'], ['ca', 'Catalan'],
-  ['ms', 'Malay'], ['tl', 'Tagalog'], ['fa', 'Persian'], ['bn', 'Bengali'], ['ta', 'Tamil'], ['ur', 'Urdu'],
+  ["", "Auto-detect"],
+  ["en", "English"],
+  ["es", "Spanish"],
+  ["pt", "Portuguese"],
+  ["fr", "French"],
+  ["de", "German"],
+  ["it", "Italian"],
+  ["nl", "Dutch"],
+  ["pl", "Polish"],
+  ["ru", "Russian"],
+  ["uk", "Ukrainian"],
+  ["tr", "Turkish"],
+  ["ar", "Arabic"],
+  ["hi", "Hindi"],
+  ["ja", "Japanese"],
+  ["ko", "Korean"],
+  ["zh", "Chinese"],
+  ["id", "Indonesian"],
+  ["vi", "Vietnamese"],
+  ["th", "Thai"],
+  ["sv", "Swedish"],
+  ["da", "Danish"],
+  ["no", "Norwegian"],
+  ["fi", "Finnish"],
+  ["cs", "Czech"],
+  ["el", "Greek"],
+  ["he", "Hebrew"],
+  ["hu", "Hungarian"],
+  ["ro", "Romanian"],
+  ["ca", "Catalan"],
+  ["ms", "Malay"],
+  ["tl", "Tagalog"],
+  ["fa", "Persian"],
+  ["bn", "Bengali"],
+  ["ta", "Tamil"],
+  ["ur", "Urdu"],
 ];
 
-const NAMES = typeof Intl !== 'undefined' && Intl.DisplayNames ? new Intl.DisplayNames(['en'], { type: 'language' }) : null;
+const NAMES =
+  typeof Intl !== "undefined" && Intl.DisplayNames
+    ? new Intl.DisplayNames(["en"], { type: "language" })
+    : null;
 /** English name for a Whisper language code ('haw' → 'Hawaiian'). */
 export function languageName(code) {
-  if (!code) return 'Auto-detect';
+  if (!code) return "Auto-detect";
   const known = WHISPER_LANGUAGES.find(([c]) => c === code);
   if (known) return known[1];
-  try { return NAMES?.of(code === 'jw' ? 'jv' : code) || code; } catch { return code; }
+  try {
+    return NAMES?.of(code === "jw" ? "jv" : code) || code;
+  } catch {
+    return code;
+  }
 }
 
 const repo = (model) => `onnx-community/whisper-${model}_timestamped`;
@@ -69,57 +115,77 @@ export async function gpuSupport() {
     gpuInfo = (async () => {
       try {
         const adapter = await navigator.gpu?.requestAdapter();
-        return { webgpu: !!adapter, f16: !!adapter?.features?.has('shader-f16') };
-      } catch { return { webgpu: false, f16: false }; }
+        return {
+          webgpu: !!adapter,
+          f16: !!adapter?.features?.has("shader-f16"),
+        };
+      } catch {
+        return { webgpu: false, f16: false };
+      }
     })();
   }
   return gpuInfo;
 }
 
 /** Resolve 'auto' | 'webgpu' | 'wasm' to a device this browser can run. */
-export async function pickDevice(pref = 'auto') {
+export async function pickDevice(pref = "auto") {
   const { webgpu } = await gpuSupport();
-  if (pref === 'wasm' || !webgpu) return 'wasm';
-  return 'webgpu';
+  if (pref === "wasm" || !webgpu) return "wasm";
+  return "webgpu";
 }
 
 async function dtypeFor(model, device) {
-  if (device !== 'webgpu') return { encoder_model: 'q8', decoder_model_merged: 'q8' };
+  if (device !== "webgpu")
+    return { encoder_model: "q8", decoder_model_merged: "q8" };
   const { f16 } = await gpuSupport();
-  return { encoder_model: model === 'small' && f16 ? 'fp16' : 'fp32', decoder_model_merged: 'q4' };
+  return {
+    encoder_model: model === "small" && f16 ? "fp16" : "fp32",
+    decoder_model_merged: "q4",
+  };
 }
 
 /** Download size in bytes for a model on a device. */
 export async function modelBytes(model, device) {
   const d = await dtypeFor(model, device);
   const sz = SIZES[model];
-  return (sz.enc[d.encoder_model] + sz.dec[d.decoder_model_merged] + SHARED_MB) * 1e6;
+  return (
+    (sz.enc[d.encoder_model] + sz.dec[d.decoder_model_merged] + SHARED_MB) * 1e6
+  );
 }
 
 /** True when every weight file for this model/device is already in Cache Storage. */
 export async function isCached(model, device) {
   try {
-    if (!('caches' in window)) return false;
-    const cache = await caches.open('transformers-cache');
+    if (!("caches" in window)) return false;
+    const cache = await caches.open("transformers-cache");
     const d = await dtypeFor(model, device);
     const base = `https://huggingface.co/${repo(model)}/resolve/main/onnx/`;
-    const files = [`encoder_model${SUFFIX[d.encoder_model]}.onnx`, `decoder_model_merged${SUFFIX[d.decoder_model_merged]}.onnx`];
+    const files = [
+      `encoder_model${SUFFIX[d.encoder_model]}.onnx`,
+      `decoder_model_merged${SUFFIX[d.decoder_model_merged]}.onnx`,
+    ];
     const hits = await Promise.all(files.map((f) => cache.match(base + f)));
     return hits.every(Boolean);
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 /** Decode the audio track of a media file into 16 kHz mono samples. */
 export async function decodeAudio(blob) {
-  const Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-  if (!Offline) throw new Error('This browser cannot decode audio (no Web Audio).');
+  const Offline =
+    window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  if (!Offline)
+    throw new Error("This browser cannot decode audio (no Web Audio).");
   const buf = await blob.arrayBuffer();
   let decoded;
   try {
     // Any OfflineAudioContext resamples to its own rate while decoding.
     decoded = await new Offline(1, 1, SAMPLE_RATE).decodeAudioData(buf);
   } catch {
-    throw new Error('Could not read an audio track from this file. Make sure the video has sound (AAC, Opus, MP3 or Vorbis).');
+    throw new Error(
+      "Could not read an audio track from this file. Make sure the video has sound (AAC, Opus, MP3 or Vorbis).",
+    );
   }
   const n = decoded.length;
   const out = new Float32Array(n);
@@ -137,7 +203,8 @@ export function splitAudio(audio, max = 29) {
   const rms = new Float32Array(frames);
   for (let f = 0; f < frames; f++) {
     let s = 0;
-    const a = f * hop, b = Math.min(audio.length, a + hop);
+    const a = f * hop,
+      b = Math.min(audio.length, a + hop);
     for (let i = a; i < b; i++) s += audio[i] * audio[i];
     rms[f] = Math.sqrt(s / Math.max(1, b - a));
   }
@@ -148,27 +215,38 @@ export function splitAudio(audio, max = 29) {
   while (start < frames) {
     let end = Math.min(frames, start + maxF);
     if (end < frames) {
-      let best = end, bestV = Infinity;
-      for (let f = start + Math.floor(maxF * 0.66); f < end; f++) if (rms[f] < bestV) { bestV = rms[f]; best = f; }
+      let best = end,
+        bestV = Infinity;
+      for (let f = start + Math.floor(maxF * 0.66); f < end; f++)
+        if (rms[f] < bestV) {
+          bestV = rms[f];
+          best = f;
+        }
       end = best;
     }
     let loud = 0;
     for (let f = start; f < end; f++) loud = Math.max(loud, rms[f]);
     // Skip near-silent windows: Whisper invents text ("Thank you.") on silence.
-    windows.push({ start: start * hop, end: Math.min(audio.length, end * hop), silent: loud < Math.max(0.004, peak * 0.03) });
+    windows.push({
+      start: start * hop,
+      end: Math.min(audio.length, end * hop),
+      silent: loud < Math.max(0.004, peak * 0.03),
+    });
     start = end;
   }
   return windows;
 }
 
 let worker = null;
-let workerKey = '';
+let workerKey = "";
 let seq = 0;
 
 function getWorker() {
   if (!worker) {
-    worker = new Worker(new URL('./whisper-worker.js', import.meta.url), { type: 'module' });
-    workerKey = '';
+    worker = new Worker(new URL("./whisper-worker.js", import.meta.url), {
+      type: "module",
+    });
+    workerKey = "";
   }
   return worker;
 }
@@ -177,17 +255,32 @@ function getWorker() {
 function request(msg, accept, onMsg, signal, transfer = []) {
   const w = getWorker();
   return new Promise((resolve, reject) => {
-    const off = () => { w.removeEventListener('message', on); w.removeEventListener('error', onErr); signal?.removeEventListener('abort', onAbort); };
+    const off = () => {
+      w.removeEventListener("message", on);
+      w.removeEventListener("error", onErr);
+      signal?.removeEventListener("abort", onAbort);
+    };
     const on = ({ data }) => {
       onMsg?.(data);
-      if (data.type === 'error' && (data.id == null || data.id === msg.id)) { off(); reject(new Error(data.message)); }
-      else if (accept(data)) { off(); resolve(data); }
+      if (data.type === "error" && (data.id == null || data.id === msg.id)) {
+        off();
+        reject(new Error(data.message));
+      } else if (accept(data)) {
+        off();
+        resolve(data);
+      }
     };
-    const onErr = (e) => { off(); reject(new Error(e.message || 'The speech worker crashed.')); };
-    const onAbort = () => { off(); reject(new DOMException('Cancelled', 'AbortError')); };
-    w.addEventListener('message', on);
-    w.addEventListener('error', onErr);
-    signal?.addEventListener('abort', onAbort, { once: true });
+    const onErr = (e) => {
+      off();
+      reject(new Error(e.message || "The speech worker crashed."));
+    };
+    const onAbort = () => {
+      off();
+      reject(new DOMException("Cancelled", "AbortError"));
+    };
+    w.addEventListener("message", on);
+    w.addEventListener("error", onErr);
+    signal?.addEventListener("abort", onAbort, { once: true });
     w.postMessage(msg, transfer);
   });
 }
@@ -201,25 +294,38 @@ export async function loadModel(model, device, { onDownload, signal } = {}) {
     const expected = await modelBytes(model, dev);
     const files = new Map();
     const report = (d) => {
-      if (d.type !== 'progress' || !d.total) return;
+      if (d.type !== "progress" || !d.total) return;
       files.set(d.file, [d.loaded, d.total]);
-      let loaded = 0, total = 0;
-      for (const [l, t] of files.values()) { loaded += l; total += t; }
+      let loaded = 0,
+        total = 0;
+      for (const [l, t] of files.values()) {
+        loaded += l;
+        total += t;
+      }
       onDownload?.(loaded, Math.max(total, expected));
     };
-    const sessionOptions = dev === 'wasm' ? { graphOptimizationLevel: 'basic' } : null;
-    await request({ type: 'load', repo: repo(model), device: dev, dtype, sessionOptions }, (d) => d.type === 'ready', report, signal);
+    const sessionOptions =
+      dev === "wasm" ? { graphOptimizationLevel: "basic" } : null;
+    await request(
+      { type: "load", repo: repo(model), device: dev, dtype, sessionOptions },
+      (d) => d.type === "ready",
+      report,
+      signal,
+    );
     workerKey = key;
     return dev;
   };
   try {
     return await tryLoad(device);
   } catch (err) {
-    if (err.name === 'AbortError') { resetWorker(); throw err; } // stop a half-finished download
-    if (device !== 'webgpu') throw err;
-    console.warn('WebGPU Whisper failed, falling back to WASM', err);
+    if (err.name === "AbortError") {
+      resetWorker();
+      throw err;
+    } // stop a half-finished download
+    if (device !== "webgpu") throw err;
+    console.warn("WebGPU Whisper failed, falling back to WASM", err);
     resetWorker();
-    return tryLoad('wasm');
+    return tryLoad("wasm");
   }
 }
 
@@ -228,7 +334,7 @@ export async function loadModel(model, device, { onDownload, signal } = {}) {
  * Keep at most 2 consecutive copies of any repeated 1–8 word phrase.
  */
 export function dropLoops(words, keep = 2) {
-  const key = (w) => w.text.toLowerCase().replace(/[^\p{L}\p{N}']/gu, '');
+  const key = (w) => w.text.toLowerCase().replace(/[^\p{L}\p{N}']/gu, "");
   const out = [];
   for (const w of words) {
     out.push(w);
@@ -237,11 +343,15 @@ export function dropLoops(words, keep = 2) {
       while (out.length >= n * (reps + 1)) {
         const end = out.length - n * reps;
         let same = true;
-        for (let i = 0; i < n && same; i++) same = key(out[end - n + i]) === key(out[out.length - n + i]);
+        for (let i = 0; i < n && same; i++)
+          same = key(out[end - n + i]) === key(out[out.length - n + i]);
         if (!same) break;
         reps++;
       }
-      if (reps > keep) { out.length -= n; break; }
+      if (reps > keep) {
+        out.length -= n;
+        break;
+      }
     }
   }
   return out;
@@ -250,21 +360,45 @@ export function dropLoops(words, keep = 2) {
 /** The first ~30 s of speech (skipping silent windows), for language detection. */
 function speechSample(audio, windows = splitAudio(audio)) {
   const win = windows.find((w) => !w.silent) || windows[0];
-  return win ? audio.slice(win.start, Math.min(win.end, win.start + 30 * SAMPLE_RATE)) : audio.slice(0, 30 * SAMPLE_RATE);
+  return win
+    ? audio.slice(win.start, Math.min(win.end, win.start + 30 * SAMPLE_RATE))
+    : audio.slice(0, 30 * SAMPLE_RATE);
 }
 
 /** Detect the spoken language. Resolves { code, prob, ranked: [[code, p], …] }. */
-export async function detectLanguage(audio, { model = 'base', device = 'wasm', onDownload, signal } = {}) {
+export async function detectLanguage(
+  audio,
+  { model = "base", device = "wasm", onDownload, signal } = {},
+) {
   await loadModel(model, device, { onDownload, signal });
   const id = ++seq;
   const chunk = speechSample(audio);
-  const res = await request({ type: 'detect', id, audio: chunk }, (d) => d.type === 'language' && d.id === id, null, signal, [chunk.buffer]);
-  const [code, prob] = res.ranked[0] || ['en', 0];
+  const res = await request(
+    { type: "detect", id, audio: chunk },
+    (d) => d.type === "language" && d.id === id,
+    null,
+    signal,
+    [chunk.buffer],
+  );
+  const [code, prob] = res.ranked[0] || ["en", 0];
   return { code, prob, ranked: res.ranked };
 }
 
 /** Transcribe (or translate into English) 16 kHz mono samples. Returns words with absolute times (seconds). */
-export async function transcribe(audio, { model = 'base', device = 'wasm', language = null, task = 'transcribe', onDownload, onProgress, onWords, onLanguage, signal } = {}) {
+export async function transcribe(
+  audio,
+  {
+    model = "base",
+    device = "wasm",
+    language = null,
+    task = "transcribe",
+    onDownload,
+    onProgress,
+    onWords,
+    onLanguage,
+    signal,
+  } = {},
+) {
   const used = await loadModel(model, device, { onDownload, signal });
   const windows = splitAudio(audio);
   let languageProb = 1;
@@ -274,9 +408,9 @@ export async function transcribe(audio, { model = 'base', device = 'wasm', langu
       language = det.code;
       languageProb = det.prob;
     } catch (err) {
-      if (err.name === 'AbortError') throw err;
-      console.warn('Language detection failed; assuming English', err);
-      language = 'en';
+      if (err.name === "AbortError") throw err;
+      console.warn("Language detection failed; assuming English", err);
+      language = "en";
       languageProb = 0;
     }
   }
@@ -286,13 +420,23 @@ export async function transcribe(audio, { model = 'base', device = 'wasm', langu
   const words = [];
   onProgress?.(0);
   for (const win of windows) {
-    if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
+    if (signal?.aborted) throw new DOMException("Cancelled", "AbortError");
     if (!win.silent) {
       const id = ++seq;
       const chunk = audio.slice(win.start, win.end);
-      const res = await request({ type: 'run', id, audio: chunk, language, task }, (d) => d.type === 'result' && d.id === id, null, signal, [chunk.buffer]);
+      const res = await request(
+        { type: "run", id, audio: chunk, language, task },
+        (d) => d.type === "result" && d.id === id,
+        null,
+        signal,
+        [chunk.buffer],
+      );
       const offset = win.start / SAMPLE_RATE;
-      const got = dropLoops(res.words).map((w) => ({ text: w.text, start: +(w.start + offset).toFixed(3), end: +(w.end + offset).toFixed(3) }));
+      const got = dropLoops(res.words).map((w) => ({
+        text: w.text,
+        start: +(w.start + offset).toFixed(3),
+        end: +(w.end + offset).toFixed(3),
+      }));
       words.push(...got);
       onWords?.(got);
     }
@@ -306,5 +450,5 @@ export async function transcribe(audio, { model = 'base', device = 'wasm', langu
 export function resetWorker() {
   worker?.terminate();
   worker = null;
-  workerKey = '';
+  workerKey = "";
 }

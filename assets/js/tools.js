@@ -90,20 +90,20 @@ export const tools = [
     category: "video-effects",
     name: "Text Behind Person",
     description:
-      "Place text behind the person in your video with AI segmentation.",
+      "Place text and images behind the person in a video or photo with AI segmentation.",
     thumbnail: "/assets/img/text-behind-person.svg",
     status: "beta",
-    tags: ["segmentation", "mediapipe", "ai", "mask"],
+    tags: ["segmentation", "mediapipe", "ai", "mask", "photo", "layers", "sticker", "logo"],
   },
   {
     id: "nametag",
     category: "video-effects",
     name: "Nametag Tracker",
     description:
-      "A blocky player nametag that floats above a person's head and follows them.",
+      "Blocky player nametags that float above people's heads and follow them, one per person.",
     thumbnail: "/assets/img/nametag.svg",
     status: "new",
-    tags: ["face tracking", "mediapipe", "pixel", "game", "username", "overlay"],
+    tags: ["face tracking", "mediapipe", "pixel", "game", "username", "overlay", "multiple people"],
   },
   {
     id: "text-match-cut",

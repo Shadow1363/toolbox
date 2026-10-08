@@ -2,52 +2,105 @@
  * Retro Looks: the effects. Each one is a fragment shader (see engine.js HEADER) plus a function
  * that maps panel settings to its uniforms. They run in EFFECTS order when enabled, so styles
  * that redraw the picture (dither, ASCII) come first, then film and tape artifacts, then the CRT screen.
- * © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad
+
  */
 
-const hex3 = (hex) => { const n = parseInt(hex.slice(1), 16); return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
+const hex3 = (hex) => {
+  const n = parseInt(hex.slice(1), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+};
 
 /* ---------- Palettes (dark → light for the luma ramps) ---------- */
 export const PALETTES = {
-  bw: { label: '1-bit (black & white)', mode: 'ramp', colors: ['#000000', '#ffffff'] },
-  handheld: { label: 'Handheld green (4)', mode: 'ramp', colors: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'] },
-  gray: { label: 'Grayscale (4)', mode: 'ramp', colors: ['#000000', '#555555', '#aaaaaa', '#ffffff'] },
-  sepia: { label: 'Sepia (4)', mode: 'ramp', colors: ['#2b1d0e', '#6b4a2b', '#b58b5a', '#f1e0c0'] },
-  pc4: { label: 'Retro PC (4 colors)', mode: 'nearest', colors: ['#000000', '#55ffff', '#ff55ff', '#ffffff'] },
-  fantasy16: { label: 'Fantasy console (16)', mode: 'nearest', colors: ['#000000', '#1d2b53', '#7e2553', '#008751', '#ab5236', '#5f574f', '#c2c3c7', '#fff1e8', '#ff004d', '#ffa300', '#ffec27', '#00e436', '#29adff', '#83769c', '#ff77a8', '#ffccaa'] },
-  duotone: { label: 'Custom duotone', mode: 'ramp', colors: null },
+  bw: {
+    label: "1-bit (black & white)",
+    mode: "ramp",
+    colors: ["#000000", "#ffffff"],
+  },
+  handheld: {
+    label: "Handheld green (4)",
+    mode: "ramp",
+    colors: ["#0f380f", "#306230", "#8bac0f", "#9bbc0f"],
+  },
+  gray: {
+    label: "Grayscale (4)",
+    mode: "ramp",
+    colors: ["#000000", "#555555", "#aaaaaa", "#ffffff"],
+  },
+  sepia: {
+    label: "Sepia (4)",
+    mode: "ramp",
+    colors: ["#2b1d0e", "#6b4a2b", "#b58b5a", "#f1e0c0"],
+  },
+  pc4: {
+    label: "Retro PC (4 colors)",
+    mode: "nearest",
+    colors: ["#000000", "#55ffff", "#ff55ff", "#ffffff"],
+  },
+  fantasy16: {
+    label: "Fantasy console (16)",
+    mode: "nearest",
+    colors: [
+      "#000000",
+      "#1d2b53",
+      "#7e2553",
+      "#008751",
+      "#ab5236",
+      "#5f574f",
+      "#c2c3c7",
+      "#fff1e8",
+      "#ff004d",
+      "#ffa300",
+      "#ffec27",
+      "#00e436",
+      "#29adff",
+      "#83769c",
+      "#ff77a8",
+      "#ffccaa",
+    ],
+  },
+  duotone: { label: "Custom duotone", mode: "ramp", colors: null },
 };
 
 export const CHARSETS = {
-  classic: { label: 'Classic  .:-=+*#%@', chars: ' .:-=+*#%@' },
-  dense: { label: 'Dense (70 chars)', chars: ' .\'`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$' },
-  blocks: { label: 'Blocks ░▒▓█', chars: ' ░▒▓█' },
-  binary: { label: 'Binary 01', chars: ' 01' },
-  dots: { label: 'Dots ·•●', chars: ' ·•●' },
+  classic: { label: "Classic  .:-=+*#%@", chars: " .:-=+*#%@" },
+  dense: {
+    label: "Dense (70 chars)",
+    chars:
+      " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
+  },
+  blocks: { label: "Blocks ░▒▓█", chars: " ░▒▓█" },
+  binary: { label: "Binary 01", chars: " 01" },
+  dots: { label: "Dots ·•●", chars: " ·•●" },
 };
 
 /** Glyph atlas for the ASCII pass: one row of square-ish cells, sorted from least to most ink. */
 export function buildAtlas(chars, family) {
-  const cw = 48, ch = 64;
+  const cw = 48,
+    ch = 64;
   const list = [...new Set([...chars])];
-  const c = document.createElement('canvas');
-  c.width = cw * list.length; c.height = ch;
-  const g = c.getContext('2d', { willReadFrequently: true });
+  const c = document.createElement("canvas");
+  c.width = cw * list.length;
+  c.height = ch;
+  const g = c.getContext("2d", { willReadFrequently: true });
   g.font = `700 ${Math.round(ch * 0.82)}px "${family}", ui-monospace, monospace`;
-  g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillStyle = '#fff';
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillStyle = "#fff";
   // Measure ink per glyph so the brightness ramp is right whatever the font.
   const ink = list.map((chr) => {
     g.clearRect(0, 0, cw, ch);
     g.fillText(chr, cw / 2, ch / 2 + 2);
     const d = g.getImageData(0, 0, cw, ch).data;
-    let a = 0; for (let i = 3; i < d.length; i += 4) a += d[i];
+    let a = 0;
+    for (let i = 3; i < d.length; i += 4) a += d[i];
     return { chr, a };
   });
   ink.sort((x, y) => x.a - y.a);
   g.clearRect(0, 0, c.width, ch);
-  g.fillStyle = '#000'; g.fillRect(0, 0, c.width, ch);
-  g.fillStyle = '#fff';
+  g.fillStyle = "#000";
+  g.fillRect(0, 0, c.width, ch);
+  g.fillStyle = "#fff";
   ink.forEach((x, i) => g.fillText(x.chr, cw * i + cw / 2, ch / 2 + 2));
   return { canvas: c, count: ink.length, aspect: cw / ch };
 }
@@ -55,7 +108,8 @@ export function buildAtlas(chars, family) {
 /* ---------- Effects ---------- */
 export const EFFECTS = [
   {
-    id: 'dither', name: 'Dithering',
+    id: "dither",
+    name: "Dithering",
     glsl: `
 uniform float uPixel, uCount, uMode, uSpread, uContrast, uBright;
 uniform vec3 uPal[16];
@@ -90,11 +144,20 @@ vec4 effect(vec2 uv) {
       const colors = pal.colors || [s.duoDark, s.duoLight];
       const flat = colors.flatMap(hex3);
       while (flat.length < 48) flat.push(0, 0, 0);
-      return { uPixel: s.ditherPixel, uCount: colors.length, uMode: pal.mode === 'nearest' ? 1 : 0, uSpread: s.ditherSpread, uContrast: s.ditherContrast, uBright: s.ditherBright, uPal: flat };
+      return {
+        uPixel: s.ditherPixel,
+        uCount: colors.length,
+        uMode: pal.mode === "nearest" ? 1 : 0,
+        uSpread: s.ditherSpread,
+        uContrast: s.ditherContrast,
+        uBright: s.ditherBright,
+        uPal: flat,
+      };
     },
   },
   {
-    id: 'ascii', name: 'ASCII art',
+    id: "ascii",
+    name: "ASCII art",
     glsl: `
 uniform sampler2D uAtlas;
 uniform float uCell, uChars, uAspect, uMono, uGamma, uBoost;
@@ -113,11 +176,23 @@ vec4 effect(vec2 uv) {
   vec3 col = uMono > 0.5 ? mix(uBg, uFg, m) : mix(uBg, clamp(c * uBoost, 0.0, 1.0), m);
   return vec4(col, 1.0);
 }`,
-    uniforms: (s, env) => ({ uCell: s.asciiCell, uChars: env.atlas.count, uAspect: env.atlas.aspect, uMono: s.asciiColor === 'mono' ? 1 : 0, uGamma: s.asciiGamma, uBoost: s.asciiBoost, uFg: hex3(s.asciiFg), uBg: hex3(s.asciiBg) }),
-    textures: (s, env) => ({ uAtlas: { canvas: env.atlas.canvas, version: env.atlasVersion } }),
+    uniforms: (s, env) => ({
+      uCell: s.asciiCell,
+      uChars: env.atlas.count,
+      uAspect: env.atlas.aspect,
+      uMono: s.asciiColor === "mono" ? 1 : 0,
+      uGamma: s.asciiGamma,
+      uBoost: s.asciiBoost,
+      uFg: hex3(s.asciiFg),
+      uBg: hex3(s.asciiBg),
+    }),
+    textures: (s, env) => ({
+      uAtlas: { canvas: env.atlas.canvas, version: env.atlasVersion },
+    }),
   },
   {
-    id: 'film', name: 'Film grain & dust',
+    id: "film",
+    name: "Film grain & dust",
     glsl: `
 uniform float uGrain, uDust, uScratch, uFlicker, uVignette, uFade;
 vec4 effect(vec2 uv) {
@@ -150,10 +225,18 @@ vec4 effect(vec2 uv) {
   c = mix(c, vec3(luma(c)) * vec3(1.06, 0.98, 0.84), uFade);
   return vec4(clamp(c, 0.0, 1.0), 1.0);
 }`,
-    uniforms: (s) => ({ uGrain: s.filmGrain, uDust: s.filmDust, uScratch: s.filmScratch, uFlicker: s.filmFlicker, uVignette: s.filmVignette, uFade: s.filmFade }),
+    uniforms: (s) => ({
+      uGrain: s.filmGrain,
+      uDust: s.filmDust,
+      uScratch: s.filmScratch,
+      uFlicker: s.filmFlicker,
+      uVignette: s.filmVignette,
+      uFade: s.filmFade,
+    }),
   },
   {
-    id: 'mm8', name: '8mm',
+    id: "mm8",
+    name: "8mm",
     glsl: `
 uniform float uWarm, uVignette, uFlicker, uWeave, uSoft, uGrain, uGate;
 vec4 effect(vec2 uv) {
@@ -174,10 +257,19 @@ vec4 effect(vec2 uv) {
   c *= 1.0 - uVignette * dot(v, v) * 3.0;
   return vec4(clamp(c, 0.0, 1.0), 1.0);
 }`,
-    uniforms: (s) => ({ uWarm: s.mmWarm, uVignette: s.mmVignette, uFlicker: s.mmFlicker, uWeave: s.mmWeave, uSoft: s.mmSoft, uGrain: s.mmGrain, uGate: s.mmGate ? 1 : 0 }),
+    uniforms: (s) => ({
+      uWarm: s.mmWarm,
+      uVignette: s.mmVignette,
+      uFlicker: s.mmFlicker,
+      uWeave: s.mmWeave,
+      uSoft: s.mmSoft,
+      uGrain: s.mmGrain,
+      uGate: s.mmGate ? 1 : 0,
+    }),
   },
   {
-    id: 'vhs', name: 'VHS',
+    id: "vhs",
+    name: "VHS",
     glsl: `
 uniform sampler2D uOsd;
 uniform float uBleed, uTracking, uNoise, uWobble, uSat, uOsdOn;
@@ -210,11 +302,21 @@ vec4 effect(vec2 uv) {
   c = mix(c, vec3(luma(c)), 0.12);
   return vec4(clamp(c, 0.0, 1.0), 1.0);
 }`,
-    uniforms: (s) => ({ uBleed: s.vhsBleed, uTracking: s.vhsTracking, uNoise: s.vhsNoise, uWobble: s.vhsWobble, uSat: s.vhsSat, uOsdOn: s.vhsOsd ? 1 : 0 }),
-    textures: (s, env) => ({ uOsd: { canvas: env.osd.canvas, version: env.osd.version } }),
+    uniforms: (s) => ({
+      uBleed: s.vhsBleed,
+      uTracking: s.vhsTracking,
+      uNoise: s.vhsNoise,
+      uWobble: s.vhsWobble,
+      uSat: s.vhsSat,
+      uOsdOn: s.vhsOsd ? 1 : 0,
+    }),
+    textures: (s, env) => ({
+      uOsd: { canvas: env.osd.canvas, version: env.osd.version },
+    }),
   },
   {
-    id: 'crt', name: 'CRT',
+    id: "crt",
+    name: "CRT",
     glsl: `
 uniform float uCurve, uScan, uScanSize, uMask, uGlow, uVignette;
 vec4 effect(vec2 uv) {
@@ -240,6 +342,13 @@ vec4 effect(vec2 uv) {
   c *= 1.0 - uVignette * dot(v, v) * 2.2;
   return vec4(clamp(c, 0.0, 1.0) * edge, 1.0);
 }`,
-    uniforms: (s) => ({ uCurve: s.crtCurve, uScan: s.crtScan, uScanSize: s.crtScanSize, uMask: s.crtMask, uGlow: s.crtGlow, uVignette: s.crtVignette }),
+    uniforms: (s) => ({
+      uCurve: s.crtCurve,
+      uScan: s.crtScan,
+      uScanSize: s.crtScanSize,
+      uMask: s.crtMask,
+      uGlow: s.crtGlow,
+      uVignette: s.crtVignette,
+    }),
   },
 ];

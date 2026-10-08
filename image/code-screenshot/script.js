@@ -1,6 +1,6 @@
 /*
  * Code Screenshot: code → highlighted window on a background, exported as PNG (1×/2×/4×) or SVG.
- * © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad
+
  *
  * Prism (lazy, from jsDelivr; its autoloader fetches each language and its dependencies) only
  * tokenizes; themes.js maps tokens to colors, so canvas and SVG draw the same `layout()` model.
