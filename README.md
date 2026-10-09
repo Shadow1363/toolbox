@@ -1,4 +1,4 @@
-# [Tom's Toolbox](tools.tomasmartinez.xyz)
+# [Tom's Toolbox](https://tools.tomasmartinez.xyz)
 
 Static site of browser tools. Plain HTML, CSS and ES modules: no framework, no build step, no backend. Files never leave the user's device.
 
