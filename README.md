@@ -1,6 +1,6 @@
-# Toolbox
+# [Tom's Toolbox](tools.tomasmartinez.xyz)
 
-Static site of browser tools (tools.tomasmartinez.xyz). Plain HTML, CSS and ES modules: no framework, no build step, no backend. Files never leave the user's device.
+Static site of browser tools. Plain HTML, CSS and ES modules: no framework, no build step, no backend. Files never leave the user's device.
 
 ```sh
 npx serve .            # or: python3 -m http.server 8000
