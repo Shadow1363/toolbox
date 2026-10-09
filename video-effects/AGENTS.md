@@ -105,11 +105,11 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Aspect presets come from `SIZES` (16:9, 9:16, 1:1, 4:5).
 
 ### text-behind-person: text and images between background and person
-- Files: `script.js` (layers, panel, render, on-canvas editing, exports), `still-mask.js` (photo mask: edge snapping + brush), `style.css`. Video segmentation uses `lib/vision.js` and `lib/person-mask.js` (see Following people).
+- Files: `script.js` (layers, panel, render, on-canvas editing, exports), `style.css`. Photos use `lib/still-mask.js` (edge snapping + brush). Video segmentation uses `lib/vision.js` and `lib/person-mask.js` (see Following people).
 - Layers: `layers[]` of `{ type: 'text' | 'image', … }`, drawn in array order; `front: true` draws over the person. The panel edits the selected layer: `select()` copies its values into the panel (`LAYER_KEYS`), `onChange` writes them back. Text-only and image-only controls have their own ids (`anim`/`imgAnim`, `exitAnim`/`imgExit`, `imgWidth`); shared ids (position, rotation, opacity, timing) live in one section each, because duplicate ids break `createControls`. Image layers animate through `drawImageLayer` (same names as the text animations).
 - Per frame: source → layers behind → person cut-out (`personAlpha`) → layers in front. "Show mask" tints the mask instead.
 - Editing on the preview: `#handles` canvas over the preview (never exported) draws the selection box, corner (scale) and round (rotate, Shift snaps 15°) handles. Hit testing works on `layerBox()`, the layer's settled (un-animated) box.
-- Photos: the canvas is the photo at full size (up to 4096 px long side), the transport is hidden, and the preview shows the settled state (no animation). `detectStill()` runs the high-quality multiclass model once in IMAGE mode. `still-mask.js` upscales the raw 256² mask to a working size (≤ 1536 px), snaps it to the photo with a grey guided filter ("Snap edges to the photo"), applies threshold/softness/polarity, then brush layers: out = (base ∪ add) − erase. Strokes are stored; undo/redo replay them. `full()` caches the feathered full-size mask by version.
+- Photos: the canvas is the photo at full size (up to 4096 px long side), the transport is hidden, and the preview shows the settled state (no animation). `detectStill()` runs the high-quality multiclass model once in IMAGE mode. `still-mask.js` upscales the raw 256² mask to a working size (≤ 1536 px), snaps it to the photo with a grey guided filter ("Snap edges to the photo"), applies threshold/softness/polarity, then brush layers: out = (base ∪ add) − erase. Strokes are stored; undo/redo replay them. `full()` caches the feathered full-size mask by version. Background Remover and Nametag reuse the same photo path (without the brush).
 - Photo exports: PNG = full-resolution still. GIF/video only when a layer has an entrance or exit animation; `beforeExport` sets `animating` (and shrinks the canvas to 1920 px for video), `afterExport` restores. "Play animation" plays once (`previewing`).
 - Video: mask polarity is auto-detected (`looksLikePerson`); users can override it. Temporal smoothing applies to video only.
 - `syncTimeRanges()` keeps every layer's "Start at" / "End at" within the clip, and "End at" follows the clip end (`endFollows`) until the user moves it.
@@ -126,6 +126,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Hide behind person: `mask.update(…, { smoothing: 0 })` once per frame (the mask covers everyone), then the person cut-out is drawn clipped to each tag's box (Tag only mode uses `destination-out` instead).
 - Speed: each sampled frame costs one Face Landmarker run (plus Pose when people are missing). The modal warns on videos over 60 s and when 4+ people are in view; 15 / s and 720p/480p tracking resolution are the fixes.
 - Output "Tag only" clears the video for a transparent tag (PNG/WebM/GIF).
+- Photos: one detection pass on the full-size photo (up to 4096 px), transport hidden, PNG export only (the tags don't move). Smoothing/hold/fade and rate/resolution controls are hidden. "Hide behind person" segments the photo once with the high-quality IMAGE-mode model through `lib/still-mask.js` (`initStillMask`, `personAlpha`).
 
 ### text-match-cut: keyword pinned while pages flicker
 - Files: `script.js`, `pages.js`, `lang.js`, `style.css`.
@@ -189,6 +190,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
   4. Composite, then add the light wrap: the blurred background, masked to the person minus their blurred interior (an edge band), drawn with `screen`.
 - Background video: `syncBgVideo(t)` plays it along while the stage plays (re-syncs when drift exceeds 0.3 s) and parks it on `t % duration` when paused. GIF export seeks it in `prepareFrame`.
 - Transparent output keeps alpha in PNG, GIF (1-bit) and Chromium WebM. Elsewhere, video export records the matte color and warns.
+- Photos: the canvas is the photo at full size (up to 4096 px). `detectStill()` segments it once with the high-quality IMAGE-mode model into `lib/still-mask.js` ("Snap edges to the photo" replaces the model picker and temporal smoothing). PNG is the main export; the transport, Clip length and GIF/video export only appear with a Video background (`moving()`), and video export shrinks the canvas to 1920 px for the encoder.
 
 ### zoom-on-click: automatic zooms on screen recordings
 - Files: `script.js` (UI, render, pointer editing, timeline strip), `camera.js` (keyframes, camera sampling, auto-suggest, click-log parsing), `style.css`.

@@ -11,7 +11,7 @@ import { h, icon, toast } from '/assets/js/lib/dom.js';
 import { loadMedia, MediaError } from '/assets/js/lib/media.js';
 import { SEGMENT_MODELS as MODELS, loadSegmenter, segmentImage } from '/assets/js/lib/vision.js';
 import { createPersonMask, drawPersonCutout } from '/assets/js/lib/person-mask.js';
-import { createStillMask } from './still-mask.js';
+import { createStillMask } from '/assets/js/lib/still-mask.js';
 
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');

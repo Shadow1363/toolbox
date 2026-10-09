@@ -5,8 +5,9 @@ import { createStage } from '/assets/js/lib/stage.js';
 import { createExportBar, progressModal, TRANSPARENT_HINT } from '/assets/js/lib/exporter.js';
 import { outputSize, supportsCanvasFilter } from '/assets/js/lib/canvas.js';
 import { h, icon, toast, formatTime } from '/assets/js/lib/dom.js';
-import { SEGMENT_MODELS, loadSegmenter } from '/assets/js/lib/vision.js';
+import { SEGMENT_MODELS, loadSegmenter, segmentImage } from '/assets/js/lib/vision.js';
 import { createPersonMask, drawPersonCutout } from '/assets/js/lib/person-mask.js';
+import { createStillMask } from '/assets/js/lib/still-mask.js';
 import { smoothTrack, sampleTrack } from '/assets/js/lib/head-tracking.js';
 import { detectHeads, assignTracks, applyEdits, trackThumbnails, MAX_PEOPLE } from '/assets/js/lib/multi-track.js';
 import { layoutLine, drawLine, ROWS } from './pixel-font.js';
@@ -16,6 +17,7 @@ const ctx = canvas.getContext('2d');
 const debug = document.getElementById('debug');
 const dctx = debug.getContext('2d');
 const overlay = document.getElementById('overlay');
+const transportEl = document.getElementById('transport');
 
 let media = null;
 let det = null;           // detection pass: every head on every frame (detectHeads)
@@ -26,11 +28,14 @@ let tracking = false;     // a tracking pass is running
 let trackNote = '';       // status shown under the People section
 let segmenter = null;     // loaded only when "Hide behind person" is on
 let segmenterKey = null;
+let stillSeg = null;      // photos: IMAGE-mode high-quality segmenter, run once
 let lastTags = [];        // geometry of the tags drawn last, for clicking and dragging
 let selectedId = 1;
 const people = new Map(); // track id → { id, name, enabled, custom, textColor, bgOpacity, size, offsetX, offsetY, smooth, medianSize, coverage, thumb }
 const mask = createPersonMask('nt');
+const still = createStillMask('nt');
 const isVideo = () => media?.kind === 'video';
+const isPhoto = () => media?.kind === 'image';
 const ID_COLORS = ['#ff5d5d', '#50dc8c', '#5db4ff', '#ffb340', '#c77dff', '#ffe066', '#ff7ac8', '#4de6e6', '#a3e05a', '#ff9466'];
 
 /* Tag colours: the classic 16-colour text palette values. Shadows are the colour at 25%. */
@@ -99,7 +104,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'trackFps', type: 'segmented', label: 'Tracking rate', value: '30', options: [['15', '15 / s'], ['30', '30 / s']], showIf: () => isVideo() },
     { id: 'trackRes', type: 'segmented', label: 'Tracking resolution', value: 'full', options: [['full', 'Full'], ['1280', '720p'], ['854', '480p']], showIf: () => isVideo(),
       hint: 'Lower is faster on long or busy videos, but finds small faces less often.' },
-    { id: 'smoothing', type: 'range', label: 'Smoothing', min: 0, max: 1, step: 0.05, value: 0.6, format: pct100 },
+    { id: 'smoothing', type: 'range', label: 'Smoothing', min: 0, max: 1, step: 0.05, value: 0.6, format: pct100, showIf: () => isVideo() },
     { id: 'hold', type: 'range', label: 'Hold when lost', min: 0, max: 2, step: 0.1, value: 0.4, unit: 's', decimals: 1, showIf: () => isVideo() },
     { id: 'fade', type: 'range', label: 'Fade', min: 0.05, max: 1, step: 0.05, value: 0.3, unit: 's', decimals: 2, showIf: () => isVideo() },
     { id: 'debugView', type: 'toggle', label: 'Show tracking overlay', value: false, hint: 'Preview only; never exported.' },
@@ -108,7 +113,8 @@ const panel = createControls(document.getElementById('controls'), [
   { title: 'Depth', showIf: () => !!media, controls: [
     { id: 'behind', type: 'toggle', label: 'Hide behind person', value: false,
       hint: 'Anyone passing in front of a tag (or a hand in front of the head) covers it.' },
-    { id: 'model', type: 'select', label: 'Segmentation model', value: 'general', options: Object.entries(SEGMENT_MODELS).map(([k, m]) => [k, m.label]), showIf: (s) => s.behind },
+    { id: 'model', type: 'select', label: 'Segmentation model', value: 'general', options: Object.entries(SEGMENT_MODELS).map(([k, m]) => [k, m.label]), showIf: (s) => s.behind && !isPhoto(),
+      hint: 'Photos always use the high-quality model.' },
     { id: 'threshold', type: 'range', label: 'Edge threshold', min: 0.1, max: 0.9, step: 0.01, value: 0.5, decimals: 2, showIf: (s) => s.behind },
     { id: 'feather', type: 'range', label: 'Feather', min: 0, max: 20, value: 3, unit: 'px', showIf: (s) => s.behind,
       hint: supportsCanvasFilter ? '' : 'Feather needs canvas filters (not available in this browser).' },
@@ -116,7 +122,6 @@ const panel = createControls(document.getElementById('controls'), [
   { title: 'Output', controls: [
     { id: 'output', type: 'segmented', label: 'Contents', value: 'video', options: [['video', 'Video + tag'], ['tag', 'Tag only']],
       hint: 'Tag only exports the nametags on a transparent background, ready to overlay in an editor.' },
-    { id: 'clip', type: 'range', label: 'Clip length', min: 1, max: 20, step: 0.5, value: 4, unit: 's', decimals: 1, showIf: () => !isVideo() },
   ]},
 ], { onChange: (st, id) => {
   if (id === 'name' || id === 'anyText') sanitizeName();
@@ -128,6 +133,7 @@ const panel = createControls(document.getElementById('controls'), [
   if (id === 'peopleMode' || id === 'peopleCount') recount();
   if (['smoothing', 'hold', 'fade'].includes(id)) resmooth();
   if (id === 'behind' || id === 'model') { mask.reset(); if (st.behind) initSegmenter(); }
+  if (id === 'threshold') updateStill();
   if (id === 'output') canvas.classList.toggle('checker', st.output === 'tag');
   exportBar.refresh();
   stage.invalidate();
@@ -248,23 +254,27 @@ function renderFix() {
 /* ---------- Upload ---------- */
 createDropzone(document.getElementById('upload'), {
   accept: ['video', 'image'],
-  label: 'Drop a video of people',
+  label: 'Drop a photo or video of people',
   onLoad: (m) => {
     media = m;
-    const { w, h: hh } = outputSize(m.width, m.height, 1920);
+    const { w, h: hh } = outputSize(m.width, m.height, m.kind === 'image' ? 4096 : 1920);
     canvas.width = debug.width = w; canvas.height = debug.height = hh;
     det = base = result = null; edits = [];
     people.clear(); selectedId = 1;
     mask.reset();
+    still.reset();
+    transportEl.hidden = m.kind === 'image'; // a photo's tags don't move
     panel.refresh();
     renderPeople();
     stage.reset();
     exportBar.refresh();
     placeDebug();
     runTracking();
+    if (s.behind) initSegmenter();
   },
   onClear: () => {
-    media = null; det = base = result = null; edits = []; people.clear(); selectedId = 1; mask.reset();
+    media = null; det = base = result = null; edits = []; people.clear(); selectedId = 1; mask.reset(); still.reset();
+    transportEl.hidden = false;
     canvas.width = debug.width = 1280; canvas.height = debug.height = 720;
     trackNote = '';
     panel.refresh(); renderPeople(); showTrackStatus(); stage.reset(); exportBar.refresh(); placeDebug(); showIntro();
@@ -283,8 +293,10 @@ async function runTracking() {
   const fps = +s.trackFps;
   const frames = isVideo() ? Math.max(1, Math.round(media.duration * fps)) : 1;
   const long = isVideo() && media.duration > 60;
-  const baseMsg = `Downloads the face model (~4 MB) on first use, then checks ${frames.toLocaleString()} frame${frames === 1 ? '' : 's'}. Keep this tab visible.`;
-  const modal = progressModal('Tracking people…', () => ctrl.abort(),
+  const baseMsg = isVideo()
+    ? `Downloads the face model (~4 MB) on first use, then checks ${frames.toLocaleString()} frame${frames === 1 ? '' : 's'}. Keep this tab visible.`
+    : 'Downloads the face model (~4 MB) on first use, then finds everyone in the photo.';
+  const modal = progressModal(isVideo() ? 'Tracking people…' : 'Finding people…', () => ctrl.abort(),
     long ? `${baseMsg} This is a long video: a 15 / s rate or a lower tracking resolution is much faster.` : baseMsg);
   tracking = true;
   stage.pause();
@@ -321,7 +333,7 @@ async function runTracking() {
       exportBar.refresh();
       showTrackStatus();
       stage.seek(0);
-      if (hasPeople()) stage.play().catch(() => {});
+      if (hasPeople() && isVideo()) stage.play().catch(() => {});
     } else modal.close();
   }
 }
@@ -385,6 +397,14 @@ function showTrackStatus() {
   for (const tr of result.tracks) for (const x of tr.samples) { total++; if (x.found) { found++; via[x.via]++; } }
   const share = total ? found / total : 0;
   const seen = det ? Math.max(0, ...det.frames.map((f) => f.length)) : n;
+  if (isPhoto()) {
+    statusEl.replaceChildren(
+      h('strong', {}, `Found ${n} ${n === 1 ? 'person' : 'people'}`),
+      h('br'),
+      `${via.face} by face, ${via.pose} by body.`,
+      s.peopleMode === 'manual' && seen > n ? ` ${seen - n} smaller ${seen - n === 1 ? 'face' : 'faces'} ignored.` : '');
+    return;
+  }
   statusEl.replaceChildren(
     h('strong', {}, `Found ${n} ${n === 1 ? 'person' : 'people'}`),
     h('br'),
@@ -395,6 +415,7 @@ function showTrackStatus() {
 
 /* ---------- Segmentation (only for "Hide behind person") ---------- */
 async function initSegmenter() {
+  if (isPhoto()) return initStillMask();
   const key = s.model;
   if (segmenterKey === key && segmenter) return;
   segmenter = null; segmenterKey = key;
@@ -405,6 +426,36 @@ async function initSegmenter() {
     console.error(err);
     toast('Could not load the segmentation model, so the tags stay in front.', 'error', 7000);
   }
+}
+
+/** Photos: segment once with the high-quality model, snapped to the photo's edges. */
+async function initStillMask() {
+  const m = media;
+  if (still.ready) return;
+  try {
+    stillSeg ||= await loadSegmenter('quality', { mode: 'IMAGE' });
+    if (media !== m) return;
+    const raw = segmentImage(stillSeg, m.el, 'quality');
+    if (!raw) throw new Error('The segmenter returned no mask.');
+    still.setSource(m.el, raw);
+    updateStill();
+  } catch (err) {
+    console.error(err);
+    if (media === m) toast('Could not load the segmentation model, so the tags stay in front.', 'error', 7000);
+  }
+}
+function updateStill() {
+  if (!still.ready) return;
+  still.update({ threshold: s.threshold, softness: 0.2 });
+  stage.invalidate();
+}
+
+/** Full-size person alpha for the "Hide behind person" cut, or null while the model loads. */
+function personAlpha(t, W, H) {
+  const feather = s.feather * (Math.min(W, H) / 1080);
+  if (isPhoto()) return still.ready ? still.full(W, H, feather) : null;
+  if (!segmenter || !mask.update(segmenter, media.el, t, { model: s.model, smoothing: 0 })) return null;
+  return mask.full(W, H, { threshold: s.threshold, softness: 0.2, feather });
 }
 
 /* ---------- Tag geometry and drawing ---------- */
@@ -551,9 +602,8 @@ function render(t) {
 
   // Hide behind person: whatever the mask calls "person" inside a tag's box covers that tag.
   // The mask covers everyone in the frame, so a tag hides behind anyone passing in front of it.
-  if (tags.length && s.behind && segmenter && mask.update(segmenter, media.el, t, { model: s.model, smoothing: 0, still: !isVideo() })) {
-    const k = Math.min(W, H) / 1080;
-    const alpha = mask.full(W, H, { threshold: s.threshold, softness: 0.2, feather: s.feather * k });
+  const alpha = tags.length && s.behind ? personAlpha(t, W, H) : null;
+  if (alpha) {
     for (const g of tags) {
       ctx.save();
       tagPath(ctx, g, 2);
@@ -727,7 +777,7 @@ const stage = createStage({
   canvas,
   transport: document.getElementById('transport'),
   render,
-  getDuration: () => (isVideo() ? media.duration : media ? s.clip : 4),
+  getDuration: () => (isVideo() ? media.duration : 4),
   getVideo: () => (isVideo() ? media.el : null),
 });
 stage.events.addEventListener('tick', (e) => drawOverlay(e.detail.t));
@@ -740,15 +790,16 @@ const exportBar = createExportBar(document.getElementById('export'), {
     return `nametag-${base || 'tag'}${s.output === 'tag' ? '-alpha' : ''}`;
   },
   getVideo: () => (isVideo() ? media.el : null),
-  video: () => !!result,
-  gif: () => !!result,
+  video: () => !!result && isVideo(),
+  gif: () => !!result && isVideo(),
   png: () => !media || !!result,
   beforeExport: () => {
-    if (s.behind && !segmenter) throw new Error('The segmentation model is still loading. Try again in a moment.');
+    if (s.behind && (isPhoto() ? !still.ready : !segmenter)) throw new Error('The segmentation model is still loading. Try again in a moment.');
     mask.reset();
   },
   hint: () => [
-    media && !result && !tracking ? 'Track the video to place the tags.' : '',
+    media && !result && !tracking ? `Track the ${isVideo() ? 'video' : 'photo'} to place the tags.` : '',
+    isPhoto() && result ? 'PNG saves the photo at full resolution.' : '',
     s.output === 'tag' ? TRANSPARENT_HINT : '',
   ].filter(Boolean).join(' '),
 });
@@ -756,7 +807,7 @@ const exportBar = createExportBar(document.getElementById('export'), {
 function showIntro() {
   overlay.hidden = false;
   overlay.classList.add('is-note');
-  overlay.innerHTML = '<div><strong>Style your tag here.</strong> Drop a video on the left and every person in it gets a tag that follows their head.</div>';
+  overlay.innerHTML = '<div><strong>Style your tag here.</strong> Drop a photo or video on the left and every person in it gets a tag above their head.</div>';
 }
 
 debug.hidden = false; // selection outline + optional tracking overlay

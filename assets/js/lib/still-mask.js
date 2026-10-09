@@ -1,7 +1,7 @@
 /**
  * Person mask for a still photo: segmented once, then refined by hand.
  *
- *   const sm = createStillMask('tbp');
+ *   const sm = createStillMask(prefix);
  *   sm.setSource(img, segmentImage(seg, img, 'quality'));   // raw model mask (e.g. 256×256)
  *   sm.update({ threshold, softness, polarity, edgeSnap }); // cheap; rerun on slider changes
  *   sm.beginStroke('add' | 'erase', radius, softness); sm.strokeTo(x, y); sm.endStroke();  // mask px
@@ -13,9 +13,9 @@
  *   → threshold/softness → base alpha; then brush layers: out = (base ∪ add) − erase.
  * Strokes are stored, so undo/redo rebuild the add/erase layers by replaying them.
  */
-import { looksLikePerson } from '/assets/js/lib/vision.js';
-import { smoothstep } from '/assets/js/lib/easing.js';
-import { scratch, supportsCanvasFilter } from '/assets/js/lib/canvas.js';
+import { looksLikePerson } from './vision.js';
+import { smoothstep } from './easing.js';
+import { scratch, supportsCanvasFilter } from './canvas.js';
 
 const WORK_SIDE = 1536;
 

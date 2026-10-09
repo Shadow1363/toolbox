@@ -41,6 +41,7 @@ export const categories = [
     description: "Mockups, code screenshots, social images, favicons, compression, palettes, whiteboards and pixel art.",
     thumbnail: "/assets/img/image.svg",
     sections: ["Create", "Optimize", "Draw"],
+    related: ["background-remover", "text-behind-person", "nametag"],
   },
   {
     id: "audio",
@@ -93,17 +94,17 @@ export const tools = [
       "Place text and images behind the person in a video or photo with AI segmentation.",
     thumbnail: "/assets/img/text-behind-person.svg",
     status: "beta",
-    tags: ["segmentation", "mediapipe", "ai", "mask", "photo", "layers", "sticker", "logo"],
+    tags: ["segmentation", "mediapipe", "ai", "mask", "photo", "image", "png", "layers", "sticker", "logo"],
   },
   {
     id: "nametag",
     category: "video-effects",
     name: "Nametag Tracker",
     description:
-      "Blocky player nametags that float above people's heads and follow them, one per person.",
+      "Blocky player nametags above people's heads in a photo or video, following each person.",
     thumbnail: "/assets/img/nametag.svg",
     status: "new",
-    tags: ["face tracking", "mediapipe", "pixel", "game", "username", "overlay", "multiple people"],
+    tags: ["face tracking", "mediapipe", "pixel", "game", "username", "overlay", "multiple people", "photo", "image", "png"],
   },
   {
     id: "text-match-cut",
@@ -149,10 +150,10 @@ export const tools = [
     category: "video-effects",
     name: "Background Remover",
     description:
-      "Remove the background behind a person, or swap it for a color, blur, image or looping video.",
+      "Remove the background behind a person in a photo or video, or swap it for a color, blur, image or looping video.",
     thumbnail: "/assets/img/background-remover.svg",
     status: "new",
-    tags: ["background", "remove background", "green screen", "chroma", "segmentation", "mediapipe", "ai", "transparent", "blur", "virtual background"],
+    tags: ["background", "remove background", "green screen", "chroma", "segmentation", "mediapipe", "ai", "transparent", "blur", "virtual background", "photo", "image", "png", "cutout"],
   },
   {
     id: "zoom-on-click",

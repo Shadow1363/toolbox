@@ -8,6 +8,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 
 ## Hub
 - `/image/index.html` has `data-search`; tools are grouped by `section` in `tools.js` (`Create`, `Optimize`, `Draw`).
+- `related` in the category entry lists Video Effects tools that also take a photo (Background Remover, Text Behind Person, Nametag Tracker); they show under "Also useful" and in the hub search. They live in `video-effects/` and follow its rules, not the shared rules below.
 
 ## Shared rules
 - **Every tool accepts a pasted image** (Ctrl/⌘+V anywhere on the page, plus a Paste button where there is a drop zone) and **copies its result** (PNG on the clipboard; browsers only accept PNG images there).

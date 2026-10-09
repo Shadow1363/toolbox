@@ -2,9 +2,9 @@
  * Background Remover: segment the person on every frame and replace the background
  * (transparent, color, blur, image or a looping video), with feathering, temporal smoothing and color matching.
 
- *
  * Per frame: background layer → mask.update (lib/person-mask.js) → person layer (source, light/color match,
- * cut out by the mask) → composite. Exports: transparent WebM keeps alpha in Chromium (canRecordAlpha);
+ * cut out by the mask) → composite. Photos are segmented once with the high-quality IMAGE-mode model and
+ * snapped to the photo's edges (lib/still-mask.js), at full size up to 4096 px. Exports: transparent WebM keeps alpha in Chromium (canRecordAlpha);
  * elsewhere the matte color is recorded instead, with a warning.
  */
 import { createControls } from "/assets/js/lib/controls.js";
@@ -27,17 +27,21 @@ import { toast } from "/assets/js/lib/dom.js";
 import {
   SEGMENT_MODELS as MODELS,
   loadSegmenter,
+  segmentImage,
 } from "/assets/js/lib/vision.js";
 import { createPersonMask } from "/assets/js/lib/person-mask.js";
+import { createStillMask } from "/assets/js/lib/still-mask.js";
 
 const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
 const overlay = document.getElementById("overlay");
+const transportEl = document.getElementById("transport");
 const videoAlpha = canRecordAlpha();
 
 let media = null; // the person video/image
 let bgMedia = null; // uploaded background image or video
 let segmenter = null;
+let stillSeg = null; // IMAGE-mode high-quality segmenter for photos
 let modelError = null;
 let exportKind = null; // 'video' | 'gif' while exporting
 
@@ -138,6 +142,7 @@ const panel = createControls(
           label: "Segmentation model",
           value: "landscape",
           options: Object.entries(MODELS).map(([k, m]) => [k, m.label]),
+          showIf: () => !isPhoto(),
         },
         {
           id: "threshold",
@@ -161,6 +166,14 @@ const panel = createControls(
           decimals: 2,
         },
         {
+          id: "edgeSnap",
+          type: "toggle",
+          label: "Snap edges to the photo",
+          value: true,
+          showIf: () => isPhoto(),
+          hint: "Follows hair and outlines in the photo instead of the blurry model edge.",
+        },
+        {
           id: "feather",
           type: "range",
           label: "Feather",
@@ -182,6 +195,7 @@ const panel = createControls(
           value: 0.5,
           decimals: 2,
           hint: "Blends each mask with the previous ones to stop edge flicker. GIF export uses 0 (frames are rendered out of order).",
+          showIf: () => !isPhoto(),
         },
         {
           id: "polarity",
@@ -232,7 +246,7 @@ const panel = createControls(
     },
     {
       title: "Clip",
-      showIf: () => media?.kind === "image",
+      showIf: (s) => isPhoto() && s.bg === "video",
       controls: [
         {
           id: "clip",
@@ -244,6 +258,7 @@ const panel = createControls(
           value: 5,
           unit: "s",
           decimals: 1,
+          hint: "Length of the GIF or video made from the photo over the looping background.",
         },
       ],
     },
@@ -257,7 +272,12 @@ const panel = createControls(
       }
       if (id === "polarity") mask.polarity = null;
       if (id === "smoothing") mask.prev = null;
-      if (id === "bg") syncBgVideo(stage.time, true);
+      if (["threshold", "softness", "polarity", "edgeSnap"].includes(id))
+        updateStill();
+      if (id === "bg") {
+        syncBgVideo(stage.time, true);
+        syncTransport();
+      }
       canvas.classList.toggle("checker", s.bg === "transparent");
       exportBar.refresh();
       stage.invalidate();
@@ -269,23 +289,28 @@ const s = panel.state;
 /* ---------- Uploads ---------- */
 createDropzone(document.getElementById("upload"), {
   accept: ["video", "image"],
-  label: "Drop a video of a person",
+  label: "Drop a photo or video of a person",
   onLoad: (m) => {
     media = m;
-    const { w, h } = outputSize(m.width, m.height, 1920);
+    const { w, h } = outputSize(m.width, m.height, m.kind === "image" ? 4096 : 1920);
     canvas.width = w;
     canvas.height = h;
     mask.reset();
+    still.reset();
+    syncTransport();
     panel.refresh();
     stage.reset();
     exportBar.refresh();
     overlay.hidden = true;
-    if (segmenter) stage.play().catch(() => {});
+    if (m.kind === "image") detectStill();
+    else if (segmenter) stage.play().catch(() => {});
     else initModel();
   },
   onClear: () => {
     media = null;
     mask.reset();
+    still.reset();
+    syncTransport();
     panel.refresh();
     stage.reset();
     exportBar.refresh();
@@ -373,6 +398,55 @@ async function initModel() {
   }
 }
 
+/* ---------- Photo: segment once with the best model, snapped to the photo's edges ---------- */
+const still = createStillMask("bgr");
+
+async function detectStill() {
+  const m = media;
+  showStatus(
+    "<div class=\"spinner\"></div>Detecting person…<br><small>The first photo downloads the high-quality model (~16 MB), then it's cached.</small>",
+  );
+  try {
+    stillSeg ||= await loadSegmenter("quality", { mode: "IMAGE" });
+    if (media !== m) return;
+    await new Promise((r) => setTimeout(r, 30)); // let the status paint before the (blocking) model run
+    const raw = segmentImage(stillSeg, m.el, "quality");
+    if (!raw) throw new Error("The segmenter returned no mask.");
+    still.setSource(m.el, raw);
+    updateStill();
+    overlay.hidden = true;
+  } catch (err) {
+    console.error(err);
+    if (media !== m) return;
+    showStatus(
+      "<strong>Could not detect the person.</strong><br>Check your connection or content blockers, then drop the photo again.",
+    );
+    toast("Person detection failed.", "error", 7000);
+  }
+  exportBar.refresh();
+  stage.invalidate();
+}
+
+function updateStill() {
+  if (!still.ready) return;
+  still.update({
+    threshold: s.threshold,
+    softness: s.softness,
+    polarity: s.polarity,
+    edgeSnap: s.edgeSnap,
+  });
+  stage.invalidate();
+}
+
+/** Photos only need the play bar when a looping background video moves behind them. */
+function syncTransport() {
+  transportEl.hidden = isPhoto() && s.bg !== "video";
+  if (transportEl.hidden) {
+    stage.pause();
+    stage.seek(0);
+  }
+}
+
 function showStatus(html) {
   overlay.classList.remove("is-note");
   overlay.hidden = false;
@@ -380,7 +454,7 @@ function showStatus(html) {
 }
 function showIntro() {
   showStatus(
-    "<strong>Drop a video of a person on the left.</strong><br>The background is removed on your device: nothing is uploaded.",
+    "<strong>Drop a photo or video of a person on the left.</strong><br>The background is removed on your device: nothing is uploaded.",
   );
 }
 
@@ -474,23 +548,12 @@ function render(t) {
   drawBackground(bctx, W, H, k);
 
   // 2. Mask
-  const smoothing = exportKind === "gif" ? 0 : s.smoothing;
-  const haveMask = mask.update(segmenter, src, t, {
-    model: s.model,
-    smoothing,
-    still: media.kind !== "video",
-  });
-  if (!haveMask) {
+  const alpha = personAlpha(t, W, H, k);
+  if (!alpha) {
     // model still loading: show the original
     ctx.drawImage(src, 0, 0, W, H);
     return;
   }
-  const alpha = mask.full(W, H, {
-    threshold: s.threshold,
-    softness: s.softness,
-    polarity: s.polarity,
-    feather: s.feather * k,
-  });
 
   if (s.showMask) {
     ctx.fillStyle = "#000";
@@ -563,7 +626,28 @@ function render(t) {
   }
 }
 
-const isVideo = () => media?.kind === "video";
+/** Full-size person alpha for this frame, or null while the model is loading. */
+function personAlpha(t, W, H, k) {
+  if (isPhoto()) return still.ready ? still.full(W, H, s.feather * k) : null;
+  const smoothing = exportKind === "gif" ? 0 : s.smoothing;
+  if (!mask.update(segmenter, media.el, t, { model: s.model, smoothing }))
+    return null;
+  return mask.full(W, H, {
+    threshold: s.threshold,
+    softness: s.softness,
+    polarity: s.polarity,
+    feather: s.feather * k,
+  });
+}
+
+function isVideo() {
+  return media?.kind === "video";
+}
+function isPhoto() {
+  return media?.kind === "image";
+}
+/** A photo only moves (and so only makes a GIF or video) over a background video. */
+const moving = () => isVideo() || (isPhoto() && s.bg === "video");
 const duration = () => (isVideo() ? media.duration : media ? s.clip : 1);
 
 const stage = createStage({
@@ -577,22 +661,31 @@ stage.events.addEventListener("tick", () => {
   if (!stage.playing) syncBgVideo(stage.time);
 });
 
+let savedSize = null;
 const exportBar = createExportBar(document.getElementById("export"), {
   stage,
   filename: () =>
     `${(media?.name || "clip").replace(/\.[^.]+$/, "")}-${s.bg === "transparent" ? "no-bg" : "new-bg"}`,
   getVideo: () => (isVideo() ? media.el : null),
-  video: () => !!media,
-  gif: () => !!media,
+  video: () => !!media && moving(),
+  gif: () => !!media && moving(),
   png: () => !!media,
   hint: () => {
     if (!media) return "";
+    if (isPhoto()) {
+      const tip = moving()
+        ? "PNG saves the full-resolution still; GIF and video play the background video behind the person."
+        : "PNG saves the full-resolution photo.";
+      return s.bg === "transparent" ? `${TRANSPARENT_HINT} ${tip}` : tip;
+    }
     if (s.bg !== "transparent")
       return "Export runs in real time; segmentation happens on every frame.";
     return `${TRANSPARENT_HINT}${videoAlpha ? "" : " Video export here uses the matte color."}`;
   },
   beforeExport: (kind) => {
-    if (!segmenter && !modelError)
+    if (isPhoto() && !still.ready)
+      throw new Error("Still detecting the person. Try again in a moment.");
+    if (isVideo() && !segmenter && !modelError)
       throw new Error(
         "The segmentation model is still loading. Try again in a moment.",
       );
@@ -605,11 +698,22 @@ const exportBar = createExportBar(document.getElementById("export"), {
     }
     exportKind = kind;
     mask.prev = null;
+    // Photos preview at full resolution; video encoders want at most 1920 px.
+    if (kind === "video" && Math.max(canvas.width, canvas.height) > 1920) {
+      savedSize = [canvas.width, canvas.height];
+      const { w, h } = outputSize(canvas.width, canvas.height, 1920);
+      canvas.width = w;
+      canvas.height = h;
+    }
     stage.invalidate();
   },
   afterExport: () => {
     exportKind = null;
     mask.prev = null;
+    if (savedSize) {
+      [canvas.width, canvas.height] = savedSize;
+      savedSize = null;
+    }
     stage.invalidate();
   },
   // GIF frames are seeked one by one: park the background video on the matching frame first.
