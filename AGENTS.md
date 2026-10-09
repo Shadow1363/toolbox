@@ -22,8 +22,9 @@ assets/
   js/tools.js            Registry of every category and tool
   js/site.js             Header, breadcrumb, theme toggle, footer, card grids, tool title
   js/theme-init.js       Sets data-theme before first paint (classic script in <head>)
+  js/toolbox.js          Home page toolbox animation (hover/click opens the lid, tools fan out; edit its TOOLS list)
   js/lib/                Shared modules (see below)
-  img/                   16:10 card thumbnails (SVG) + favicon
+  img/                   16:10 card thumbnails (SVG) + logo.svg (favicon; the header draws the same shape inline from site.js)
 _template/               Copy-paste starters: category/, tool/, canvas-tool/
 <category>/index.html    Category hub, e.g. video-effects/, convert/, image/, audio/
 <category>/<tool>/       index.html + script.js (+ style.css, + tool-only modules)

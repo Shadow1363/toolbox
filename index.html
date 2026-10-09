@@ -18,16 +18,46 @@
       name="description"
       content="Free developer and creator tools that run entirely in your browser. Nothing is uploaded."
     />
-    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/assets/css/styles.css" />
     <script src="/assets/js/theme-init.js"></script>
     <script type="module" src="/assets/js/site.js"></script>
+    <script type="module" src="/assets/js/toolbox.js"></script>
   </head>
   <body>
     <header id="site-header" class="site-header"></header>
     <main class="container">
       <section class="page-head">
-        <div class="eyebrow">Toolbox</div>
+        <div class="toolbox" role="button" tabindex="0" aria-expanded="false">
+          <span class="toolbox-art">
+            <!-- Tools are injected here by assets/js/toolbox.js -->
+            <svg class="toolbox-svg" viewBox="0 0 120 90" aria-hidden="true">
+              <g class="toolbox-lid">
+                <path
+                  class="toolbox-handle"
+                  d="M44 22V14a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v8"
+                />
+                <rect x="8" y="22" width="104" height="16" rx="4" />
+              </g>
+              <rect
+                class="toolbox-body"
+                x="12"
+                y="38"
+                width="96"
+                height="46"
+                rx="4"
+              />
+              <rect
+                class="toolbox-latch"
+                x="52"
+                y="44"
+                width="16"
+                height="14"
+                rx="3"
+              />
+            </svg>
+          </span>
+        </div>
         <h1>The only toolbox you'll need</h1>
         <p>
           Developer and creator utilities that run entirely on your device. No
