@@ -136,6 +136,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
   - Drawing: `renderFrame()` = `drawContent` (page transformed so the keyword sits at the centre, highlight drawn after the text) → three blur levels masked by `maskEllipse` → texture → vignette. It redraws only when the frame index or `version` changes.
   - UI: filmstrip (lock, regenerate, remove) and the `markWord` dialog for user screenshots.
   - Exports: GIF (primary, its own `onGif` with per-page holds), video, PNG of the current frame, and a frames ZIP.
+  - Shutter sound (Output → `shutter`, `shutterVolume`, `shutterPreview`): `shutter.mp3` (next to the script) is decoded once when the toggle turns on (that click also resumes the AudioContext). One stage `tick` listener plays the buffer whenever `frameAt(t)` changes, and each click cuts off the previous one. Preview: to the speakers, only while playing (scrubbing is silent). Video export: `getAudio` switches it to a `MediaStreamDestination` track; `afterExport` switches back. GIF/PNG/ZIP are silent. `hasAudio: () => false` hides the exporter's Audio toggle.
 
 ### transitions: cinematic transitions between clips
 - Files: `script.js` (UI, video sync, export), `sequence.js` (timeline math, `drawClip`), `engine.js` (WebGL renderer + `GLSL_HEADER`), `gallery.js` (picker with live thumbnails), `samples.js` (demo/gallery frames), `transitions/*.js` (one per transition; `index.js` registry, `_common.js` param/2D helpers, `_text.js` text layout + masks).

@@ -362,6 +362,31 @@ const panel = createControls(
           ],
           hint: "Smaller GIFs load faster. WebM and PNG frames are always full size.",
         },
+        {
+          id: "shutter",
+          type: "toggle",
+          label: "Shutter sound",
+          value: false,
+          hint: "Plays a camera shutter on every cut in the exported video (GIFs and PNGs are silent).",
+        },
+        {
+          id: "shutterVolume",
+          type: "range",
+          label: "Shutter volume",
+          min: 0.1,
+          max: 1,
+          step: 0.05,
+          value: 0.8,
+          format: (v) => `${Math.round(v * 100)}%`,
+          showIf: (s) => s.shutter,
+        },
+        {
+          id: "shutterPreview",
+          type: "toggle",
+          label: "Hear it in the preview",
+          value: true,
+          showIf: (s) => s.shutter,
+        },
       ],
     },
     { title: "Your screenshots", controls: [{ type: "custom", el: shotsEl }] },
@@ -369,6 +394,11 @@ const panel = createControls(
   {
     onChange: (st, id) => {
       if (id === "frames") syncFrameCount();
+      if (id === "shutter" || id === "shutterPreview") {
+        if (st.shutter) shutter.load();
+        return;
+      }
+      if (id === "shutterVolume") return;
       changed(id);
     },
   },
@@ -1253,10 +1283,89 @@ function scheduleEstimate() {
   }, 700);
 }
 
+/* ---------- Shutter sound ---------- */
+// One click per cut, fired from the stage clock so it lands on the frame change.
+// Plays through the speakers while previewing, and into the recording while exporting video.
+const shutter = (() => {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  let actx = null;
+  let dest = null;
+  let buffer = null;
+  let loading = null;
+  let last = -1;
+  let playing = null;
+  let exporting = false;
+
+  function load() {
+    if (!Ctx) return Promise.resolve(null);
+    actx ||= new Ctx();
+    actx.resume().catch(() => {});
+    loading ||= fetch(new URL("./shutter.mp3", import.meta.url))
+      .then((r) => r.arrayBuffer())
+      .then((data) => actx.decodeAudioData(data))
+      .then((b) => (buffer = b))
+      .catch((err) => {
+        console.warn("Shutter sound unavailable", err);
+        loading = null;
+        return null;
+      });
+    return loading;
+  }
+
+  function cut() {
+    try {
+      playing?.stop();
+    } catch {}
+    playing = null;
+  }
+
+  stage.events.addEventListener("tick", (e) => {
+    const i = frameAt(e.detail.t);
+    if (i === last) return;
+    last = i;
+    if (!buffer || !s.shutter) return;
+    // Preview: only while playing, so scrubbing stays quiet.
+    if (!exporting && (!s.shutterPreview || !stage.playing)) return;
+    cut();
+    const src = actx.createBufferSource();
+    const gain = actx.createGain();
+    src.buffer = buffer;
+    gain.gain.value = s.shutterVolume;
+    src.connect(gain).connect(exporting ? dest : actx.destination);
+    src.start();
+    playing = src;
+  });
+
+  return {
+    load,
+    /** Called inside the export click: resume audio and route clicks to the recording. */
+    track() {
+      if (!s.shutter || !buffer) return null;
+      actx.resume();
+      dest ||= actx.createMediaStreamDestination();
+      cut();
+      exporting = true;
+      last = -1;
+      return dest.stream.getAudioTracks()[0];
+    },
+    stop() {
+      exporting = false;
+      cut();
+    },
+  };
+})();
+
 const exportBar = createExportBar(document.getElementById("export"), {
   stage,
   filename: () => `match-cut-${slug()}`,
   primary: "gif",
+  getAudio: () => shutter.track(),
+  hasAudio: () => false, // the Shutter sound toggle in Output decides
+  beforeExport: async (kind) => {
+    if (kind === "video" && s.shutter && !(await shutter.load()))
+      toast("Couldn't load the shutter sound; exporting without it.", "warning");
+  },
+  afterExport: () => shutter.stop(),
   onGif: exportGif,
   actions: [{ label: "PNG frames (.zip)", icon: "archive", onClick: exportZip }],
   hint: () => estimate,
