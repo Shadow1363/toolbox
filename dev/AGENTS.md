@@ -7,7 +7,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - **Belongs elsewhere:** plain format conversion, encoding and hashing (Convert & Encode: Base64, encoders, hashes, JSON tools, colors, timestamps, case, QR). Don't duplicate them here; the hub links to them through the category's `related` list in `tools.js`.
 
 ## Hub
-- `/dev/index.html` has `data-search`; tools are grouped by `section` (`Code & text`, `Web`, `Generate`).
+- `/dev/index.html` has `data-search`; tools are grouped by `section` (`Code & text`, `Web`, `Validate`, `Generate`).
 - `related: [...]` on the category renders an "Also useful (in Convert & Encode)" section at the end of the hub, and those tools are included in the hub search (`site.js` → `renderCategory`).
 
 ## Shared layout and code
@@ -28,6 +28,7 @@ Every tool is input on the left, output on the right (`.io-grid`, stacks under 8
 | croner + cronstrue (`croner`, `cronstrue`) | Cron Builder, first valid expression. |
 | Faker (`faker`, one ES module per locale: `dist/locale/<code>.js`) | Fake Data Generator, first run, then once per locale chosen. |
 | SVGO browser build (`svgo`) | SVG Optimizer, first optimization. |
+| libphonenumber-js max bundle (`phone`, classic script → `window.libphonenumber`, ~65 KB compressed, MIT) | Validators, first time the Phone tab opens. Its `+esm` build was returning 503s from jsDelivr when it was added, so the UMD bundle is used. |
 | EFF long wordlist (`effWords`, JSON, CC BY 3.0) | Generators, first passphrase. |
 | JSZip (`jszip`, through `downloadZip` in `image-io.js`) | SVG Optimizer "All (.zip)". |
 
@@ -84,6 +85,12 @@ Every tool is input on the left, output on the right (`.io-grid`, stacks under 8
 - Strength = entropy of how it was generated (pool size × length, or words × log2 7776), not a pattern guesser; crack time assumes 10¹¹ guesses per second.
 - Options persist; results are never stored. The UI says so.
 
+### validators: CPF, CNPJ, CEP & Phone Validator
+- Tabs: CPF, CNPJ, CEP, Postal code, Phone. Input is one value per line (up to 5000; 300 cards drawn, the CSV has all). Every card shows Valid / Check / Invalid, the reason, the formatted value and details. "Copy valid" copies the valid ones, formatted; "CSV" downloads one row per line with a column per detail.
+- `validate.js` is pure (runs in Node): `cpf` (mod-11 check digits, rejects repeated digits, issuing fiscal region from the 9th digit), `cnpj` (also the **alphanumeric CNPJ** issued from July 2026: the first 12 characters may be A–Z, each counted as char code − 48; the check digits stay numeric; `12.ABC.345/01DE-35` is the official example), `cep` (8 digits; state from the Correios range table), `postal(text, country)` (55 countries, matched on the compact form; `ANY` lists every country whose format matches), `randomCpf`/`randomCnpj(alnum)` for the "Test numbers" button.
+- Lookups are the only network requests, each behind a toggle and named in the note under the tabs (the tool's `privacy` line in `tools.js` says so too). CEPs go to `viacep.com.br/ws/<8 digits>/json/` (`{ erro: true }` = valid format but unknown CEP → "Check"). Postal codes go to `api.zippopotam.us/<cc>/<code>`; `POSTAL[cc].zip(compact)` gives the form it expects (GB: outward code only, CA: first 3, NL: 4 digits, LU: `L-1009`, SE: no space); countries without `zip` have no lookup; BR uses ViaCEP. At most 50 new lookups per edit, 4 at a time, cached for the page; failures retry on the next edit.
+- Phone: `parsePhoneNumberWithError` with an optional default country for numbers without `+` (a leading `00` is read as `+`). Country is `number.country`; when it can't be pinned down, the card lists the countries that share the calling code. Valid = `isValid()`; "Check" = the length is possible but no range matches; type from `getType()`.
+
 ## Known limitations
 - **Regex:** JavaScript flavor only (no possessive quantifiers, atomic groups or PCRE verbs). Zero-length matches are listed but not highlighted in the text. Highlights need CodeMirror; the textarea fallback shows only the match list.
 - **Diff:** line-based alignment (no move detection). Very different large files can hit the 5 s timeout.
@@ -92,6 +99,7 @@ Every tool is input on the left, output on the right (`.io-grid`, stacks under 8
 - **Fake data:** faker's locales vary in coverage (some fall back to English for missing data). Changing the faker version changes seeded output.
 - **SVG Optimizer:** very large or many files are optimized on the main thread and can pause the page briefly. The JSX output doesn't rewrite `<style>` selectors or IDs.
 - **Meta previews:** approximations of each platform's layout, which change over time. Images on servers that block hotlinking may not load (the size check then can't run). No live URL fetching.
+- **Validators:** a valid CPF/CNPJ only has correct check digits; it may not be registered (no Receita Federal lookup exists without a backend). Postal code formats can't tell whether a code exists; the lookups can, but Zippopotam's coverage varies. libphonenumber has no carrier or city data in this build.
 - **Generators:** strength assumes the value was generated here; it says nothing about reused or leaked passwords.
 
 ## Checklist: new tool in this category

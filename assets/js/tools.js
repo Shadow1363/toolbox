@@ -53,9 +53,9 @@ export const categories = [
   {
     id: "dev",
     name: "Dev",
-    description: "Regex tester, diff checker, CSS generators, cron builder, fake data, SVG optimizer, meta tags and secure generators.",
+    description: "Regex tester, diff checker, CSS generators, cron builder, CPF/CNPJ/CEP and phone validators, fake data, SVG optimizer, meta tags and secure generators.",
     thumbnail: "/assets/img/dev.svg",
-    sections: ["Code & text", "Web", "Generate"],
+    sections: ["Code & text", "Web", "Validate", "Generate"],
     related: ["json-tools", "encode-decode", "base64", "hash", "timestamp", "color", "case", "qr-code"],
   },
 ];
@@ -427,6 +427,17 @@ export const tools = [
     thumbnail: "/assets/img/meta-preview.svg",
     status: "new",
     tags: ["meta tags", "open graph", "og", "og:image", "twitter card", "seo", "social", "link preview", "unfurl", "html"],
+  },
+  {
+    id: "validators",
+    category: "dev",
+    section: "Validate",
+    name: "CPF, CNPJ, CEP & Phone Validator",
+    description: "Check CPF and CNPJ (also alphanumeric), look up CEP addresses, validate postal codes in 55 countries and find a phone number's country.",
+    thumbnail: "/assets/img/validators.svg",
+    status: "new",
+    privacy: "Checked locally; only the optional address lookups go online",
+    tags: ["cpf", "cnpj", "cnpj alfanumérico", "cep", "viacep", "brasil", "brazil", "zip code", "postal code", "postcode", "phone number", "phone country", "country code", "e.164", "libphonenumber", "validate", "validator", "check digit", "test data"],
   },
   {
     id: "fake-data",

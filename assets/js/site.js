@@ -132,7 +132,7 @@ function renderToolHead() {
     h("div", {}, h("h1", {}, tool.name), h("p", {}, tool.description)),
     h("div", {
       class: "privacy-note",
-      html: `${icon("lock")} Processed locally, nothing is uploaded`,
+      html: `${icon("lock")} ${tool.privacy || "Processed locally, nothing is uploaded"}`,
     }),
   );
 }

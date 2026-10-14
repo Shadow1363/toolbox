@@ -68,6 +68,8 @@ export const LIBS = {
   cronstrue: { kind: 'esm', url: `${NPM}/cronstrue@3.30.0/+esm` },
   // Faker: one ES module per locale (`dist/locale/<code>.js` exports `faker`); see dev/fake-data.
   faker: { kind: 'url', url: `${NPM}/@faker-js/faker@10.6.0/dist/locale/` },
+  // Phone numbers (Dev → Validators): the full-metadata bundle (number types, exact ranges), a classic script.
+  phone: { kind: 'script', url: `${NPM}/libphonenumber-js@1.13.13/bundle/libphonenumber-max.js`, global: 'libphonenumber' },
   // EFF long wordlist (7776 words, CC BY 3.0) as a JSON array, for passphrases.
   effWords: { kind: 'url', url: `${NPM}/@wordlist/english-eff@1.0.1/dist/data/long.json` },
   // Audio category (lib/audio-*.js). mediabunny: container probing, track picking, WebCodecs decode, Opus in OGG/WebM

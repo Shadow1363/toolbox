@@ -35,7 +35,7 @@ _template/               Copy-paste starters: category/, tool/, canvas-tool/
 - Folder routing: `/<category>/<tool>/index.html` serves `/<category>/<tool>/`. A tool without a category lives at `/<tool>/` (e.g. a future `/regex/`).
 - `assets/js/tools.js` is the single source of truth for what is listed.
   - `categories[]`: `{ id, name, description, thumbnail, sections?, related? }`. `related` lists tool ids from other categories to show (and search) at the end of the hub.
-  - `tools[]`: `{ id, category?, name, description, thumbnail, status?, tags? }`. `status` is `'new' | 'beta' | 'soon'` (`soon` renders a disabled card); `tags` feed home search.
+  - `tools[]`: `{ id, category?, name, description, thumbnail, status?, tags?, privacy? }`. `status` is `'new' | 'beta' | 'soon'` (`soon` renders a disabled card); `tags` feed home search; `privacy` replaces the "Processed locally, nothing is uploaded" line under the title, for a tool that makes requests the user opts into (Validators).
   - Helpers: `getTool`, `getCategory`, `toolsIn`, `standaloneTools`, `toolUrl`, `categoryUrl`.
 - `site.js` reads `<body data-tool="…">` or `<body data-category="…">` and fills placeholders:
   `#site-header`, `#site-footer`, `[data-tool-head]` (tool title + description from the registry), `[data-grid="home"]`, `[data-grid="category"]`, `[data-search]`.
@@ -139,4 +139,4 @@ New helpers that two or more tools need go in `assets/js/lib/`; anything single-
 - [Convert & Encode](convert/AGENTS.md): file converter (documents, data, images, audio/video), Base64, encoders, hashes, JSON, colors, timestamps, case, QR.
 - [Image](image/AGENTS.md): device mockups, code screenshots, social images, favicons, before/after sliders, compression, palettes, a whiteboard and a pixel art editor.
 - [Audio](audio/AGENTS.md): audio extractor + Whisper transcript (batch, original-stream copy), trimmer with fades and splits, waveform videos (audiograms), noise reduction and loudness normalization.
-- [Dev](dev/AGENTS.md): regex tester, diff checker, cron builder, CSS generators (gradient, shadow, glass, clip-path, cubic-bezier), SVG optimizer, meta tag previewer, fake data, and password/UUID/API key generators.
+- [Dev](dev/AGENTS.md): regex tester, diff checker, cron builder, CSS generators (gradient, shadow, glass, clip-path, cubic-bezier), SVG optimizer, meta tag previewer, CPF/CNPJ/CEP/postal code/phone validators, fake data, and password/UUID/API key generators.

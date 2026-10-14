@@ -51,6 +51,7 @@ body:
         - SVG Optimizer
         - Meta Tag Previewer
         - Fake Data Generator
+        - CPF, CNPJ, CEP & Phone Validator
         - Password, UUID & API Key Generator
         - Audio Extractor + Transcript
         - Audio Trimmer + Fade

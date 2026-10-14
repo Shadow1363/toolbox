@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CPF, CNPJ, CEP, Postal Code &amp; Phone Validator · Toolbox</title>
+  <meta name="description" content="Validate Brazilian CPF and CNPJ (including the new alphanumeric CNPJ), look up CEP addresses, check postal codes for 50+ countries and find which country a phone number belongs to. Batch input, test numbers, CSV export.">
+  <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="validators">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <nav class="dev-tabs" aria-label="Validator"><div class="segmented" id="tabs" role="group" aria-label="Validator"></div></nav>
+    <p class="vd-note" id="note"></p>
+    <div class="io-grid">
+      <section class="panel io-panel" aria-label="Input">
+        <div class="io-head"><h2>Input</h2><span id="in-actions"></span></div>
+        <div id="controls" class="vd-controls"></div>
+        <textarea id="input" rows="10" spellcheck="false" autocomplete="off" aria-label="Values to check, one per line"></textarea>
+        <div class="io-note">One per line. Spaces, dots and dashes are fine.</div>
+      </section>
+      <section class="panel io-panel" aria-label="Results">
+        <div class="io-head"><h2>Results</h2><span id="out-actions"></span></div>
+        <div class="io-status" id="status"></div>
+        <ol class="vd-list" id="list"></ol>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

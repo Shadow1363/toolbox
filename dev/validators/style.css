@@ -1,0 +1,24 @@
+/* CPF, CNPJ, CEP & Phone Validator */
+.vd-note { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-muted); margin: -4px 0 16px; }
+.vd-note svg { width: 15px; height: 15px; flex: none; margin-top: 2px; color: var(--success); }
+.vd-controls .ctrl-section { padding: 0; border: 0; }
+.vd-controls[hidden] { display: none; }
+.vd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; align-content: start; max-height: 75vh; overflow: auto; }
+.vd-item { display: grid; gap: 6px; padding: 8px 8px 10px 12px; border: 1px solid var(--border); border-left: 3px solid var(--vd-c); border-radius: var(--radius-sm); background: var(--bg-elev); --vd-c: var(--success); }
+.vd-item.is-warn { --vd-c: var(--warning); }
+.vd-item.is-bad { --vd-c: var(--danger); }
+.vd-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.vd-top code { flex: 1; min-width: 0; font: 600 14px/1.4 var(--font-mono); overflow-wrap: anywhere; background: none; }
+.vd-top .icon-btn { width: 30px; height: 30px; flex: none; }
+.vd-badge { display: inline-flex; align-items: center; gap: 4px; flex: none; font-size: 11.5px; font-weight: 650; padding: 2px 8px 2px 6px; border-radius: 99px; color: var(--vd-c); background: color-mix(in srgb, var(--vd-c) 14%, transparent); }
+.vd-badge svg { width: 12px; height: 12px; }
+.vd-input, .vd-wait { font-size: 12px; color: var(--text-faint); margin: 0; overflow-wrap: anywhere; }
+.vd-reason { font-size: 13px; margin: 0; color: var(--text); }
+.vd-kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 12px; margin: 0; font-size: 12.5px; }
+.vd-kv dt { color: var(--text-muted); }
+.vd-kv dd { margin: 0; font-family: var(--font-mono); overflow-wrap: anywhere; }
+.vd-more { text-align: center; color: var(--text-muted); font-size: 13px; padding: 8px; }
+@media (max-width: 480px) {
+  .vd-kv { grid-template-columns: minmax(0, 1fr); }
+  .vd-kv dd { margin-bottom: 4px; }
+}
