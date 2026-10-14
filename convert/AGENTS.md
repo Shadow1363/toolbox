@@ -36,6 +36,7 @@ Each is `index.html` + `script.js` (+ `style.css` when needed): `createControls`
 - Light conversions (no `heavy` step, ≤ 25 MB) run automatically when files, targets or options change; audio/video waits for **Convert**. Failed or cancelled items don't auto-retry until something changes (`stale()` vs `retryable()`).
 - Options shown = the union of option specs of every queued chain, persisted in `fc-options`; the last target per source format is remembered (`fc-target:<format>`).
 - Two or more images targeting PDF combine into one `images.pdf` (toggle in the queue).
+- PDF → PNG/JPG has two modes (`pdfExtract`): "Each page" renders pages at 72/150/300 dpi; "Images inside" (`extractImages` in `converters/pdf.js`) walks each page's operator list for `paintImageXObject`/`paintInlineImageXObject`, saves every embedded image at its native size (deduplicated by PDF object `ref`, so a logo on every page is saved once), skips ones smaller than `pdfMinSize`, and keeps alpha in PNG (JPG flattens onto white). pdf.js hands images over as decoded RGB/RGBA/1-bit pixels or an `ImageBitmap`; JPEGs come out re-encoded, not as the original bytes. Stencil masks (one-colour shapes) are skipped.
 - Preview: HTML (and DOCX via mammoth) in an `iframe sandbox=""` with scripts stripped; PDF in the browser viewer; CSV/TSV/XLSX as a table (first 200 rows); text capped at 200 KB.
 - Size limits (`LIMIT`): documents/data 200 MB, images 100 MB, audio/video 1 GB (warning above 250 MB).
 
@@ -65,7 +66,7 @@ Each is `index.html` + `script.js` (+ `style.css` when needed): `createControls`
 | docx | HTML → DOCX (writer in `converters/html-docx.js`) |
 | pdfmake + vfs_fonts + html-to-pdfmake | HTML → PDF |
 | jsPDF | images → PDF (one page per image, any page size) |
-| pdfjs-dist (+ worker) | PDF → text/images |
+| pdfjs-dist (+ worker) | PDF → text, page images, embedded images |
 | SheetJS (cdn.sheetjs.com, not npm: npm `xlsx` is stale) | XLSX/XLS/ODS in or out, spreadsheet preview |
 | js-yaml, fast-xml-parser, smol-toml | YAML, XML, TOML (converter and JSON Tools) |
 | heic-to | HEIC → PNG/JPG |

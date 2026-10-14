@@ -1,0 +1,10 @@
+/* Click points and the brush cursor: on top of the preview canvas, never part of an export. */
+.preview-stage canvas.bgr-marks {
+  position: absolute; max-width: none; max-height: none;
+  border-radius: 6px; box-shadow: none; background: transparent; pointer-events: none;
+}
+#preview { touch-action: none; }
+#preview.bgr-picking, #preview.bgr-brushing { cursor: crosshair; }
+
+.bgr-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.bgr-actions .ctrl-hint { flex-basis: 100%; margin: 0; }

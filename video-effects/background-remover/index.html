@@ -7,9 +7,10 @@
   <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
   <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
   <title>Background Remover · Toolbox</title>
-  <meta name="description" content="Remove or replace the background behind a person in a photo or video: transparent, color, blur, image or looping video. Runs in your browser with AI segmentation.">
+  <meta name="description" content="Remove or replace the background behind people, objects, products, logos or text in a photo or video: transparent, color, blur, image or looping video. Click to pick what to keep. Runs in your browser with AI segmentation.">
   <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
   <script src="/assets/js/theme-init.js"></script>
   <script type="module" src="/assets/js/site.js"></script>
   <script type="module" src="./script.js"></script>
@@ -26,6 +27,7 @@
       <section class="panel preview-panel" aria-label="Preview">
         <div class="preview-stage">
           <canvas id="preview" width="1280" height="720"></canvas>
+          <canvas id="marks" class="bgr-marks" width="1280" height="720" aria-hidden="true"></canvas>
           <div class="preview-overlay" id="overlay" hidden></div>
         </div>
         <div id="transport"></div>

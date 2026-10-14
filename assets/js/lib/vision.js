@@ -102,19 +102,23 @@ export function segmentImage(segmenter, source, key) {
  * Guess whether a mask marks the person (true) or the background (false):
  * the person is usually nearer the centre than the frame edges. Returns null when the frame
  * gives no clear answer (no person yet, e.g. a title card), so callers can ask again later.
+ * A mask that covers less than half the frame is never called inverted: two people standing
+ * at the sides with empty space between them look "edge-heavy" but are still the subject.
  */
 export function looksLikePerson({ data, width, height }) {
-  let edge = 0, edgeN = 0, centre = 0, centreN = 0;
+  let edge = 0, edgeN = 0, centre = 0, centreN = 0, total = 0;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const v = data[y * width + x];
       const nx = x / width, ny = y / height;
+      total += v;
       if (nx < 0.06 || nx > 0.94 || ny < 0.06) { edge += v; edgeN++; }
       else if (nx > 0.35 && nx < 0.65 && ny > 0.3) { centre += v; centreN++; }
     }
   }
   const c = centre / centreN, e = edge / edgeN;
   if (Math.abs(c - e) < 0.15) return null;
+  if (c < e && total / (width * height) < 0.5) return null;
   return c > e;
 }
 

@@ -1,8 +1,9 @@
 /**
- * Person mask for a still photo: segmented once, then refined by hand.
+ * Subject mask for a still photo (person, object or clicked selection): segmented once, then refined by hand.
  *
  *   const sm = createStillMask(prefix);
  *   sm.setSource(img, segmentImage(seg, img, 'quality'));   // raw model mask (e.g. 256×256)
+ *   sm.setMask(raw);                                        // a new raw mask for the same photo; brush edits stay
  *   sm.update({ threshold, softness, polarity, edgeSnap }); // cheap; rerun on slider changes
  *   sm.beginStroke('add' | 'erase', radius, softness); sm.strokeTo(x, y); sm.endStroke();  // mask px
  *   sm.undo(); sm.redo(); sm.clearEdits();
@@ -24,6 +25,7 @@ export function createStillMask(prefix) {
   let guide = null;      // photo luminance 0..1 at the working size
   let up = null;         // raw mask upscaled to the working size
   let snapped = null;    // guided-filtered `up` (cached until the source changes)
+  let rawSide = 256;     // long side of the raw mask: sets the edge-snap radius
   let autoPolarity = null;
   let strokes = [], redoStack = [], current = null;
   let fullKey = '';
@@ -60,10 +62,19 @@ export function createStillMask(prefix) {
       guide = new Float32Array(w * h);
       for (let i = 0, j = 0; i < guide.length; i++, j += 4) guide[i] = (0.299 * px[j] + 0.587 * px[j + 1] + 0.114 * px[j + 2]) / 255;
 
+      strokes = []; redoStack = []; current = null;
+      add.getContext('2d').clearRect(0, 0, w, h);
+      erase.getContext('2d').clearRect(0, 0, w, h);
+      sm.setMask(raw);
+    },
+
+    /** Replace the raw mask (same photo), keeping brush edits. Call update() afterwards. */
+    setMask(raw) {
+      if (!guide) return;
       up = bilinear(raw.data, raw.width, raw.height, w, h);
+      rawSide = Math.max(raw.width, raw.height);
       snapped = null;
       autoPolarity = looksLikePerson(raw);
-      strokes = []; redoStack = []; current = null;
       sm.ready = true;
     },
 
@@ -73,7 +84,7 @@ export function createStillMask(prefix) {
       let prob = up;
       if (edgeSnap) {
         // Radius ≈ 1.5 model pixels at the working size; eps keeps flat areas flat.
-        snapped ||= guidedFilter(guide, up, w, h, Math.max(2, Math.round((Math.max(w, h) / 256) * 1.5)), 2e-3);
+        snapped ||= guidedFilter(guide, up, w, h, Math.max(2, Math.round((Math.max(w, h) / rawSide) * 1.5)), 2e-3);
         prob = snapped;
       }
       const invert = polarity === 'invert' || (polarity === 'auto' && autoPolarity === false);

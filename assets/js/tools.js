@@ -150,10 +150,10 @@ export const tools = [
     category: "video-effects",
     name: "Background Remover",
     description:
-      "Remove the background behind a person in a photo or video, or swap it for a color, blur, image or looping video.",
+      "Remove the background behind people, objects, logos or text (or click what to keep), or swap it for a color, blur, image or looping video.",
     thumbnail: "/assets/img/background-remover.svg",
     status: "new",
-    tags: ["background", "remove background", "green screen", "chroma", "segmentation", "mediapipe", "ai", "transparent", "blur", "virtual background", "photo", "image", "png", "cutout"],
+    tags: ["background", "remove background", "green screen", "chroma", "color key", "segmentation", "mediapipe", "segment anything", "sam", "object", "product", "logo", "text", "ai", "transparent", "blur", "virtual background", "photo", "image", "png", "cutout"],
   },
   {
     id: "zoom-on-click",
@@ -204,7 +204,7 @@ export const tools = [
     thumbnail: "/assets/img/file-converter.svg",
     status: "new",
     tags: ["pdf", "docx", "word", "markdown", "md", "html", "txt", "text", "csv", "tsv", "json", "yaml", "xml", "xlsx", "excel", "spreadsheet",
-      "png", "jpg", "jpeg", "webp", "bmp", "ico", "icon", "svg", "heic", "image", "mp4", "webm", "mov", "gif", "mp3", "wav", "ogg", "audio", "video", "zip"],
+      "png", "jpg", "jpeg", "webp", "bmp", "ico", "icon", "svg", "heic", "image", "pdf to png", "pdf to jpg", "extract images", "pdf images", "mp4", "webm", "mov", "gif", "mp3", "wav", "ogg", "audio", "video", "zip"],
   },
   {
     id: "qr-code",
