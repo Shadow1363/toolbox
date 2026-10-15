@@ -25,7 +25,8 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 
 ## Export
 - Every tool exports **video, GIF and PNG** from one `createExportBar`, always in that order with those labels. Keep all three; a still source still exports a clip of the stage duration.
-- `createExportBar(root, { stage, filename, getVideo, getAudio, hasAudio, video, gif, png, onGif, primary, hint, actions, beforeExport, afterExport, prepareFrame })`.
+- `createExportBar(root, { stage, filename, getVideo, getAudio, hasAudio, video, gif, png, onGif, primary, hint, actions, beforeExport, afterExport, prepareFrame, renderVideo })`.
+  - `renderVideo: { supported(), run({ signal, onProgress, includeAudio }) → { blob, ext }, message() }` replaces the real-time recording when `supported()` is true (Auto Editor: frame-by-frame WebCodecs through `lib/video-encode.js`).
   - `video`/`gif`/`png` enable each button (bool or function; disabled buttons stay visible, e.g. before an upload). `hint` may be a function. Call `exportBar.refresh()` when any of them would change.
   - `primary` picks the highlighted button (`'video'` by default; Text Match Cut uses `'gif'`). `actions` adds extra buttons after the three (Text Match Cut's ZIP, Shape Crop's SVG); an action's `show` (bool or function) hides it, re-checked on `refresh()`.
   - Multi-clip tools pass `getAudio: () => mixTrack(videos)` instead of `getVideo`.
@@ -85,7 +86,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 ## Screen Showcase styling (`lib/showcase-frame.js`)
 - Shared by Screen Showcase and Zoom on Click, so both tools offer the same backgrounds and frames.
 - `backgroundSection()` and `frameSection({ frame, padding })` return `createControls` sections. They own these ids: `bg`, `bgColor`, `gradient`, `gAngle`, `blurAmount`, `frame`, `url`, `padding`, `radius`, `border`, `borderColor`, `shadow`, `shadowOpacity`. Don't reuse them for other controls.
-- Drawing: `drawShowcaseBackground(ctx, media, W, H, k, s)` → `fitInFrame(media, W, H, k, s)` → `buildFrameCard(source, w, h, k, s, name)` → `drawCardShadow(ctx, card, r, tf, s, k, alpha)`.
+- Drawing: `drawShowcaseBackground(ctx, media, W, H, k, s)` → `fitInFrame(media, W, H, k, s)` → `buildFrameCard(source, w, h, k, s, name)` → `drawCard(ctx, card, r, tf, s, k, persp, alpha)` (shadow via `drawCardShadow`, then the card, tilted through `persp` when `tf.rx/ry` ≠ 0). `cardMotion(t, D, s)` is Screen Showcase's motion (intro zoom, pan, tilt, fades).
 - `source` can be any drawable. Zoom on Click passes its zoomed content canvas. `mediaOffset(s, k)` is where the media sits inside the card, used to map clicks.
 
 ## Passing files between tools (`lib/handoff.js`)
@@ -96,7 +97,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 ## Tools
 
 ### text-effects: animated titles
-- Files: `text-effects/script.js`.
+- Files: `text-effects/script.js`. `textOptions(s, W, H, end)` in `lib/text-anim.js` maps the panel to `drawAnimatedText` options (shared with the registry's text effect).
 - Background (none/solid/gradient) or an uploaded video (the video drives the clock and audio is kept), then `drawAnimatedText(ctx, opts, t)`.
 - Presets patch `anim` / `easing` / `family`; picking an `anim` sets `DEFAULT_EASING`.
 
@@ -107,8 +108,8 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Stop-motion quantizes `t` to `fps` steps; "choppy" holds video frames in the `paper-hold` scratch canvas.
 
 ### screen-showcase: product-demo framing
-- Files: `screen-showcase/script.js`; backgrounds, frames and the shadow come from `lib/showcase-frame.js` (shared with Zoom on Click).
-- `buildFrameCard()` (media + browser/phone chrome, radius, border) → `motion(t)` (intro zoom, fade, pan, tilt) → `drawCardShadow` (projected polygon) → card via `persp.draw` when tilted, plain `drawImage` otherwise.
+- Files: `screen-showcase/script.js`; backgrounds, frames, the shadow, the motion (`cardMotion`) and card drawing (`drawCard`) come from `lib/showcase-frame.js` (shared with Zoom on Click and the registry's screenshot effect).
+- `buildFrameCard()` (media + browser/phone chrome, radius, border) → `cardMotion(t, D, s)` (intro zoom, fade, pan, tilt) → `drawCard` (projected-polygon shadow, then the card via `persp.draw` when tilted, plain `drawImage` otherwise).
 - Aspect presets come from `SIZES` (16:9, 9:16, 1:1, 4:5).
 
 ### text-behind-person: text and images between background and person
@@ -150,6 +151,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Files: `script.js` (UI, video sync, export), `sequence.js` (timeline math, `drawClip`), `engine.js` (WebGL renderer + `GLSL_HEADER`), `gallery.js` (picker with live thumbnails), `samples.js` (demo/gallery frames), `transitions/*.js` (one per transition; `index.js` registry, `_common.js` param/2D helpers, `_text.js` text layout + masks).
 - Model: `clips[]` (video trim in/out or image duration + Ken Burns, per-clip fit), `cuts[i]` between clips i and i+1, plus `intro`/`outro` slots that transition from/to a solid color. Slot = `{ type, duration, easing, bezier, params, slotColor }`; `type: 'cut'` means none.
 - Overlap model (`buildTimeline`): a transition of length d starts d s before clip A ends and clip B starts then; d is capped at 45% of each neighbouring clip.
+- Slot easing goes through `easeWith(name, bezier, t)` (`lib/easing.js`). The registry's transition effect imports `engine.js` and `transitions/index.js` from this folder.
 - Per frame `renderAt(ctx, t)`: `frameAt(tl, t)` → one clip via `drawClip`, or two side frames (`tr-side-A/B` scratch) → `engine.render`. Preview, PNG, WebM and GIF all call it. The preview plays `previewRange()`: the selected transition ±1 s, the selected clip, or the full sequence.
 - Videos: the stage runs on the wall clock (`getVideo` is null); `syncVideos(t)` plays, pre-rolls (parks the next clip on `trimIn` 1.5 s early), drift-corrects (>0.25 s) and pauses each `<video>`, and crossfades their audio `level`. GIF export seeks instead (`seekClips`) so frames are exact.
 - Engine: frames are prepared in 2D (fit/fill/blurred fill), uploaded as `uA`/`uB`, plus `uMask`; drawn on an offscreen WebGL canvas, then copied onto the 2D preview. No WebGL, or a shader that fails to compile → that transition's `draw2d`.
@@ -179,13 +181,31 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 4. Import it in `shapes/index.js` and add it to `SHAPES` (the order is the picker order).
 5. Check it at extreme box ratios and with every param at its min and max; it must stay inside its box.
 
+### auto-editor: talking head → short-form edit
+- Files: `script.js` (panel, uploads, pipeline run, apply, exports), `analyze.js` (levels, silences, fillers, sentences, retakes), `timemap.js` (cuts → kept segments, source ↔ output time, `retimeWords`/`retimeRange`), `edl.js` (EDL validation, `STYLE_PRESETS`, `localPlan`, `matchScreenshots`), `compose.js` (`buildPlan`, `renderFrame`, `outputDims`), `playback.js` (two-video preview), `audio.js` (`cutAudio`), `ocr.js` (tesseract.js), `pipeline.js` (step list, `cached`), `decisions.js`, `script-edit.js` (caption text card, `replaceLineWords`), `style.css`. `analyze.js`, `timemap.js` and `edl.js` have no DOM and run in Node.
+- Pipeline (each step shows in the step list; transcripts, OCR text and face tracks are cached in IndexedDB by file + options through `cached()`):
+  1. On upload: `loadAudio` (full rate, kept for the output) + `resample` to 16 kHz mono (Whisper, levels). The uncut video plays at once.
+  2. Analyze and edit: `transcribe` (word timestamps) → `levels` (RMS every 10 ms; threshold = floor + max(6 dB, 35% of the floor→speech range), capped 12 dB under speech) → `findSilences`, `findFillers` (um/uh tokens; "like"/"basically" as soft; voiced gaps: a gap between words that is mostly above the threshold, because Whisper drops most fillers) and `findRepeats` (a sentence whose words reappear in order, LCS ≥ 60%, within 20 s, is a retake) → OCR of each screenshot → `trackHead` at 5 fps + `smoothTrack` (strength 0.9).
+  3. `localPlan` builds the EDL from the analysis and the panel (style preset fields), then `validateEdl` checks it.
+  4. `apply()`: `buildPlan` (time map, crops, zoom keys, layers retimed to output, caption pages, fonts) → `cleanAudio` once per audio setting (RNNoise output `wet` reused) → `cutAudio` → a WAV in an `<audio>` element, which is the stage clock.
+- EDL v1 (all times in source seconds, so they match the transcript): `{ version, summary, source, cuts: [{ id, start, end, kind, reason, off? }], layers: [{ id, effect, start, end, params, reason, off? } | { id, effect: 'transition', at: '<cut id>', params, extra?, reason }], captions: { enabled, params }, camera: { reframe: 'face'|'center', punchIn, punchZoom }, audio: { cleanup, target, nrMix }, progress: { enabled, params } }`. Layer params hold only what differs from the effect's defaults (`effectParams` completes them). `validateEdl(raw, { duration, imageIds, effects })` clamps times and numbers with warnings and returns errors for unknown effects, screenshots, params or cut ids, inverted ranges, and cuts that leave under a second.
+- Local plan: pauses longer than "Longest pause kept" are shortened to it (leading/trailing silence removed); um/uh cut; voiced gaps, retakes and a hook title from the first sentence are added switched off; zooms on sentence starts every `zoomEvery` s; screenshots placed on the sentence that best matches their note + OCR words (plus "look at this…" phrases), switched off when the match is weak.
+- Time map: overlapping cuts merge; `srcToOut` maps a time inside a cut to the cut point, so layers that start in a cut start at the join. `retimeWords` keeps a word that overlaps a kept range by 80 ms or a third of its length (Whisper stretches word ends into pauses).
+- Frame (`renderFrame(ctx, plan, t, { main, next })`): base = the registry's zoom effect drawing the source through `crop(segment, srcT)` (aspect-locked crop following the face, face ~38% from the top; every other segment tighter by `punchZoom`) and the zoom keys (`drawZoomed`'s `crop` option keeps it one sharp draw) → transition at a cut (A = live/held outgoing frame, B = the next segment's first frame) → screenshot and text layers → captions → progress. Screenshot `position: 'auto'` uses the face box and the caption area (`captionBand`: `captionTop` when the captions are in the lower half, `captionBottom` when they're in the upper half, so cards stay clear either way).
+- Preview (`playback.js`): even segments play on the page's video, odd ones on a second `<video>`; the idle one waits on the next segment's start and starts 60 ms before the cut. Drift under 0.25 s is absorbed by `playbackRate` (±15%), more re-seeks. Measured in Chromium: median 12 ms, max ~50 ms. GIF/PNG use `exact()` (seeks, `sync` paused until `release()`).
+- Audio: `cutAudio` pads each kept piece by half the 10 ms crossfade on both sides, joins with `concatBuffers`, drops the first lead-in and trims to the time map's length, so sound and picture line up to the sample.
+- Export: `renderVideo` → `encodeVideo` (MP4 H.264 + AAC where possible, else WebM VP9 + Opus) with frames from `openFrames(file).at(times)` (mediabunny `CanvasSink`, each packet decoded once); the next segment's first frame for transitions comes from `frames.get`. The page's own render is paused while exporting (shared scratch canvases). No WebCodecs encoder → the exporter's real-time recording of the `<audio>` clock. Actions: `.srt`, `.vtt` (the burned-in caption pages, or 6-word pages when captions are off), transcript `.txt` (`audio/extractor/formats.js`), the EDL `.json` (+ video, output and screenshot info).
+- Caption placement: the panel's Caption position (`posY`, % from the top) and Caption size (% of the style's size) are written into `edl.captions.params` by `captionParams()`, also after every regenerate. Dragging the captions on the preview moves `plan.captions.params.posY` live and commits on release. A new caption style brings its own position until you've moved the captions yourself (`capMoved`).
+- Caption text: the Caption text card lists `buildLines` of the caption words (source time; cut lines struck through). Editing a line runs `replaceLineWords(words, i0, n, text)`: same word count keeps every time; otherwise the matching words at both ends keep theirs and the changed middle shares the time it replaces (by length); an empty line removes its words. The edited words (`edited`) feed the captions, `.srt`/`.vtt`, the transcript and a `transcript` field in the EDL `.json`; analysis and cuts keep Whisper's words. They're saved in IndexedDB per transcription (`auto-editor:edits:<words key>`) and come back on the next run; "Undo my edits" deletes them.
+- Tested with a generated 30 s clip (`say` voice with pauses, an "um", a retake, two mentions): 9 pauses, the filler and the retake found, both screenshots placed on their sentences, 1080×1920 MP4 rendered in ~6 s, fallback WebM and GIF exported, no console errors.
+
 ### auto-captions: speech to animated captions
 - Files: `script.js` (UI, transcription flow, render), `style.css`. The line model (`lib/transcript.js`: retiming, pages, SRT/VTT) and `drawCaption` (`lib/captions.js`) are shared with the Audio tools.
 - Flow: upload, then Transcribe. That runs `decodeAudio(fetch(media.url))`, downloads the model (shown in a `progressModal` phase), then calls `transcribe`; words stream into the transcript editor. `buildLines` groups words into lines, breaking on pauses over 0.7 s, sentence ends, 14 words or 7 s.
 - Model: `lines = [{ id, words: [{ text, start, end }] }]`. A line is the unit the user edits. `pagesOf(line, maxWords)` splits it into balanced captions. `timeline()` sets each caption's `until`: it bridges short gaps so captions don't flicker, and lingers 0.6 s otherwise. `pageAt(pages, t)` finds the caption with a binary search.
 - Editing keeps timing. `retime(snapshotWords, text)` matches tokens with an LCS. Matched words keep their times; new words split the span of the words they replace (or the gap they sit in) in proportion to their length. The snapshot is taken on focus, so every keystroke retimes against the original words. Enter splits the line at the cursor (`wordIndexAt`); Backspace at the start merges it into the line above.
 - The transcript is saved in localStorage per file (`auto-captions:<name>:<size>`) and restored on upload.
-- Styles: the presets (Karaoke, Pop-in, Classic, Bold short-form, Boxed word) only set panel values. The render reads `highlight` (`none|color|box|wipe`), `reveal` (`page|word`), `pop`, outline, shadow and background box. The current word stays highlighted until the next word starts. `offset` shifts every caption.
+- Styles: the presets (Karaoke, Pop-in, Classic, Bold short-form, Boxed word; `CAPTION_PRESETS` in `lib/captions.js`, shared with the registry's captions effect) only set panel values. The render reads `highlight` (`none|color|box|wipe`), `reveal` (`page|word`), `pop`, outline, shadow and background box. The current word stays highlighted until the next word starts. `offset` shifts every caption.
 - Exports: video/GIF/PNG of the burned-in captions, plus SRT and VTT actions. Both files have one cue per on-screen caption, with uppercase applied; VTT adds inline word timestamps (`<00:00:01.200>`).
 
 ### background-remover: remove or replace the background
@@ -208,7 +228,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Photos: the canvas is the photo at full size (up to 4096 px). "Snap edges to the photo" replaces the model picker and temporal smoothing; its radius follows the raw mask's size (1.5 model pixels). PNG is the main export; the transport, Clip length and GIF/video export only appear with a Video background (`moving()`), and video export shrinks the canvas to 1920 px for the encoder.
 
 ### zoom-on-click: automatic zooms on screen recordings
-- Files: `script.js` (UI, render, pointer editing, timeline strip), `camera.js` (keyframes, camera sampling, auto-suggest, click-log parsing), `style.css`.
+- Files: `script.js` (UI, render, pointer editing, timeline strip), `camera.js` (auto-suggest, click-log parsing; re-exports the camera), `style.css`. The camera (keyframes, sampling, `drawZoomed` with motion blur and click rings) is `lib/zoom-camera.js`, shared with the registry's zoom effect.
 - Points: `{ id, t, x, y (0..1), zoom, dur, hold, easing, source: 'click'|'manual'|'auto' }`. Sources:
   - Click log (`handoff.js` slot `zoom-on-click`, or an imported .json; duplicates are skipped).
   - Clicks on the preview at the playhead, mapped back through the current camera.
@@ -225,7 +245,7 @@ Shared in `assets/js/lib/`; reuse these instead of loading MediaPipe again.
 - Points are saved in localStorage per file. With no upload, a built-in demo screenshot with two zooms plays.
 
 ### progress-overlay: progress bar, countdown and chapters
-- Files: `script.js`, `style.css`.
+- Files: `script.js` (panel, chapters, background, export), `style.css`. The drawing (`drawProgressOverlay(ctx, t, s, chapters)`: bar, labels, timer) is `lib/progress-bar.js`, shared with the registry's progress effect.
 - Works with no video (a solid or transparent stage, length slider, aspect presets) or over a video. "Overlay only" hides the video (it still drives the clock) for a transparent export, with a matte fallback.
 - `p = (t − start) / (end − start)`. "Ends at" follows the clip end until the user moves it.
 - Bar styles: line, rounded (track + pill fill), segmented (`segmentStops()`: chapter boundaries, or N equal parts), circle (in one of the 9 spots). Positions: top, bottom, or edges (one clockwise path from the top-left, dashed to `p × perimeter`). Glow and "empty instead of fill" options.

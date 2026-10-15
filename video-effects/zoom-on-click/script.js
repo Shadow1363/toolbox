@@ -16,7 +16,7 @@ import {
   TRANSPARENT_HINT,
 } from "/assets/js/lib/exporter.js";
 import { outputSize, scratch, roundRectPath } from "/assets/js/lib/canvas.js";
-import { easingOptions, easings, clamp } from "/assets/js/lib/easing.js";
+import { easingOptions, clamp } from "/assets/js/lib/easing.js";
 import { seekVideo } from "/assets/js/lib/media.js";
 import { fontString } from "/assets/js/lib/fonts.js";
 import { h, icon, toast, formatTime, store } from "/assets/js/lib/dom.js";
@@ -34,7 +34,7 @@ import {
   FULL,
   buildKeyframes,
   cameraAt,
-  viewRect,
+  drawZoomed,
   suggestZooms,
   parseClickLog,
 } from "./camera.js";
@@ -733,57 +733,6 @@ function resize() {
 let layout = null; // where the media sits on the canvas, for pointer mapping and markers
 
 /* ---------- Rendering ---------- */
-function drawZoomed(c, m, cam, t, bw, bh, k) {
-  const draw = (v, alpha) => {
-    const r = viewRect(v, m.width, m.height);
-    c.globalAlpha = alpha;
-    c.drawImage(m.el, r.sx, r.sy, r.sw, r.sh, 0, 0, bw, bh);
-  };
-  c.clearRect(0, 0, bw, bh);
-  c.imageSmoothingQuality = "high";
-  const prev = cameraAt(keys, t - 1 / 30);
-  const motion =
-    (Math.abs(cam.cx - prev.cx) + Math.abs(cam.cy - prev.cy)) * bw * cam.z +
-    Math.abs(Math.log(cam.z / prev.z)) * bw;
-  if (s.motionBlur && showZoom && motion * s.mbStrength > 1.5) {
-    // Average cameras across a shutter of up to 1/30 s (the frame stays the same; only the view moves).
-    // Enough samples that neighbours are ≤ ~2 px apart, so the blur is smooth rather than ghosted copies.
-    // Capped at ~3.5% of the width so even fast moves stay subtle.
-    const smear = Math.min(motion * s.mbStrength, bw * 0.035);
-    const shutter = smear / motion / 30;
-    const N = Math.min(24, Math.max(3, Math.ceil(smear / 2)));
-    for (let j = 0; j < N; j++)
-      draw(cameraAt(keys, t - (shutter * j) / (N - 1)), 1 / (j + 1));
-    c.globalAlpha = 1;
-  } else draw(cam, 1);
-
-  if (s.ring && showZoom) {
-    for (const p of points) {
-      const q = (t - p.t) / RING_TIME;
-      if (q < 0 || q > 1) continue;
-      const x = (p.x - (cam.cx - 0.5 / cam.z)) * cam.z * bw;
-      const y = (p.y - (cam.cy - 0.5 / cam.z)) * cam.z * bh;
-      const kk = k; // ring size is authored for a 1080px output, like every other size
-      const r = s.ringSize * kk * (0.35 + 0.65 * easings.easeOut(q));
-      c.save();
-      c.globalAlpha = (1 - q) * 0.9;
-      c.strokeStyle = s.ringColor;
-      c.lineWidth = Math.max(2, 5 * kk);
-      c.shadowColor = "rgba(0,0,0,.35)";
-      c.shadowBlur = 8 * kk;
-      c.beginPath();
-      c.arc(x, y, r, 0, Math.PI * 2);
-      c.stroke();
-      c.globalAlpha = (1 - q) * 0.35;
-      c.fillStyle = s.ringColor;
-      c.beginPath();
-      c.arc(x, y, r * 0.45, 0, Math.PI * 2);
-      c.fill();
-      c.restore();
-    }
-  }
-}
-
 let exportMode = null;
 
 function render(t) {
@@ -798,7 +747,14 @@ function render(t) {
     bh = Math.round(box.h);
   const cam = showZoom ? (drag ? drag.cam : cameraAt(keys, t)) : FULL;
   const content = scratch(`zoc-content-${bw}x${bh}`, bw, bh);
-  drawZoomed(content.getContext("2d"), m, cam, t, bw, bh, k);
+  drawZoomed(content.getContext("2d"), m, keys, points, cam, t, bw, bh, k, {
+    motionBlur: s.motionBlur && showZoom,
+    mbStrength: s.mbStrength,
+    ring: s.ring && showZoom,
+    ringColor: s.ringColor,
+    ringSize: s.ringSize,
+    ringTime: RING_TIME,
+  });
   const { card, r } = buildFrameCard(content, bw, bh, k, s, "zoc-card");
   const tf = {
     rx: 0,

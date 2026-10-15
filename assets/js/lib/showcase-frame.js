@@ -8,6 +8,8 @@
  *   const box = fitInFrame(media, W, H, k, s)                          // { w, h } of the media inside padding + chrome
  *   const { card, r } = buildFrameCard(source, box.w, box.h, k, s)     // source: anything drawable at that size
  *   drawCardShadow(ctx, card, r, tf, s, k, alpha)                      // tf = { rx, ry, scale, x, y, focal }
+ *   const mo = cardMotion(t, D, s)                                     // Screen Showcase motion: intro zoom, pan, tilt, fades
+ *   drawCard(ctx, card, r, tf, s, k, persp, alpha)                     // shadow + card, tilted through persp when rx/ry ≠ 0
  */
 import {
   fit,
@@ -17,6 +19,7 @@ import {
   drawBlurred,
 } from "./canvas.js";
 import { projectPoint } from "./perspective.js";
+import { ease, clamp } from "./easing.js";
 import { fontString } from "./fonts.js";
 
 export const GRADIENTS = [
@@ -350,4 +353,71 @@ export function drawCardShadow(ctx, card, r, tf, s, k, alpha = 1) {
   ctx.fillStyle = "#000";
   ctx.fill();
   ctx.restore();
+}
+
+/**
+ * Screen Showcase card motion at time t of a clip D seconds long: intro zoom, slow pan, 3D tilt and fades.
+ * Reads zoomIn, zoomFrom, intro, panAmount, pan, tilt, rx, ry, fadeIn, fadeOut from s.
+ * Returns { scale, x, y (fractions of the stage to offset by), rx, ry (degrees), alpha }.
+ */
+export function cardMotion(t, D, s) {
+  const intro = clamp(t / s.intro);
+  const e = ease("easeOutQuint", intro);
+  let scale = s.zoomIn ? s.zoomFrom + (1 - s.zoomFrom) * e : 1;
+  let x = 0,
+    y = 0;
+  const p = clamp(t / D);
+  const amt = s.panAmount / 100;
+  if (s.pan === "zoom") scale *= 1 + amt * ease("easeInOut", p);
+  if (s.pan === "left") x = (0.5 - ease("easeInOut", p)) * amt * 2;
+  if (s.pan === "right") x = (ease("easeInOut", p) - 0.5) * amt * 2;
+  if (s.pan === "up") y = (0.5 - ease("easeInOut", p)) * amt * 2;
+
+  let rx = 0,
+    ry = 0;
+  if (s.tilt === "static") {
+    rx = s.rx;
+    ry = s.ry;
+  }
+  if (s.tilt === "tilt-in") {
+    rx = s.rx * (1 - e);
+    ry = s.ry * (1 - e);
+  }
+  if (s.tilt === "float") {
+    rx = s.rx * (0.6 + 0.4 * Math.sin(t * 0.9));
+    ry = s.ry * Math.cos(t * 0.7);
+  }
+
+  let alpha = 1;
+  if (s.fadeIn > 0) alpha *= clamp(t / s.fadeIn);
+  if (s.fadeOut > 0) alpha *= clamp((D - t) / s.fadeOut);
+  return { scale, x, y, rx, ry, alpha };
+}
+
+/**
+ * Draw a card from buildFrameCard with its shadow. tf = { rx, ry, scale, x, y (card centre), focal }.
+ * Tilted cards go through `persp` (a createPerspective() renderer); without it they draw flat.
+ */
+export function drawCard(ctx, card, r, tf, s, k, persp, alpha = 1) {
+  const W = ctx.canvas.width,
+    H = ctx.canvas.height;
+  drawCardShadow(ctx, card, r, tf, s, k, alpha);
+  if ((tf.rx || tf.ry) && persp) {
+    const quad = [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1],
+    ].map(([sx, sy]) =>
+      projectPoint((sx * card.width) / 2, (sy * card.height) / 2, tf),
+    );
+    ctx.drawImage(persp.draw(card, quad, W, H, alpha), 0, 0);
+  } else {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(tf.x, tf.y);
+    ctx.scale(tf.scale, tf.scale);
+    ctx.drawImage(card, -card.width / 2, -card.height / 2);
+    ctx.restore();
+  }
 }

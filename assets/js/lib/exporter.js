@@ -17,6 +17,11 @@
  *     actions: [{ label, icon, onClick, show? }],  // extra buttons after the standard three (e.g. ZIP); show: bool or () => bool
  *     beforeExport, afterExport,          // optional hooks, run around video and built-in GIF exports (async ok); get 'video' | 'gif'
  *     prepareFrame: async (t) => {},      // built-in GIF only: runs before each frame is drawn (seek extra videos, remap time)
+ *     renderVideo: {                      // optional: encode the video yourself (e.g. frame by frame with WebCodecs)
+ *       supported: () => bool,            //   false → the real-time recording above
+ *       run: async ({ signal, onProgress, includeAudio }) => ({ blob, ext }) | null,
+ *       message: () => 'text',            //   progress modal text
+ *     },
  *   });
  */
 import { h, icon, toast, downloadBlob, formatTime, formatBytes, store } from './dom.js';
@@ -353,6 +358,17 @@ export function createExportBar(root, opts) {
 
   videoBtn.addEventListener('click', () => {
     // The audio graph must be resumed synchronously inside the click, so recordStage starts here.
+    const custom = opts.renderVideo?.supported?.() ? opts.renderVideo : null;
+    if (custom) {
+      run('video', 'Exporting video…', custom.message?.() || 'Rendering every frame.', async (signal, onProgress) => {
+        const result = await custom.run({ signal, onProgress, includeAudio: audioToggle.checked && !audioLabel.hidden });
+        if (!result) return null;
+        const name = `${filename()}.${result.ext}`;
+        downloadBlob(result.blob, name);
+        return `${name} (${formatBytes(result.blob.size)})`;
+      });
+      return;
+    }
     const onHidden = () => document.hidden && toast('Export paused while the tab is hidden. Come back to finish it.', 'warning');
     document.addEventListener('visibilitychange', onHidden);
     const withAudio = audioToggle.checked && !audioLabel.hidden;

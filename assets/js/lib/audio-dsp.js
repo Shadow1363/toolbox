@@ -1,6 +1,6 @@
 /*
- * Noise Reduction + Volume Normalizer: sample-level processing (loudness, gate, limiter, RNNoise).
-
+ * Sample-level audio processing (loudness, gate, limiter, RNNoise), used by Audio Cleanup through
+ * audio-clean.js and by the Auto Editor.
  *
  *   measureLoudness(buffer)                            → { lufs, peakDb }  integrated loudness (BS.1770-4 gating) + sample peak
  *   await gateMix(dry, wet, mix, gate, { signal })     → AudioBuffer      wet/dry mix, then an optional noise gate
@@ -10,9 +10,9 @@
  * Everything streams over the samples with small state (no per-sample side arrays), so long files only cost
  * the output buffer. Long loops yield to the event loop every ~1M samples.
  */
-import { loadLib, LIBS } from "/assets/js/lib/cdn.js";
-import { resample } from "/assets/js/lib/audio-io.js";
-import { makeBuffer } from "/assets/js/lib/audio-export.js";
+import { loadLib, LIBS } from "./cdn.js";
+import { resample } from "./audio-io.js";
+import { makeBuffer } from "./audio-export.js";
 
 const YIELD = 1 << 20;
 const tick = () => new Promise((r) => setTimeout(r));

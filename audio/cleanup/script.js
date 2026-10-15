@@ -3,7 +3,7 @@
  * normalization with a peak limiter, A/B compare.
 
  *
- * Chain (each stage only runs when it does something):
+ * Chain (lib/audio-clean.js cleanAudio; each stage only runs when it does something):
  *   source ─ RNNoise (cached, fully wet) ─ wet/dry mix + gate (dsp.gateMix)
  *          ─ OfflineAudioContext: high-pass → EQ biquads → compressor (+ makeup)
  *          ─ measure LUFS → gain to the target + 5 ms lookahead limiter (dsp.normalizeLimit) ─ processed
@@ -19,11 +19,9 @@ import {
 } from "/assets/js/lib/audio-io.js";
 import { createWaveform } from "/assets/js/lib/audio-waveform.js";
 import { createPlayer } from "/assets/js/lib/audio-player.js";
-import {
-  createAudioExport,
-  renderOffline,
-} from "/assets/js/lib/audio-export.js";
-import { measureLoudness, gateMix, normalizeLimit, rnnoise } from "./dsp.js";
+import { createAudioExport } from "/assets/js/lib/audio-export.js";
+import { measureLoudness, rnnoise } from "/assets/js/lib/audio-dsp.js";
+import { cleanAudio, TARGETS } from "/assets/js/lib/audio-clean.js";
 
 let file = null;
 let source = null,
@@ -34,56 +32,6 @@ let before = null,
   appliedGain = 0;
 let ab = "b";
 let isPlaying = false;
-
-/* ---------- Presets ---------- */
-const TARGETS = { podcast: -16, youtube: -14, broadcast: -23, voice: -19 };
-const COMP = {
-  light: {
-    threshold: -18,
-    ratio: 2,
-    attack: 0.01,
-    release: 0.25,
-    knee: 8,
-    makeup: 2,
-  },
-  medium: {
-    threshold: -24,
-    ratio: 3.5,
-    attack: 0.006,
-    release: 0.18,
-    knee: 6,
-    makeup: 5,
-  },
-  heavy: {
-    threshold: -30,
-    ratio: 6,
-    attack: 0.003,
-    release: 0.12,
-    knee: 4,
-    makeup: 9,
-  },
-};
-/** EQ presets as biquad specs: [type, frequency, gain dB, Q]. */
-const EQ = {
-  flat: [],
-  voice: [
-    ["peaking", 250, -3, 1],
-    ["peaking", 3200, 3, 0.9],
-    ["highshelf", 10000, 2, 0.7],
-  ],
-  bass: [["lowshelf", 110, 6, 0.7]],
-  treble: [["highshelf", 6000, 5, 0.7]],
-  warm: [
-    ["lowshelf", 200, 3, 0.7],
-    ["highshelf", 8000, -2.5, 0.7],
-  ],
-  deess: [["peaking", 6500, -4, 2]],
-  phone: [
-    ["highpass", 350, 0, 0.7],
-    ["lowpass", 3400, 0, 0.7],
-    ["peaking", 1500, 4, 1],
-  ],
-};
 
 const db = (v) => `${v > 0 ? "+" : ""}${v.toFixed(0)} dB`;
 const panel = createControls(
@@ -351,14 +299,9 @@ async function processAll() {
   const id = ++run;
   const stale = () => id !== run;
   try {
-    let buf = source;
-    // 1. Noise reduction (RNNoise mix and/or gate)
-    const gate =
-      s.nr === "gate" || (s.nr === "rnnoise" && s.gateToo)
-        ? { thresholdDb: s.gateDb, depthDb: s.gateDepth }
-        : null;
+    const o = { ...s };
     let w = null;
-    if (s.nr === "rnnoise") {
+    if (o.nr === "rnnoise") {
       try {
         w = await ensureWet();
       } catch (err) {
@@ -373,60 +316,10 @@ async function processAll() {
       }
       if (stale()) return;
     }
-    if (w || gate) buf = await gateMix(source, w, s.nrMix, gate);
-    if (stale()) return;
-
-    // 2. Filters and compressor (offline Web Audio)
-    const eq = EQ[s.eq] || [];
-    const comp = COMP[s.comp];
-    if (s.hpf || eq.length || comp) {
-      buf = await renderOffline(buf, (ctx, src) => {
-        let node = src;
-        const chain = (n) => {
-          node.connect(n);
-          node = n;
-        };
-        if (s.hpf)
-          chain(
-            new BiquadFilterNode(ctx, {
-              type: "highpass",
-              frequency: s.hpfFreq,
-              Q: 0.707,
-            }),
-          );
-        for (const [type, frequency, gain, Q] of eq)
-          chain(new BiquadFilterNode(ctx, { type, frequency, gain, Q }));
-        if (comp) {
-          chain(
-            new DynamicsCompressorNode(ctx, {
-              threshold: comp.threshold,
-              ratio: comp.ratio,
-              attack: comp.attack,
-              release: comp.release,
-              knee: comp.knee,
-            }),
-          );
-          chain(new GainNode(ctx, { gain: 10 ** (comp.makeup / 20) }));
-        }
-        return node;
-      });
-      if (stale()) return;
-    }
-
-    // 3. Loudness: gain to the target, then the limiter.
-    const target = s.target === "custom" ? s.custom : TARGETS[s.target];
-    appliedGain = 0;
-    if (target != null) {
-      const mid = measureLoudness(buf);
-      appliedGain = isFinite(mid.lufs)
-        ? Math.max(-30, Math.min(30, target - mid.lufs))
-        : 0;
-      // Reuse the intermediate buffer as the output when it's ours (saves one copy of the audio).
-      buf = await normalizeLimit(buf, appliedGain, s.ceiling, {
-        target: buf !== source && buf !== w ? buf : null,
-      });
-      if (stale()) return;
-    }
+    const res = await cleanAudio(source, o, { wet: w, stale });
+    if (!res) return;
+    const buf = res.buffer;
+    appliedGain = res.appliedGain;
     processed = buf === source ? source : buf;
     after = measureLoudness(processed);
     waveB.setBuffer(processed, { keepView: true });

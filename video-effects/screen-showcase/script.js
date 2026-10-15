@@ -4,10 +4,9 @@ import { createDropzone } from '/assets/js/lib/upload.js';
 import { createStage } from '/assets/js/lib/stage.js';
 import { createExportBar, TRANSPARENT_HINT } from '/assets/js/lib/exporter.js';
 import { roundRectPath } from '/assets/js/lib/canvas.js';
-import { ease, clamp } from '/assets/js/lib/easing.js';
-import { createPerspective, projectPoint } from '/assets/js/lib/perspective.js';
+import { createPerspective } from '/assets/js/lib/perspective.js';
 import { fontString } from '/assets/js/lib/fonts.js';
-import { backgroundSection, frameSection, drawShowcaseBackground, fitInFrame, buildFrameCard, drawCardShadow } from '/assets/js/lib/showcase-frame.js';
+import { backgroundSection, frameSection, drawShowcaseBackground, fitInFrame, buildFrameCard, cardMotion, drawCard } from '/assets/js/lib/showcase-frame.js';
 
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
@@ -110,31 +109,6 @@ function resize() {
   canvas.classList.toggle('checker', s.bg === 'transparent');
 }
 
-/* ---------- Motion ---------- */
-function motion(t) {
-  const D = duration();
-  const intro = clamp(t / s.intro);
-  const e = ease('easeOutQuint', intro);
-  let scale = s.zoomIn ? s.zoomFrom + (1 - s.zoomFrom) * e : 1;
-  let x = 0, y = 0;
-  const p = clamp(t / D);
-  const amt = s.panAmount / 100;
-  if (s.pan === 'zoom') scale *= 1 + amt * ease('easeInOut', p);
-  if (s.pan === 'left') x = (0.5 - ease('easeInOut', p)) * amt * 2;
-  if (s.pan === 'right') x = (ease('easeInOut', p) - 0.5) * amt * 2;
-  if (s.pan === 'up') y = (0.5 - ease('easeInOut', p)) * amt * 2;
-
-  let rx = 0, ry = 0;
-  if (s.tilt === 'static') { rx = s.rx; ry = s.ry; }
-  if (s.tilt === 'tilt-in') { rx = s.rx * (1 - e); ry = s.ry * (1 - e); }
-  if (s.tilt === 'float') { rx = s.rx * (0.6 + 0.4 * Math.sin(t * 0.9)); ry = s.ry * Math.cos(t * 0.7); }
-
-  let alpha = 1;
-  if (s.fadeIn > 0) alpha *= clamp(t / s.fadeIn);
-  if (s.fadeOut > 0) alpha *= clamp((D - t) / s.fadeOut);
-  return { scale, x, y, rx, ry, alpha };
-}
-
 /* ---------- Rendering ---------- */
 function render(t) {
   const W = canvas.width, H = canvas.height;
@@ -147,25 +121,10 @@ function render(t) {
   const box = fitInFrame(m, W, H, k, s);
   const { card, r } = buildFrameCard(m.el, box.w, box.h, k, s);
 
-  const mo = motion(t);
+  const mo = cardMotion(t, duration(), s);
   if (mo.alpha <= 0) return;
   const tf = { rx: mo.rx, ry: mo.ry, scale: mo.scale, x: W / 2 + mo.x * W, y: H / 2 + mo.y * H, focal: Math.max(W, H) * 1.6 };
-  const tilted = (mo.rx || mo.ry) && persp;
-
-  drawCardShadow(ctx, card, r, tf, s, k, mo.alpha);
-
-  // Card
-  if (tilted) {
-    const quad = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => projectPoint((sx * card.width) / 2, (sy * card.height) / 2, tf));
-    ctx.drawImage(persp.draw(card, quad, W, H, mo.alpha), 0, 0);
-  } else {
-    ctx.save();
-    ctx.globalAlpha = mo.alpha;
-    ctx.translate(tf.x, tf.y);
-    ctx.scale(mo.scale, mo.scale);
-    ctx.drawImage(card, -card.width / 2, -card.height / 2);
-    ctx.restore();
-  }
+  drawCard(ctx, card, r, tf, s, k, persp, mo.alpha);
 }
 
 const duration = () => (isVideo() ? media.duration : s.clip);

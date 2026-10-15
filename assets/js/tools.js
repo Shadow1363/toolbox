@@ -136,6 +136,16 @@ export const tools = [
     tags: ["crop", "mask", "circle", "heart", "star", "svg", "png", "transparent", "cutout", "shape", "keyframes", "gif"],
   },
   {
+    id: "auto-editor",
+    category: "video-effects",
+    name: "Auto Editor",
+    description:
+      "Turn a talking-head video into a short-form edit: cut pauses and fillers, clean the audio, add captions, zooms and your screenshots, reframe to 9:16.",
+    thumbnail: "/assets/img/auto-editor.svg",
+    status: "beta",
+    tags: ["edit", "editor", "short form", "shorts", "reels", "tiktok", "jump cut", "silence", "remove pauses", "filler words", "captions", "reframe", "9:16", "zoom", "screenshot", "mp4", "ai"],
+  },
+  {
     id: "auto-captions",
     category: "video-effects",
     name: "Auto Captions",
