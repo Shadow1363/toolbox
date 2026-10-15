@@ -88,6 +88,8 @@ export const LIBS = {
   tesseractLang: { kind: 'url', url: `${NPM}/@tesseract.js-data` },
   // Machine learning (bundles onnxruntime-web, which fetches its WASM from jsDelivr). Loaded inside workers by lib/whisper.js.
   transformers: { kind: 'esm', url: `${NPM}/@huggingface/transformers@4.2.0/dist/transformers.min.js` },
+  // AI (lib/ai.js): the official Anthropic SDK, used from the browser with the user's own key.
+  anthropic: { kind: 'esm', url: `${NPM}/@anthropic-ai/sdk@0.131.0/+esm` },
 };
 
 const loaded = new Map();

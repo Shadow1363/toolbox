@@ -17,6 +17,8 @@
  *   }
  *
  * frame = { el, width, height } (the video frame so far); t = output seconds.
+ * Transition-kind effects (transition, magic-mask) render across a cut from env.A (outgoing) to env.B (incoming); the
+ * Auto Editor picks the layer's own effect, so a new transition kind needs no change there.
  * env = { W, H, k, duration, item: { start, end, extra }, local (t − item.start), slot (layer index),
  *         gpu: { engine, persp }, data: { pages, images, face, faceAt, captionTop, captionBottom, chapters }, track, A, B, refresh }.
  * Sizes are authored for a 1080px short side; each effect scales by k itself.
@@ -30,9 +32,12 @@ import screenshot from './screenshot.js';
 import zoom from './zoom.js';
 import transition from './transition.js';
 import progress from './progress.js';
+import popOut from './pop-out.js';
+import playlist from './playlist.js';
+import magicMask from './magic-mask.js';
 import { validateParams, describeParams, paramsToSchema, defaultsOf } from './schema.js';
 
-export const EFFECTS = [captions, text, screenshot, zoom, transition, progress];
+export const EFFECTS = [captions, text, screenshot, zoom, transition, progress, popOut, playlist, magicMask];
 
 export const getEffect = (id) => EFFECTS.find((e) => e.id === id);
 

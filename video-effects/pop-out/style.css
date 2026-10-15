@@ -1,0 +1,14 @@
+/* Pop Out: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+#preview.po2-movable { cursor: grab; }
+#preview.po2-dragging { cursor: grabbing; }
+
+.po2-comments { display: grid; gap: 6px; }
+.po2-comment { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto auto auto; gap: 4px; align-items: center; }
+.po2-comment input { padding: 6px 8px; font-size: 13px; min-width: 0; }
+.po2-icon { width: 28px; height: 28px; padding: 0; }
+.po2-icon svg { width: 13px; height: 13px; }
+.po2-comments > .btn { justify-self: start; }
+.po2-comments .btn svg { width: 14px; height: 14px; }
+.po2-preset-note { font-size: 12px; color: var(--text-muted); display: grid; gap: 8px; }
+.po2-preset-note.is-error { color: var(--text); padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.po2-preset-actions { display: flex; gap: 6px; flex-wrap: wrap; }

@@ -5,6 +5,7 @@
  *   const seg = await loadSegmenter('general');   const m = segmentFrame(seg, video, 'general');
  *   const face = await loadFaceLandmarker();      const lm = detectFace(face, video);   // 478 points or null
  *   const pose = await loadPoseLandmarker();      const lm = detectPose(pose, video);   // 33 points or null
+ *   const hands = await loadHandLandmarker({ numHands: 2 });  detectHands(hands, video);  // [{ points (21), handedness, score }]
  *   const faces = await loadFaceLandmarker({ numFaces: 5 });  detectFaces(faces, video);  // array, one per face
  *   const still = await loadSegmenter('quality', { mode: 'IMAGE' });  segmentImage(still, img, 'quality');
  *
@@ -25,6 +26,8 @@ export const SEGMENT_MODELS = {
 };
 const FACE_MODEL = `${MODELS}/face_landmarker/face_landmarker/float16/1/face_landmarker.task`;
 const POSE_MODEL = `${MODELS}/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`;
+const HAND_MODEL = `${MODELS}/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`;
+export const HAND_MODEL_BYTES = 7.8e6;
 
 let visionPromise;
 const tasks = new Map(); // cache key → Promise<task>
@@ -159,4 +162,25 @@ export function detectFaces(landmarker, source) {
 export function detectPoses(landmarker, source) {
   return (landmarker.detectForVideo(source, nextTimestamp()).landmarks || [])
     .map((lm) => lm.map((p) => ({ x: p.x, y: p.y, visibility: p.visibility ?? 1 })));
+}
+
+/* ---------- Hands ---------- */
+export const loadHandLandmarker = ({ numHands = 1 } = {}) => loadTask(`hand:${numHands}`, 'HandLandmarker', {
+  baseOptions: { modelAssetPath: HAND_MODEL },
+  numHands,
+  minHandDetectionConfidence: 0.5,
+  minHandPresenceConfidence: 0.5,
+  minTrackingConfidence: 0.5,
+});
+
+/**
+ * Every hand: { points: 21 landmarks { x, y, z } (0..1; 4 = thumb tip, 8 = index fingertip), handedness: 'Left' | 'Right', score }.
+ */
+export function detectHands(landmarker, source) {
+  const r = landmarker.detectForVideo(source, nextTimestamp());
+  return (r.landmarks || []).map((points, i) => ({
+    points: points.map((p) => ({ x: p.x, y: p.y, z: p.z })),
+    handedness: r.handedness?.[i]?.[0]?.categoryName || '',
+    score: r.handedness?.[i]?.[0]?.score ?? 1,
+  }));
 }

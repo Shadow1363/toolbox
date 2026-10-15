@@ -1,0 +1,34 @@
+/* Magic Mask Transition: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+
+/* Steps: Upload → Preview → Adjust → Export */
+.mm-steps { list-style: none; margin: 0; padding: 12px 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; border-bottom: 1px solid var(--border); }
+.mm-step { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 2px; border: 0; background: none; color: var(--text-muted); font: 500 12px var(--font); cursor: pointer; border-radius: var(--radius-sm); }
+.mm-step:disabled { cursor: default; opacity: .55; }
+.mm-step:not(:disabled):hover { background: var(--surface-2); }
+.mm-step-n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--border-strong); font-size: 12px; font-weight: 650; }
+.mm-step.is-done .mm-step-n { background: var(--success); border-color: var(--success); color: #fff; }
+.mm-step.is-current { color: var(--text); }
+.mm-step.is-current .mm-step-n { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+
+/* Clip slots */
+.mm-slots { display: grid; gap: 6px; margin-top: 10px; }
+.mm-slot { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); }
+.mm-slot.is-empty { border-style: dashed; }
+.mm-slot-key { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-weight: 700; background: var(--surface-2); }
+.mm-slot-info { display: grid; min-width: 0; }
+.mm-slot-info strong { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mm-slot-info span { font-size: 12px; color: var(--text-muted); }
+.mm-icon { width: 28px; height: 28px; padding: 0; }
+.mm-icon svg, .mm-swap svg { width: 14px; height: 14px; }
+.mm-swap { justify-self: center; }
+.dropzone.mm-compact { padding: 10px; min-height: 0; }
+.dropzone.mm-compact > span { display: none; }
+
+/* Auto setup status */
+.mm-status { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.mm-status[hidden] { display: none; }
+.mm-status .spinner { width: 16px; height: 16px; border-width: 2px; flex: none; }
+.mm-status > span:not(.spinner) { flex: 1; min-width: 0; }
+.mm-status.is-ready { background: color-mix(in srgb, var(--success) 14%, transparent); }
+.mm-status.is-needs-click, .mm-status.is-error { background: color-mix(in srgb, var(--warning) 16%, transparent); }
+.dropzone.mm-compact svg { display: none; }

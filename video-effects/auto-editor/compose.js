@@ -8,7 +8,8 @@
  *     next = the first frame of the next segment (only used during a transition's first half)
  *
  * Per frame: base (reframe crop → punch-in → zoom camera, through the registry's zoom effect)
- *            → transition at a cut (registry transition effect) → screenshots → text → captions → progress.
+ *            → transition at a cut (the layer's transition-kind effect: transition, magic-mask) → pop-out → playlist
+ *            → screenshots → text → captions → progress.
  */
 import { scratch } from '/assets/js/lib/canvas.js';
 import { buildLines } from '/assets/js/lib/transcript.js';
@@ -17,7 +18,8 @@ import { getEffect, effectParams, createGpu } from '/assets/js/lib/effects/index
 import { captionPages } from '/assets/js/lib/effects/captions.js';
 import { buildTimemap, retimeWords, retimeRange } from './timemap.js';
 
-const OVERLAY_ORDER = ['screenshot', 'text'];
+// pop-out replaces the whole picture, so it goes first; the playlist floats under cards and titles.
+const OVERLAY_ORDER = ['pop-out', 'playlist', 'screenshot', 'text'];
 
 /** Output size for an aspect setting ('9:16', '1:1', '4:5', '16:9' or 'source') and short side. */
 export function outputDims(aspect, short, src) {
@@ -98,11 +100,12 @@ export async function buildPlan({ edl, duration, size, out, words = [], face = n
     const c = edl.cuts.find((x) => x.id === l.at && !x.off);
     const cp = c && tm.cutPoints.find((p) => p.from <= c.start + 1e-3 && p.to >= c.end - 1e-3);
     if (!cp) continue;
-    const params = effectParams(getEffect('transition'), l.params).params;
+    const fx = getEffect(l.effect); // 'transition' or another transition-kind effect (magic-mask)
+    const params = effectParams(fx, l.params).params;
     const room = 2 * 0.45 * Math.min(cp.before.out - cp.before.in, cp.after.out - cp.after.in);
     const d = Math.min(params.duration, room);
     if (d < 0.08) continue;
-    transitions.push({ id: l.id, t: cp.t, d, params: { ...params, duration: d }, extra: l.extra, after: cp.after });
+    transitions.push({ id: l.id, effect: fx, t: cp.t, d, params: { ...params, duration: d }, extra: l.extra, after: cp.after });
   }
 
   const capFx = getEffect('captions');
@@ -120,6 +123,7 @@ export async function buildPlan({ edl, duration, size, out, words = [], face = n
     captions && capFx.prepare(captions.params),
     progress && getEffect('progress').prepare(progress),
     ...overlays.map((o) => o.effect.prepare?.(o.params)),
+    ...transitions.map((x) => x.effect.prepare?.(x.params)),
   ]);
   const gpu = transitions.length ? await createGpu() : null;
 
@@ -176,7 +180,7 @@ export function renderFrame(ctx, plan, t, frames = {}) {
       A = plan.held.id === tr.id ? scratch(`ae-held-${W}x${H}`, W, H) : base;
       B = base;
     }
-    getEffect('transition').render(ctx, null, t, tr.params, { gpu: plan.gpu, A, B, local, item: { extra: tr.extra }, data: {} });
+    tr.effect.render(ctx, null, t, tr.params, { gpu: plan.gpu, A, B, local, item: { extra: tr.extra }, data: {} });
   } else {
     ctx.drawImage(base, 0, 0);
   }

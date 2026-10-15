@@ -7,7 +7,7 @@
  *               { type: 'pick', id, groups: [{ points: [[x, y]…], labels: [1 | 0…] }] }   image px
  * Messages out: { type: 'progress', file, loaded, total }   while downloading
  *               { type: 'ready', id, device }
- *               { type: 'mask', id, data: Float32Array (0..1, 1 = keep), width, height }
+ *               { type: 'mask', id, data: Float32Array (0..1, 1 = keep), width, height, score? }   score: SAM's best IoU estimate (lowest over the groups)
  *               { type: 'embedded', id }
  *               { type: 'error', id, message }
  */
@@ -16,7 +16,7 @@ import { LIBS } from "./cdn.js";
 let tf = null;
 const models = { auto: null, pick: null }; // { key, model, processor }
 let embedding = null; // { inputs, emb } for the current photo (SAM)
-const groupCache = new Map(); // JSON(group) → Float32Array, cleared on every new embedding
+const groupCache = new Map(); // JSON(group) → { mask: Float32Array, score }, cleared on every new embedding
 
 async function lib() {
   if (!tf) {
@@ -90,11 +90,12 @@ async function pick({ id, groups }) {
   const { inputs, emb, width, height } = embedding;
   const ip = m.processor.image_processor;
   const union = new Float32Array(width * height);
+  let score = 1;
   for (const g of groups) {
     if (!g.labels.includes(1)) continue; // only "remove" clicks: nothing to keep in this group
     const key = JSON.stringify(g);
-    let mask = groupCache.get(key);
-    if (!mask) {
+    let hit = groupCache.get(key);
+    if (!hit) {
       const input_points = ip.reshape_input_points([g.points], inputs.original_sizes, inputs.reshaped_input_sizes);
       const input_labels = ip.add_input_labels([g.labels], input_points);
       const out = await m.model({ ...emb, input_points, input_labels });
@@ -104,13 +105,16 @@ async function pick({ id, groups }) {
       for (let i = 1; i < iou.length; i++) if (iou[i] > iou[best]) best = i;
       const n = width * height;
       const plane = masks.data.subarray(best * n, (best + 1) * n);
-      mask = new Float32Array(n);
+      const mask = new Float32Array(n);
       for (let i = 0; i < n; i++) mask[i] = sigmoid(plane[i]);
-      groupCache.set(key, mask);
+      hit = { mask, score: iou[best] };
+      groupCache.set(key, hit);
     }
+    score = Math.min(score, hit.score);
+    const { mask } = hit;
     for (let i = 0; i < union.length; i++) if (mask[i] > union[i]) union[i] = mask[i];
   }
-  post({ type: "mask", id, data: union, width, height }, [union.buffer]);
+  post({ type: "mask", id, data: union, width, height, score }, [union.buffer]);
 }
 
 const handlers = { load, auto, embed, pick };

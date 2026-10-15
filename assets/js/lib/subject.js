@@ -146,7 +146,7 @@ function pixels(source) {
   return { data: data.buffer, width, height };
 }
 
-const asMask = ({ data, width, height }) => ({ data, width, height });
+const asMask = ({ data, width, height, score }) => ({ data, width, height, ...(score != null ? { score } : {}) });
 
 /** The main subject(s) of a photo (ISNet). Load the model first. */
 export async function segmentSubject(source) {
@@ -165,7 +165,8 @@ export async function embedPhoto(source) {
 /**
  * Mask for the clicked objects: `groups` is one array of clicks per object, each click
  * { x, y (0..1 of the photo), keep: boolean }. Groups without a "keep" click are ignored.
- * Returns null when nothing is kept.
+ * Returns null when nothing is kept; the mask carries `score`, SAM's IoU estimate (the lowest over the groups).
+ * Video frames work the same way: embedPhoto(frame), then pickMask (lib/object-mask.js does this per frame).
  */
 export async function pickMask(groups) {
   if (!photoSize) throw new Error("Embed a photo first.");

@@ -187,7 +187,7 @@ export function createStillMask(prefix) {
 }
 
 /** Bilinear resize of a float image (pixel centres aligned). */
-function bilinear(src, sw, sh, dw, dh) {
+export function bilinear(src, sw, sh, dw, dh) {
   const dst = new Float32Array(dw * dh);
   const sx = sw / dw, sy = sh / dh;
   for (let y = 0; y < dh; y++) {
@@ -204,7 +204,7 @@ function bilinear(src, sw, sh, dw, dh) {
 }
 
 /** Mean over a (2r+1)² window, edges normalized by the pixels actually covered. Separable running sums. */
-function boxMean(src, w, h, r) {
+export function boxMean(src, w, h, r) {
   const tmp = new Float32Array(w * h), dst = new Float32Array(w * h);
   for (let y = 0; y < h; y++) {
     const row = y * w;
