@@ -1,0 +1,23 @@
+<!-- Scrolling Playlist thumbnail · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b3355"/><stop offset="1" stop-color="#14323b"/></linearGradient>
+    <linearGradient id="c1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a5a"/><stop offset="1" stop-color="#a43cf0"/></linearGradient>
+    <linearGradient id="c2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4fd1c5"/><stop offset="1" stop-color="#2b6cb0"/></linearGradient>
+    <linearGradient id="c3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e05e"/><stop offset="1" stop-color="#dd6b20"/></linearGradient>
+  </defs>
+  <rect width="320" height="200" fill="url(#bg)"/>
+  <circle cx="250" cy="70" r="34" fill="#c99a7b" opacity=".55"/>
+  <path d="M196 200c6-46 30-74 54-74s48 28 54 74z" fill="#1d2433" opacity=".7"/>
+  <path d="M74 22 L220 30 Q228 100 220 170 L74 178 Q66 100 74 22z" fill="#121212" opacity=".62"/>
+  <g opacity=".45"><rect x="88" y="34" width="20" height="14" rx="3" fill="url(#c2)"/><rect x="114" y="36" width="60" height="5" rx="2.5" fill="#fff"/><rect x="114" y="44" width="36" height="4" rx="2" fill="#aaa"/></g>
+  <g opacity=".8"><rect x="86" y="60" width="26" height="20" rx="3" fill="url(#c3)"/><rect x="118" y="63" width="70" height="6" rx="3" fill="#fff"/><rect x="118" y="73" width="42" height="5" rx="2.5" fill="#aaa"/></g>
+  <rect x="80" y="88" width="134" height="30" rx="6" fill="#1ed760" opacity=".16"/>
+  <rect x="84" y="91" width="30" height="24" rx="3" fill="url(#c1)"/>
+  <g fill="#1ed760"><rect x="120" y="96" width="3" height="10"/><rect x="125" y="93" width="3" height="13"/><rect x="130" y="98" width="3" height="8"/></g>
+  <rect x="138" y="95" width="62" height="7" rx="3.5" fill="#1ed760"/><rect x="120" y="108" width="46" height="5" rx="2.5" fill="#bbb"/>
+  <g opacity=".8"><rect x="86" y="126" width="26" height="20" rx="3" fill="url(#c2)"/><rect x="118" y="129" width="64" height="6" rx="3" fill="#fff"/><rect x="118" y="139" width="40" height="5" rx="2.5" fill="#aaa"/></g>
+  <g opacity=".45"><rect x="88" y="154" width="20" height="14" rx="3" fill="url(#c3)"/><rect x="114" y="156" width="56" height="5" rx="2.5" fill="#fff"/></g>
+  <path d="M206 132c-2-14-1-30 2-40 2-6 9-6 10 0l1 26 4-2c4-1 7 1 8 5l2 10c1 8-1 16-6 22h-16z" fill="#e8b48f"/>
+  <circle cx="213" cy="96" r="4" fill="#fff" opacity=".9"/>
+</svg>

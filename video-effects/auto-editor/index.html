@@ -1,0 +1,73 @@
+<!doctype html>
+<!-- Auto Editor · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Tomas Martinez (tomasmartinez.xyz)">
+  <meta name="copyright" content="© 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad">
+  <title>Auto Editor · Toolbox</title>
+  <meta name="description" content="Turn a talking-head video into a short-form edit in your browser: cut pauses and filler words, clean up the audio, add captions, zooms and your screenshots, reframe to 9:16 and export MP4.">
+  <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="/assets/js/theme-init.js"></script>
+  <script type="module" src="/assets/js/site.js"></script>
+  <script type="module" src="./script.js"></script>
+</head>
+<body data-tool="auto-editor">
+  <header id="site-header" class="site-header"></header>
+  <main class="container">
+    <div data-tool-head></div>
+    <div class="tool-layout">
+      <aside class="panel controls-panel" aria-label="Settings">
+        <section class="ctrl-section"><h3>Video</h3><div id="upload"></div></section>
+        <section class="ctrl-section">
+          <h3>Screenshots</h3>
+          <p class="ctrl-hint">Comments, posts, charts or pages you talk about. A short note (e.g. “comment from Jake”) helps match them to what you say.</p>
+          <div id="shots-drop"></div>
+          <ul class="ae-shots" id="shots"></ul>
+        </section>
+        <div id="controls"></div>
+      </aside>
+      <div class="ae-main">
+        <section class="panel preview-panel" aria-label="Preview">
+          <div class="preview-stage">
+            <canvas id="preview" width="1080" height="1920"></canvas>
+            <div class="preview-overlay" id="overlay" hidden></div>
+          </div>
+          <div id="transport"></div>
+          <div id="export"></div>
+        </section>
+        <section class="panel ae-card" aria-label="Steps">
+          <div class="ae-card-head">
+            <h2>Edit</h2>
+            <span class="ae-meta" id="edit-meta"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="cancel" hidden>Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" id="run" disabled>Analyze and edit</button>
+          </div>
+          <ol class="ae-steps" id="steps"></ol>
+        </section>
+        <section class="panel ae-card" aria-label="Decisions">
+          <div class="ae-card-head">
+            <h2>Decisions</h2>
+            <span class="ae-meta" id="decisions-meta"></span>
+          </div>
+          <p class="ae-help">Every cut and effect, with the reason. Untick one to undo it; click a time to jump there. Grey items are suggestions that start switched off.</p>
+          <div id="decisions"><p class="ae-empty">Drop a video, then press <strong>Analyze and edit</strong>.</p></div>
+        </section>
+        <section class="panel ae-card" aria-label="Caption text">
+          <div class="ae-card-head">
+            <h2>Caption text</h2>
+            <span class="ae-meta" id="script-meta"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="script-reset" hidden>Undo my edits</button>
+          </div>
+          <p class="ae-help">Fix words the speech model got wrong, then press Enter. Changes go into the captions and the .srt, .vtt and transcript files; the cuts stay as they are. Struck-through lines were cut from the video.</p>
+          <div id="script"><p class="ae-empty">The transcript appears here after <strong>Analyze and edit</strong>.</p></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

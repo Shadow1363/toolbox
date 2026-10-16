@@ -57,3 +57,12 @@ export function cubicBezier(x1, y1, x2, y2) {
     return by(t);
   };
 }
+
+/** Named easing, or 'custom' with a CSS-style "x1, y1, x2, y2" bezier string (falls back to easeInOut if unparsable). */
+export function easeWith(name, bezier, t) {
+  if (name !== 'custom') return ease(name, t);
+  const n = String(bezier).split(/[\s,]+/).map(Number).filter((v) => !Number.isNaN(v));
+  if (n.length !== 4) return ease('easeInOut', t);
+  const x = (v) => Math.min(1, Math.max(0, v));
+  return cubicBezier(x(n[0]), n[1], x(n[2]), n[3])(t);
+}

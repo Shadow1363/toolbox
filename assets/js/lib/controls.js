@@ -15,7 +15,8 @@
  * Control types: range, number, color, select, segmented, toggle, text, textarea,
  *   presets (chips that apply a patch), swatches (color chips), button, custom.
  * Every control accepts: id, label, value, hint, showIf(state).
- * Sections accept: title, controls, showIf(state).
+ * Sections accept: id, title, controls, showIf(state), collapsed (true = a closed <details>; false = open but
+ *   collapsible), and subhead controls ({ type: 'subhead', label }) to group long sections.
  */
 import { h } from './dom.js';
 
@@ -23,6 +24,7 @@ export function createControls(root, sections, { onChange } = {}) {
   const state = {};
   const setters = {};      // id → (value) => update the DOM without emitting
   const conditionals = []; // [{ el, showIf }]
+  const sectionEls = {};   // section id → element (sections with an `id`)
 
   const emit = (id) => {
     refresh();
@@ -35,7 +37,10 @@ export function createControls(root, sections, { onChange } = {}) {
   };
 
   for (const section of sections) {
-    const sec = h('section', { class: 'ctrl-section' }, section.title && h('h3', {}, section.title));
+    const foldable = section.collapsed !== undefined;
+    const sec = foldable
+      ? h('details', { class: 'ctrl-section ctrl-fold', open: !section.collapsed }, h('summary', {}, h('h3', {}, section.title)))
+      : h('section', { class: 'ctrl-section' }, section.title && h('h3', {}, section.title));
     if (section.showIf) conditionals.push({ el: sec, showIf: section.showIf });
     for (const c of section.controls) {
       const el = buildControl(c);
@@ -44,6 +49,7 @@ export function createControls(root, sections, { onChange } = {}) {
       sec.append(el);
     }
     root.append(sec);
+    if (section.id) sectionEls[section.id] = sec;
   }
   refresh();
 
@@ -160,6 +166,8 @@ export function createControls(root, sections, { onChange } = {}) {
         const btn = h('button', { type: 'button', class: `btn btn-sm ${c.variant || ''}`, onclick: () => c.onClick?.(state) }, c.text || c.label);
         return h('div', { class: 'ctrl' }, btn);
       }
+      case 'subhead':
+        return h('div', { class: 'ctrl ctrl-subhead' }, c.label);
       case 'custom':
         return h('div', { class: 'ctrl' }, c.label && h('div', { class: 'ctrl-label' }, c.label), c.el);
       default:
@@ -180,6 +188,8 @@ export function createControls(root, sections, { onChange } = {}) {
       if (!silent) onChange?.(state, Object.keys(patch)[0]);
     },
     get: (id) => state[id],
+    /** The element of the section with this `id` (e.g. to open a collapsed one). */
+    section: (id) => sectionEls[id],
     refresh,
   };
   return api;

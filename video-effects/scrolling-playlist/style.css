@@ -1,0 +1,46 @@
+/* Scrolling Playlist: tool-only styles, built on the shared tokens. © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad */
+#preview { touch-action: none; }
+#preview.pl-dragging { cursor: grabbing; }
+
+.pl-list { display: grid; gap: 4px; max-height: 360px; overflow-y: auto; padding-right: 2px; }
+.pl-song { display: grid; grid-template-columns: 16px 40px minmax(0, 1fr) auto auto; gap: 6px; align-items: center; padding: 4px; border-radius: 8px; border: 1px solid transparent; }
+.pl-song.is-over { border-color: var(--accent); }
+.pl-song.is-dragging { opacity: .5; }
+.pl-grip { cursor: grab; color: var(--text-muted); display: grid; }
+.pl-grip svg { width: 14px; height: 14px; }
+.pl-thumb { width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2) center / cover no-repeat; cursor: pointer; padding: 0; }
+.pl-fields { display: grid; gap: 3px; min-width: 0; }
+.pl-fields input { padding: 4px 6px; font-size: 13px; min-width: 0; }
+.pl-video { display: flex; gap: 4px; align-items: center; font-size: 12px; color: var(--text-muted); }
+.pl-icon { width: 28px; height: 28px; padding: 0; }
+.pl-icon svg { width: 13px; height: 13px; }
+.pl-row-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.pl-row-actions .btn svg, .pl-track .btn svg, .pl-build .btn svg { width: 14px; height: 14px; }
+.pl-paste, .pl-service, .pl-build, .pl-track, .pl-keys { display: grid; gap: 8px; }
+.pl-steps { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--text-muted); display: grid; gap: 6px; }
+.pl-steps code { font-size: 12px; word-break: break-all; }
+.pl-service details summary { cursor: pointer; font-size: 13px; }
+.pl-key { display: flex; justify-content: space-between; align-items: center; }
+
+/* Hand detection timeline (detection-off ranges) */
+.pl-ranges { display: grid; gap: 6px; padding-top: 12px; }
+.pl-tl-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pl-tl-bar .btn { margin-left: auto; }
+.pl-tl-bar .btn svg { width: 14px; height: 14px; }
+.pl-tl-title { font-size: 13px; font-weight: 600; }
+.pl-tl-legend { display: flex; align-items: center; gap: 4px 6px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
+.pl-tl-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-left: 4px; }
+.pl-tl-legend .is-count { background: #2fbf71; }
+.pl-tl-legend .is-return { background: rgba(150, 150, 160, .55); }
+.pl-tl-legend .is-off { background: color-mix(in srgb, #a78bfa 55%, transparent); border: 1px solid #a78bfa; }
+.pl-tl { position: relative; height: 40px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); cursor: pointer; touch-action: none; overflow: hidden; }
+.pl-tl-strokes { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pl-tl-ranges { position: absolute; inset: 0; }
+.pl-tl-range { position: absolute; top: 2px; bottom: 2px; background: color-mix(in srgb, #a78bfa 40%, transparent); border: 1.5px solid #a78bfa; border-radius: 6px; cursor: grab; min-width: 8px; }
+.pl-tl-range:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pl-tl-edge { position: absolute; top: 0; bottom: 0; width: 10px; cursor: ew-resize; }
+.pl-tl-edge.is-start { left: -5px; }
+.pl-tl-edge.is-end { right: -5px; }
+.pl-tl-del { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.pl-tl-del svg { width: 11px; height: 11px; }
+.pl-tl-head { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--text); pointer-events: none; }

@@ -3,7 +3,7 @@ import { createControls } from '/assets/js/lib/controls.js';
 import { createDropzone } from '/assets/js/lib/upload.js';
 import { createStage } from '/assets/js/lib/stage.js';
 import { createExportBar, TRANSPARENT_HINT } from '/assets/js/lib/exporter.js';
-import { drawAnimatedText, ANIMATIONS, DEFAULT_EASING } from '/assets/js/lib/text-anim.js';
+import { drawAnimatedText, textOptions, ANIMATIONS, DEFAULT_EASING } from '/assets/js/lib/text-anim.js';
 import { fontOptions, weightOptions, ensureFont } from '/assets/js/lib/fonts.js';
 import { easingOptions } from '/assets/js/lib/easing.js';
 import { linearGradient, outputSize } from '/assets/js/lib/canvas.js';
@@ -118,22 +118,13 @@ function resize() {
 
 function render(t) {
   const W = canvas.width, H = canvas.height;
-  const k = Math.min(W, H) / 1080; // sizes are authored for a 1080px short side
   ctx.clearRect(0, 0, W, H);
 
   if (hasVideo()) ctx.drawImage(media.el, 0, 0, W, H);
   else if (s.bg === 'solid') { ctx.fillStyle = s.bgColor; ctx.fillRect(0, 0, W, H); }
   else if (s.bg === 'gradient') { ctx.fillStyle = linearGradient(ctx, W, H, s.gAngle, [s.g1, s.g2]); ctx.fillRect(0, 0, W, H); }
 
-  drawAnimatedText(ctx, {
-    text: s.text, family: s.family, weight: s.weight, size: s.size * k, color: s.color, glowColor: s.glowColor,
-    align: s.align, uppercase: s.uppercase, letterSpacing: s.letterSpacing * k, lineHeight: s.lineHeight,
-    x: (s.posX / 100) * W, y: (s.posY / 100) * H,
-    anim: s.anim, duration: s.duration, delay: s.delay, easing: s.easing,
-    outDuration: s.outDuration, end: duration(),
-    stroke: { width: s.strokeWidth * k, color: s.strokeColor },
-    shadow: s.shadow ? { blur: s.shadowBlur * k, y: s.shadowY * k, color: s.shadowColor } : null,
-  }, t);
+  drawAnimatedText(ctx, textOptions(s, W, H, duration()), t);
 }
 
 const duration = () => (hasVideo() ? media.duration : s.clip);

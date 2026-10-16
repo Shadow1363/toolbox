@@ -1,0 +1,31 @@
+<!-- Auto Editor thumbnail · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d3b6b"/><stop offset="1" stop-color="#0f1220"/></linearGradient>
+    <linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b6890"/><stop offset="1" stop-color="#2a3150"/></linearGradient>
+    <clipPath id="ph"><rect x="112" y="14" width="96" height="172" rx="14"/></clipPath>
+  </defs>
+  <rect width="320" height="200" fill="url(#bg)"/>
+  <!-- timeline strips, with cuts -->
+  <g opacity=".9">
+    <rect x="16" y="150" width="78" height="10" rx="3" fill="#2997ff"/>
+    <rect x="16" y="166" width="30" height="10" rx="3" fill="#2997ff"/><rect x="52" y="166" width="42" height="10" rx="3" fill="#2997ff"/>
+    <rect x="226" y="150" width="34" height="10" rx="3" fill="#34c759"/><rect x="266" y="150" width="38" height="10" rx="3" fill="#2997ff"/>
+    <rect x="226" y="166" width="78" height="10" rx="3" fill="#ffd23f"/>
+    <path d="M40 140v44M270 140v44" stroke="#ff4d6d" stroke-width="2" stroke-dasharray="3 3"/>
+  </g>
+  <!-- 9:16 phone frame with speaker, screenshot card and caption -->
+  <rect x="112" y="14" width="96" height="172" rx="14" fill="#141a2e" stroke="#fff" stroke-opacity=".5" stroke-width="2"/>
+  <g clip-path="url(#ph)">
+    <g fill="url(#p)"><circle cx="160" cy="62" r="20"/><path d="M118 140c3-36 20-58 42-58s39 22 42 58z"/></g>
+    <rect x="122" y="104" width="76" height="38" rx="7" fill="#fff"/>
+    <circle cx="133" cy="115" r="5" fill="#ff9a5a"/><rect x="142" y="111" width="30" height="5" rx="2.5" fill="#8a93a6"/>
+    <rect x="128" y="124" width="62" height="4" rx="2" fill="#c3c9d6"/><rect x="128" y="132" width="44" height="4" rx="2" fill="#c3c9d6"/>
+    <g font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="15" text-anchor="middle" stroke="#000" stroke-width="4" paint-order="stroke" stroke-linejoin="round">
+      <text x="146" y="166" fill="#fff">LOOK</text><text x="182" y="166" fill="#ffe14d">THIS</text>
+    </g>
+  </g>
+  <!-- scissors -->
+  <g transform="translate(36 40)" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><circle cx="10" cy="42" r="8"/><path d="M16 15l40 30M16 37l40-30"/></g>
+  <g transform="translate(238 42)" fill="#ffd23f"><path d="M22 0l6 16 16 6-16 6-6 16-6-16-16-6 16-6z"/><path d="M50 30l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" opacity=".8"/></g>
+</svg>

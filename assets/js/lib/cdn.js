@@ -79,8 +79,17 @@ export const LIBS = {
   lamejs: { kind: 'url', url: `${NPM}/lamejs@1.2.1/lame.min.js` },
   rnnoise: { kind: 'esm', url: `${NPM}/@jitsi/rnnoise-wasm@0.2.1/dist/rnnoise.js` },
   rnnoiseWasm: { kind: 'url', url: `${NPM}/@jitsi/rnnoise-wasm@0.2.1/dist/rnnoise.wasm` },
+  // OCR (Auto Editor: text in screenshots). A classic script → window.Tesseract; its worker, WASM core and language
+  // data are fetched from jsDelivr on first use;
+  // the language data is `${tesseractLang}/<lang>@1.0.0/4.0.0_best_int` (video-effects/auto-editor/ocr.js).
+  tesseract: { kind: 'script', url: `${NPM}/tesseract.js@7.0.0/dist/tesseract.min.js`, global: 'Tesseract' },
+  tesseractWorker: { kind: 'url', url: `${NPM}/tesseract.js@7.0.0/dist/worker.min.js` },
+  tesseractCore: { kind: 'url', url: `${NPM}/tesseract.js-core@7.0.0` },
+  tesseractLang: { kind: 'url', url: `${NPM}/@tesseract.js-data` },
   // Machine learning (bundles onnxruntime-web, which fetches its WASM from jsDelivr). Loaded inside workers by lib/whisper.js.
   transformers: { kind: 'esm', url: `${NPM}/@huggingface/transformers@4.2.0/dist/transformers.min.js` },
+  // AI (lib/ai.js): the official Anthropic SDK, used from the browser with the user's own key.
+  anthropic: { kind: 'esm', url: `${NPM}/@anthropic-ai/sdk@0.131.0/+esm` },
 };
 
 const loaded = new Map();

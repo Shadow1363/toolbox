@@ -580,6 +580,55 @@ p {
   color: var(--text-muted);
   margin: 2px 0 10px;
 }
+/* Collapsible section (createControls `collapsed`) */
+.ctrl-fold > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ctrl-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.ctrl-fold > summary > h3 {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 2px 0;
+}
+.ctrl-fold > summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.15s;
+}
+.ctrl-fold[open] > summary {
+  margin-bottom: 10px;
+}
+.ctrl-fold[open] > summary::after {
+  transform: rotate(225deg) translateY(-2px);
+}
+.ctrl-fold[hidden] {
+  display: none;
+}
+.ctrl-subhead {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text);
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+.ctrl-fold > .ctrl-subhead:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
 .ctrl {
   display: flex;
   flex-direction: column;
@@ -1041,6 +1090,38 @@ input[type="color"]::-moz-color-swatch {
 }
 .preview-overlay .spinner {
   margin: 0 auto 10px;
+}
+
+/* Subject masks (lib/mask-panel.js): click points and the brush cursor sit on a canvas stacked on the
+   preview (placed by the script, never exported); the strip shows which frames have a mask. */
+.preview-stage canvas.mask-marks {
+  position: absolute;
+  max-width: none;
+  max-height: none;
+  border-radius: 6px;
+  box-shadow: none;
+  background: transparent;
+  pointer-events: none;
+}
+#preview.mask-picking {
+  cursor: crosshair;
+  touch-action: none;
+}
+.mask-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mask-actions .btn svg {
+  width: 14px;
+  height: 14px;
+}
+.mask-strip {
+  display: block;
+  width: 100%;
+  height: 22px;
+  cursor: pointer;
+  border-radius: 4px;
 }
 
 .transport {

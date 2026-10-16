@@ -63,7 +63,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - Clip: drag on the waveform (files over 90 s start with the first minute selected). Captions: Whisper on the clip only, or words handed over from the Extractor; four styles reuse `drawCaption`.
 
 ### cleanup: Noise Reduction + Volume Normalizer
-- Files: `script.js` (panel, processing chain, A/B, stats), `dsp.js` (`measureLoudness`: BS.1770-4 K-weighting with the −70 LUFS / −10 LU gates, matches ffmpeg `ebur128`; `gateMix`; `normalizeLimit`: gain + 5 ms lookahead limiter via a monotonic-deque min filter; `rnnoise`: 48 kHz, int16-scaled frames of 480, delay measured by cross-correlation and removed), `style.css`.
+- Files: `script.js` (panel, RNNoise cache + progress, A/B, stats), `style.css`. The chain is `cleanAudio` in `lib/audio-clean.js`, on top of `lib/audio-dsp.js` (`measureLoudness`: BS.1770-4 K-weighting with the −70 LUFS / −10 LU gates, matches ffmpeg `ebur128`; `gateMix`; `normalizeLimit`: gain + 5 ms lookahead limiter via a monotonic-deque min filter; `rnnoise`: 48 kHz, int16-scaled frames of 480, delay measured by cross-correlation and removed).
 - Chain: RNNoise (fully wet, cached per file) mixed with the dry signal by Strength, optional gate → offline high-pass, EQ preset biquads and compressor preset (+ makeup) → measure → gain to the target LUFS + limiter at the peak ceiling. Each stage is skipped when off. Changes re-run after 250 ms; stale runs are dropped.
 - Two waveforms with synced zoom/scroll and mirrored selections; A/B (button or `B`) swaps the player's buffer at the same position.
 

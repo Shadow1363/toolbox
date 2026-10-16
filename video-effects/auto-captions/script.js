@@ -50,7 +50,7 @@ import {
   toSRT,
   toVTT,
 } from "/assets/js/lib/transcript.js";
-import { drawCaption } from "/assets/js/lib/captions.js";
+import { drawCaption, CAPTION_PRESETS } from "/assets/js/lib/captions.js";
 
 const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
@@ -64,121 +64,8 @@ let lines = [];
 let pages = [];
 let busy = false;
 
-/* ---------- Style presets ---------- */
-const PRESETS = [
-  {
-    label: "Karaoke",
-    value: "karaoke",
-    patch: {
-      family: "Montserrat",
-      weight: "900",
-      size: 64,
-      uppercase: false,
-      color: "#ffffff",
-      hlColor: "#ffd23f",
-      highlight: "wipe",
-      reveal: "page",
-      pop: false,
-      stroke: 5,
-      strokeColor: "#000000",
-      shadow: 10,
-      bg: "none",
-      posY: 82,
-      width: 84,
-      maxWords: 6,
-    },
-  },
-  {
-    label: "Pop-in",
-    value: "pop",
-    patch: {
-      family: "Montserrat",
-      weight: "900",
-      size: 78,
-      uppercase: false,
-      color: "#ffffff",
-      hlColor: "#5cf08f",
-      highlight: "color",
-      reveal: "word",
-      pop: true,
-      stroke: 6,
-      strokeColor: "#000000",
-      shadow: 14,
-      bg: "none",
-      posY: 70,
-      width: 80,
-      maxWords: 4,
-    },
-  },
-  {
-    label: "Classic",
-    value: "classic",
-    patch: {
-      family: "Inter",
-      weight: "600",
-      size: 44,
-      uppercase: false,
-      color: "#ffffff",
-      hlColor: "#ffd23f",
-      highlight: "none",
-      reveal: "page",
-      pop: false,
-      stroke: 0,
-      strokeColor: "#000000",
-      shadow: 0,
-      bg: "lines",
-      bgColor: "#000000",
-      bgOpacity: 0.7,
-      posY: 88,
-      width: 80,
-      maxWords: 10,
-    },
-  },
-  {
-    label: "Bold short-form",
-    value: "bold",
-    patch: {
-      family: "Anton",
-      weight: "400",
-      size: 110,
-      uppercase: true,
-      color: "#ffffff",
-      hlColor: "#ffe14d",
-      highlight: "color",
-      reveal: "word",
-      pop: true,
-      stroke: 9,
-      strokeColor: "#000000",
-      shadow: 22,
-      bg: "none",
-      posY: 64,
-      width: 78,
-      maxWords: 3,
-    },
-  },
-  {
-    label: "Boxed word",
-    value: "boxed",
-    patch: {
-      family: "Montserrat",
-      weight: "900",
-      size: 80,
-      uppercase: true,
-      color: "#ffffff",
-      hlColor: "#7c4dff",
-      highlight: "box",
-      reveal: "page",
-      pop: true,
-      stroke: 0,
-      strokeColor: "#000000",
-      shadow: 12,
-      bg: "none",
-      posY: 72,
-      width: 80,
-      maxWords: 3,
-    },
-  },
-];
+/* ---------- Style presets (lib/captions.js) ---------- */
+const PRESETS = CAPTION_PRESETS;
 
 /* ---------- Transcribe controls (custom elements) ---------- */
 const modelInfo = h("div", { class: "ac-model-info", "aria-live": "polite" });

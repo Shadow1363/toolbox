@@ -5,7 +5,7 @@ import { createExportBar, progressModal, canRecord } from '/assets/js/lib/export
 import { loadMedia, seekVideo, audioGraph, mixTrack, setPreviewMuted, LIMITS, MediaError } from '/assets/js/lib/media.js';
 import { loadGifenc, quantizeFrame, gifDelay } from '/assets/js/lib/gif.js';
 import { scratch, fit } from '/assets/js/lib/canvas.js';
-import { ease, cubicBezier } from '/assets/js/lib/easing.js';
+import { ease, easeWith } from '/assets/js/lib/easing.js';
 import { loadFontStylesheet } from '/assets/js/lib/fonts.js';
 import { h, icon, toast, downloadBlob, formatBytes, formatTime } from '/assets/js/lib/dom.js';
 import { createEngine } from './engine.js';
@@ -183,11 +183,7 @@ function setLevel(c, v) {
 
 /* ---------- Timing ---------- */
 function easeSlot(slot, t) {
-  if (slot.easing !== 'custom') return ease(slot.easing, t);
-  const n = String(slot.bezier).split(/[\s,]+/).map(Number).filter((v) => !Number.isNaN(v));
-  if (n.length !== 4) return ease('easeInOut', t);
-  const x = (v) => Math.min(1, Math.max(0, v));
-  return cubicBezier(x(n[0]), n[1], x(n[2]), n[3])(t);
+  return easeWith(slot.easing, slot.bezier, t);
 }
 
 /** Part of the sequence the preview plays: the selected transition ±1 s, the selected clip, or everything. */

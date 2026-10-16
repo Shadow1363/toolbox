@@ -358,3 +358,20 @@ function drawNeon(ctx, o, L, lt, p) {
   for (const line of L.lines) ctx.fillText(line.text, line.x, line.y);
   ctx.restore();
 }
+
+/**
+ * Text Effects panel state → drawAnimatedText options for a W × H canvas. Sizes in `s` are authored for a
+ * 1080px short side; posX/posY are percentages. `end` is when the fade-out finishes (the clip length).
+ */
+export function textOptions(s, W, H, end) {
+  const k = Math.min(W, H) / 1080;
+  return {
+    text: s.text, family: s.family, weight: s.weight, size: s.size * k, color: s.color, glowColor: s.glowColor,
+    align: s.align, uppercase: s.uppercase, letterSpacing: s.letterSpacing * k, lineHeight: s.lineHeight,
+    x: (s.posX / 100) * W, y: (s.posY / 100) * H,
+    anim: s.anim, duration: s.duration, delay: s.delay, easing: s.easing,
+    outDuration: s.outDuration, end,
+    stroke: { width: s.strokeWidth * k, color: s.strokeColor },
+    shadow: s.shadow ? { blur: s.shadowBlur * k, y: s.shadowY * k, color: s.shadowColor } : null,
+  };
+}

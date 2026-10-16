@@ -1,0 +1,16 @@
+<!-- Magic Mask Transition thumbnail · © 2026 Tomas Martinez · GPL-3.0-or-later · tm1363-c339e3ad -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a2f7a"/><stop offset="1" stop-color="#0f5f73"/></linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb36b"/><stop offset="1" stop-color="#e0487a"/></linearGradient>
+    <linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b3044"/><stop offset="1" stop-color="#151926"/></linearGradient>
+    <clipPath id="left"><path d="M0 0H210L120 200H0z"/></clipPath>
+  </defs>
+  <rect width="320" height="200" fill="url(#b)"/>
+  <circle cx="262" cy="56" r="22" fill="#fff3c4" opacity=".85"/>
+  <path d="M0 160l60-30 50 22 70-40 80 36 60-20v72H0z" fill="#7a2448" opacity=".45"/>
+  <g clip-path="url(#left)"><rect width="320" height="200" fill="url(#a)"/><path d="M0 150h320v50H0z" fill="#0b2a33" opacity=".6"/><rect x="20" y="40" width="40" height="110" fill="#0b2a33" opacity=".5"/></g>
+  <path d="M210 0 120 200" stroke="#fff" stroke-width="3" opacity=".9"/>
+  <g fill="url(#p)"><circle cx="160" cy="70" r="22"/><path d="M128 200c2-48 14-98 32-98s30 50 32 98z"/></g>
+  <path d="M160 46a24 24 0 1 1 0 48" fill="none" stroke="#ffd166" stroke-width="2" stroke-dasharray="4 4"/>
+</svg>
