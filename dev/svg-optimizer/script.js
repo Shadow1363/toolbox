@@ -1,7 +1,7 @@
 /* SVG Optimizer: SVGO (browser build) over a batch of files or pasted code, with per-plugin toggles and four output formats. */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, toast, store, formatBytes } from '/assets/js/lib/dom.js';
-import { remember, copyButton, downloadButton, actionButton, debounce, rememberInput, dropFiles } from '/assets/js/lib/text-tool.js';
+import { copyButton, downloadButton, actionButton, debounce, rememberInput, dropFiles } from '/assets/js/lib/text-tool.js';
 import { createFilePicker } from '/assets/js/lib/upload.js';
 import { createEditor } from '/assets/js/lib/editor.js';
 import { downloadZip } from '/assets/js/lib/image-io.js';
@@ -49,13 +49,13 @@ const MAX = 10 * 1024 * 1024;
 const $ = (id) => document.getElementById(id);
 
 /* ---------- Options ---------- */
-const opts = remember('svg-optimizer', [{ title: '', controls: [
+const opts = [{ title: '', controls: [
   { id: 'precision', type: 'range', label: 'Precision (decimals)', min: 0, max: 8, value: 3, hint: 'Lower is smaller; too low can distort shapes.' },
   { id: 'multipass', type: 'toggle', label: 'Multipass', value: true },
   { id: 'base64', type: 'toggle', label: 'Data URI as Base64', value: false },
   { id: 'cssUrl', type: 'toggle', label: 'Wrap data URI in url()', value: false },
-]}]);
-const panel = createControls($('options'), opts.sections, { onChange: (st, id) => { opts.save(st); if (id === 'base64' || id === 'cssUrl') render(); else optimizeAll(); } });
+]}];
+const panel = createControls($('options'), opts, { persist: 'svg-optimizer', onChange: (st, id) => { if (id === 'base64' || id === 'cssUrl') render(); else optimizeAll(); } });
 const s = panel.state;
 
 const plugins = { ...Object.fromEntries(PRESET.map((p) => [p, true])), ...Object.fromEntries(Object.entries(EXTRAS).map(([k, [on]]) => [k, on])), ...store.get('opts:svg-plugins', {}) };

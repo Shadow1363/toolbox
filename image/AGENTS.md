@@ -14,12 +14,13 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - **Every tool accepts a pasted image** (Ctrl/⌘+V anywhere on the page, plus a Paste button where there is a drop zone) and **copies its result** (PNG on the clipboard; browsers only accept PNG images there).
 - Paste is ignored while the user types in a text field, unless the clipboard holds only an image.
 - Results are drawn on a canvas by one function that the preview and every export call, so exports match the preview.
+- Settings panels pass `persist: '<id>'` to `createControls` (remembered, with Reset to defaults). Before/After skips `dx`, `dy`, `zoom` (`persist: false`). The editors keep their documents in `kv.js` instead.
 
 ## Shared code
 | Module | Use it for |
 | --- | --- |
 | `assets/js/lib/image-io.js` | `createImageDrop(root, { label, onLoad, onClear, paste })`: `createDropzone` for one image + page-wide paste + Paste button (`paste: false` when the tool routes pastes itself, e.g. Before/After's two slots). `onPasteImages(cb, { multiple })`, `imagesFromClipboard(clipboardData)`, `readClipboardImages()`, `pasteButton()`. `loadImage(file)` (= `loadMedia` for images), `blobToImage`. `FORMATS`, `canEncode(mime)` (toBlob silently falls back to PNG, so it checks the blob type), `encodeCanvas`, `flatten` (JPG matte). `copyCanvas`/`copyBlob` (passes a Promise to `ClipboardItem` for Safari), `copySvgText`, `downloadZip(files, name)` (JSZip), `pickFile(accept)`, `safeName`. |
-| `createImageExport(root, { id, getCanvas(scale), formats, svg, scales, matte, enabled, actions })` | The standard image export bar: Format (PNG/JPG/WebP/AVIF/SVG), Scale, Quality (lossy only), **Download** and **Copy**. Choices persist per `id`; formats the browser can't encode are disabled. `getCanvas` may be async. `actions` adds buttons (Pixel Art: Sprite sheet, GIF). Returns `{ refresh, state, setInfo }`. |
+| `createImageExport(root, { id, getCanvas(scale), formats, svg, scales, matte, enabled, actions })` | The standard image export bar: Format (PNG/JPG/WebP/AVIF/SVG), Scale, Quality (lossy only), **Download** and **Copy**. Choices persist per `id`; formats the browser can't encode are disabled. `getCanvas` may be async. `actions` adds buttons (Pixel Art: Sprite sheet, GIF). **Open in…** sends the current render (SVG as PNG) to tools whose registry entry `accepts: ['image']` (Compressor, Palette, Mockup's selected screen, Favicon, Before/After's Before slot, Background Remover). Returns `{ refresh, state, setInfo }`. |
 | `assets/js/lib/palette.js` | `samplePixels(img, maxSide)` (opaque pixels, downscaled), `kmeans(px, k, { seed })` in Lab with k-means++ seeding, `medianCut(px, k)`; both return `[{ rgb, count, share }]` largest first. Color math: `hex`, `parseHex`, `rgbToHsl`, `luminance`, `contrastRatio`, `wcag(ratio)`, `readableOn`. |
 | `assets/js/lib/kv.js` | `kvGet`/`kvSet`/`kvDel` on IndexedDB (`toolbox-kv`), `autosaver(key, get, ms)` (debounced, flushes on `pagehide`). Used instead of localStorage because boards, sprites and designs with images outgrow its ~5 MB. |
 | `styles.css` §13 | `.img-paste-row`, `.img-export`, `.editor-layout` (canvas + 300px side panel), `.editor-main`, `.editor-side`, `.toolbar`, `.tool-btn` (with `<kbd>` shortcut hint), `.editor-viewport`, `.btn-row`, `.kbd-help`. |
@@ -51,7 +52,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - `detect(code)` scores weighted regex rules per language (≥ 3 points wins, else plain text). Keep rules linear: a nested-quantifier rule once hung the page with catastrophic backtracking. Test new rules on a long snippet.
 - `layout()` measures every token (canvas `measureText`) into a model shared by `paint()` (canvas at any scale) and `toSvg()` (one `<text>` per line with coloured `<tspan>`s, `xml:space="preserve"`, the Google font `@import`ed, `feDropShadow`).
 - Highlighted lines: a text field (`3, 5-7`) or click a line in the preview; numbers are the displayed line numbers (they follow "First line number").
-- Code, language and options persist in localStorage. Tab in the code box inserts spaces.
+- Code and language persist in localStorage; options through `persist`. Tab in the code box inserts spaces.
 
 ### social-image: Social Image Maker
 - Files: `script.js` (editor), `model.js` (`TEMPLATES` with safe-area guides, `starter()` layouts, `renderDoc`, text wrapping, geometry).

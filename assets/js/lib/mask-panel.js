@@ -66,10 +66,10 @@ export function createMaskPanel(opts) {
     {
       title: 'Subject',
       controls: [
-        { id: 'mkMode', type: 'segmented', label: 'Cut out', value: opts.mode || 'person', options: MASK_MODES, showIf: (st) => showMode(st) },
+        { id: 'mkMode', persist: false, type: 'segmented', label: 'Cut out', value: opts.mode || 'person', options: MASK_MODES, showIf: (st) => showMode(st) },
         ...Object.entries(MODE_HINTS).map(([m, text]) => ({ type: 'custom', el: h('div', { class: 'ctrl-hint' }, text), showIf: (st) => st.mkMode === m && showMode(st) })),
         {
-          id: 'mkTool', type: 'segmented', label: 'On the preview', value: opts.moveLabel ? 'move' : 'keep', options: toolOptions,
+          id: 'mkTool', persist: false, type: 'segmented', label: 'On the preview', value: opts.moveLabel ? 'move' : 'keep', options: toolOptions,
           hint: 'Keep / Remove: click points (object modes). Paint / Erase: brush the mask by hand.',
         },
         { id: 'mkBrush', type: 'range', label: 'Brush size', min: 4, max: 240, value: 50, unit: 'px', showIf: (st) => ['add', 'erase'].includes(st.mkTool) },
@@ -98,7 +98,7 @@ export function createMaskPanel(opts) {
         { id: 'mkFeather', type: 'range', label: 'Feather', min: 0, max: 30, value: 2, unit: 'px' },
         { id: 'mkSmooth', type: 'range', label: 'Smooth over time', min: 0, max: 1, step: 0.05, value: 0.35, format: (v) => `${Math.round(v * 100)}%`, showIf: () => isVideo(), hint: 'Averages neighbouring frames (no lag) to stop edge flicker.' },
         { id: 'mkSnap', type: 'toggle', label: 'Snap edges to the photo', value: true, showIf: () => isPhoto() },
-        { id: 'mkShow', type: 'toggle', label: 'Show mask overlay', value: false },
+        { id: 'mkShow', persist: false, type: 'toggle', label: 'Show mask overlay', value: false },
       ],
     },
   ];

@@ -326,6 +326,7 @@ const panel = createControls(
     },
   ],
   {
+    persist: "trimmer",
     onChange: (st, id) => {
       if (id === "preset") applyPreset();
       if (id === "maxLen" && sel) setSel(sel);

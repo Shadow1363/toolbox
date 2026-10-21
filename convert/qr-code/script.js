@@ -3,17 +3,17 @@ import { createControls } from '/assets/js/lib/controls.js';
 import { createFilePicker } from '/assets/js/lib/upload.js';
 import { h, icon, toast, downloadBlob } from '/assets/js/lib/dom.js';
 import { loadLib } from '/assets/js/lib/cdn.js';
-import { remember, copyButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
+import { copyButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
 
 const canvas = document.getElementById('qr');
 const qrStatus = document.getElementById('qr-status');
 let matrix = null; // { n, dark(r, c) } for the current code
 
 /* ---------- Mode ---------- */
-const mode = remember('qr-mode', [{ title: '', controls: [
+const mode = [{ title: '', controls: [
   { id: 'mode', type: 'segmented', label: 'Mode', value: 'create', options: [['create', 'Create a QR code'], ['read', 'Read a QR code']] },
-]}]);
-const modePanel = createControls(document.getElementById('mode'), mode.sections, { onChange: (st) => { mode.save(st); showMode(); } });
+]}];
+const modePanel = createControls(document.getElementById('mode'), mode, { persist: { key: 'qr-mode', resetButton: false }, onChange: () => showMode() });
 function showMode() {
   const read = modePanel.state.mode === 'read';
   document.getElementById('create').hidden = read;
@@ -21,32 +21,29 @@ function showMode() {
 }
 
 /* ---------- Create ---------- */
-const content = remember('qr-content', [{ title: '', controls: [
+const content = [{ title: '', controls: [
   { id: 'qrType', type: 'segmented', label: 'Type', value: 'text', options: [['text', 'Text or link'], ['wifi', 'Wi-Fi'], ['email', 'Email']] },
   { id: 'text', type: 'textarea', label: 'Text or link', value: 'https://example.com', rows: 4, showIf: (s) => s.qrType === 'text' },
   { id: 'ssid', type: 'text', label: 'Network name (SSID)', value: '', showIf: (s) => s.qrType === 'wifi' },
-  { id: 'wifiPass', type: 'text', label: 'Password', value: '', showIf: (s) => s.qrType === 'wifi' && s.security !== 'nopass' },
+  { id: 'wifiPass', type: 'text', label: 'Password', value: '', persist: false, showIf: (s) => s.qrType === 'wifi' && s.security !== 'nopass' },
   { id: 'security', type: 'segmented', label: 'Security', value: 'WPA', options: [['WPA', 'WPA/WPA2/WPA3'], ['WEP', 'WEP'], ['nopass', 'None']], showIf: (s) => s.qrType === 'wifi' },
   { id: 'hidden', type: 'toggle', label: 'Hidden network', value: false, showIf: (s) => s.qrType === 'wifi' },
   { id: 'emailTo', type: 'text', label: 'To', value: '', placeholder: 'name@example.com', showIf: (s) => s.qrType === 'email' },
   { id: 'emailSubject', type: 'text', label: 'Subject', value: '', showIf: (s) => s.qrType === 'email' },
   { id: 'emailBody', type: 'textarea', label: 'Message', value: '', rows: 3, showIf: (s) => s.qrType === 'email' },
-]}]);
-// Wi-Fi passwords stay out of localStorage.
-content.sections[0].controls.find((c) => c.id === 'wifiPass').value = '';
-const contentPanel = createControls(document.getElementById('fields'), content.sections, {
-  onChange: (st) => { const { wifiPass, ...rest } = st; content.save(rest); draw(); },
-});
+]}];
+// Wi-Fi passwords stay out of localStorage (persist: false). Only the Style panel gets the reset button.
+const contentPanel = createControls(document.getElementById('fields'), content, { persist: { key: 'qr-content', resetButton: false }, onChange: () => draw() });
 
-const style = remember('qr-style', [{ title: '', controls: [
+const style = [{ title: '', controls: [
   { id: 'ecc', type: 'segmented', label: 'Error correction', value: 'M', options: [['L', 'L 7%'], ['M', 'M 15%'], ['Q', 'Q 25%'], ['H', 'H 30%']], hint: 'Higher survives damage or a logo on top, but makes a denser code.' },
   { id: 'size', type: 'range', label: 'PNG size', min: 128, max: 2048, step: 32, value: 512, unit: ' px' },
   { id: 'margin', type: 'range', label: 'Quiet zone', min: 0, max: 8, value: 4, unit: ' modules', hint: 'Scanners want 4; less may not scan.' },
   { id: 'fg', type: 'color', label: 'Foreground', value: '#000000' },
   { id: 'bg', type: 'color', label: 'Background', value: '#ffffff' },
   { id: 'transparent', type: 'toggle', label: 'Transparent background', value: false },
-]}]);
-const stylePanel = createControls(document.getElementById('style'), style.sections, { onChange: (st) => { style.save(st); draw(); } });
+]}];
+const stylePanel = createControls(document.getElementById('style'), style, { persist: 'qr-style', onChange: () => draw() });
 
 const esc = (v) => String(v).replace(/([\;,:"])/g, '\\$1');
 function payload() {

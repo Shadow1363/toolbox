@@ -123,6 +123,7 @@ const panel = createControls(document.getElementById('controls'), [
     ],
   },
 ], {
+  persist: { key: 'scrolling-playlist', skip: ['manualPos', 'startPlaying'] },
   onChange: (st, id) => {
     if (id === 'mode' || id === 'handFront') { syncNote(); renderRanges(); }
     if (id === 'rate') { hand = null; renderTrack(); }

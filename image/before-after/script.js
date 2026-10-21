@@ -10,7 +10,7 @@
 import { createControls } from "/assets/js/lib/controls.js";
 import { createStage } from "/assets/js/lib/stage.js";
 import { createExportBar } from "/assets/js/lib/exporter.js";
-import { h, toast, downloadBlob, store } from "/assets/js/lib/dom.js";
+import { h, toast, downloadBlob } from "/assets/js/lib/dom.js";
 import {
   createImageDrop,
   onPasteImages,
@@ -21,6 +21,7 @@ import {
 import { fit, outputSize, roundRectPath } from "/assets/js/lib/canvas.js";
 import { ease, easingOptions } from "/assets/js/lib/easing.js";
 import { copyText } from "/assets/js/lib/text-tool.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const $ = (id) => document.getElementById(id);
 const canvas = $("preview");
@@ -31,8 +32,6 @@ let manual = 0.5;
 let exporting = false;
 
 /* ---------- Panel ---------- */
-const saved = store.get("opts:before-after", {});
-const keep = (id, v) => saved[id] ?? v;
 const panel = createControls(
   $("controls"),
   [
@@ -43,7 +42,7 @@ const panel = createControls(
           id: "dir",
           type: "segmented",
           label: "Divider",
-          value: keep("dir", "h"),
+          value: "h",
           options: [
             ["h", "Left / right"],
             ["v", "Top / bottom"],
@@ -53,7 +52,7 @@ const panel = createControls(
           id: "match",
           type: "segmented",
           label: "Size match",
-          value: keep("match", "cover"),
+          value: "cover",
           options: [
             ["cover", "Crop to fill"],
             ["contain", "Fit inside"],
@@ -64,7 +63,7 @@ const panel = createControls(
           id: "maxSide",
           type: "select",
           label: "Output size",
-          value: keep("maxSide", "1600"),
+          value: "1600",
           options: [
             ["960", "960 px"],
             ["1280", "1280 px"],
@@ -86,6 +85,7 @@ const panel = createControls(
         },
         {
           id: "dx",
+          persist: false,
           type: "range",
           label: "Shift X",
           min: -20,
@@ -96,6 +96,7 @@ const panel = createControls(
         },
         {
           id: "dy",
+          persist: false,
           type: "range",
           label: "Shift Y",
           min: -20,
@@ -106,6 +107,7 @@ const panel = createControls(
         },
         {
           id: "zoom",
+          persist: false,
           type: "range",
           label: "Scale",
           min: 80,
@@ -124,27 +126,27 @@ const panel = createControls(
           id: "labels",
           type: "toggle",
           label: "Show labels",
-          value: keep("labels", true),
+          value: true,
         },
         {
           id: "labelA",
           type: "text",
           label: "Before label",
-          value: keep("labelA", "Before"),
+          value: "Before",
           showIf: (st) => st.labels,
         },
         {
           id: "labelB",
           type: "text",
           label: "After label",
-          value: keep("labelB", "After"),
+          value: "After",
           showIf: (st) => st.labels,
         },
         {
           id: "labelPos",
           type: "segmented",
           label: "Position",
-          value: keep("labelPos", "top"),
+          value: "top",
           options: [
             ["top", "Top"],
             ["bottom", "Bottom"],
@@ -157,7 +159,7 @@ const panel = createControls(
           label: "Size",
           min: 16,
           max: 72,
-          value: keep("labelSize", 32),
+          value: 32,
           unit: "px",
           showIf: (st) => st.labels,
         },
@@ -170,7 +172,7 @@ const panel = createControls(
           id: "lineColor",
           type: "color",
           label: "Color",
-          value: keep("lineColor", "#ffffff"),
+          value: "#ffffff",
         },
         {
           id: "lineWidth",
@@ -178,14 +180,14 @@ const panel = createControls(
           label: "Width",
           min: 1,
           max: 12,
-          value: keep("lineWidth", 4),
+          value: 4,
           unit: "px",
         },
         {
           id: "handle",
           type: "segmented",
           label: "Handle",
-          value: keep("handle", "circle"),
+          value: "circle",
           options: [
             ["circle", "Circle"],
             ["none", "Line only"],
@@ -203,7 +205,7 @@ const panel = createControls(
           min: 1.5,
           max: 10,
           step: 0.5,
-          value: keep("duration", 4),
+          value: 4,
           unit: "s",
           hint: "One full sweep there and back. GIF and video loop it.",
         },
@@ -213,7 +215,7 @@ const panel = createControls(
           label: "From",
           min: 0,
           max: 50,
-          value: keep("from", 10),
+          value: 10,
           unit: "%",
         },
         {
@@ -222,7 +224,7 @@ const panel = createControls(
           label: "To",
           min: 50,
           max: 100,
-          value: keep("to", 90),
+          value: 90,
           unit: "%",
         },
         {
@@ -231,27 +233,22 @@ const panel = createControls(
           label: "Pause at ends",
           min: 0,
           max: 40,
-          value: keep("hold", 12),
+          value: 12,
           unit: "%",
         },
         {
           id: "easing",
           type: "select",
           label: "Easing",
-          value: keep("easing", "easeInOut"),
+          value: "easeInOut",
           options: easingOptions.slice(0, 5),
         },
       ],
     },
   ],
   {
+    persist: "before-after",
     onChange: (st, id) => {
-      store.set(
-        "opts:before-after",
-        Object.fromEntries(
-          Object.entries(st).filter(([k]) => !["dx", "dy", "zoom"].includes(k)),
-        ),
-      );
       if (id === "maxSide" || id === "match") resize();
       canvas.classList.toggle("is-vertical", st.dir === "v");
       stage.invalidate();
@@ -867,3 +864,6 @@ loadDemo();
 resize();
 canvas.classList.toggle("is-vertical", s.dir === "v");
 exportBar.refresh();
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("before-after", (file) => dzA.load(file));

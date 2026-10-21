@@ -1,7 +1,7 @@
 /* JSON tools: format / minify / validate, convert JSON ↔ YAML ↔ TOML ↔ XML, and JSON → TypeScript types. */
 import { createControls } from '/assets/js/lib/controls.js';
 import { icon } from '/assets/js/lib/dom.js';
-import { remember, copyButton, downloadButton, actionButton, debounce, readText } from '/assets/js/lib/text-tool.js';
+import { copyButton, downloadButton, actionButton, debounce, readText } from '/assets/js/lib/text-tool.js';
 import { createFilePicker } from '/assets/js/lib/upload.js';
 import {
   parseJson, stringifyJson, parseYaml, stringifyYaml, parseToml, stringifyToml, parseXml, stringifyXml,
@@ -14,15 +14,15 @@ const statusEl = document.getElementById('status');
 
 const ACTIONS = [['format', 'Format'], ['minify', 'Minify'], ['yaml', 'YAML'], ['toml', 'TOML'], ['xml', 'XML'], ['ts', 'TypeScript']];
 const EXT = { format: 'json', minify: 'json', yaml: 'yaml', toml: 'toml', xml: 'xml', ts: 'ts' };
-const opts = remember('json-tools', [{ title: '', controls: [
+const opts = [{ title: '', controls: [
   { id: 'from', type: 'select', label: 'Input', value: 'auto', options: [['auto', 'Detect'], ['json', 'JSON'], ['yaml', 'YAML'], ['toml', 'TOML'], ['xml', 'XML']] },
   { id: 'action', type: 'segmented', label: 'Output', value: 'format', options: ACTIONS },
   { id: 'indent', type: 'segmented', label: 'Indent', value: '2', options: [['2', '2'], ['4', '4'], ['tab', 'Tab']], showIf: (s) => !['minify', 'toml'].includes(s.action) },
   { id: 'sortKeys', type: 'toggle', label: 'Sort keys', value: false, showIf: (s) => s.action !== 'ts' },
   { id: 'xmlRoot', type: 'text', label: 'Root element', value: 'root', showIf: (s) => s.action === 'xml' },
   { id: 'tsRoot', type: 'text', label: 'Root type name', value: 'Root', showIf: (s) => s.action === 'ts' },
-]}]);
-const panel = createControls(document.getElementById('options'), opts.sections, { onChange: (st) => { opts.save(st); run(); } });
+]}];
+const panel = createControls(document.getElementById('options'), opts, { persist: 'json-tools', onChange: () => run() });
 const s = panel.state;
 
 input.placeholder = 'Paste JSON, YAML, TOML or XML…';

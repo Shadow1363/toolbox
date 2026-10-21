@@ -53,8 +53,6 @@ const fontFamily = (fam) =>
   fam === "System mono" ? SYSTEM_MONO : `"${fam}", ${SYSTEM_MONO}`;
 
 /* ---------- Panel ---------- */
-const saved = store.get("opts:code-screenshot", {});
-const keep = (id, v) => saved[id] ?? v;
 const panel = createControls(
   $("controls"),
   [
@@ -65,7 +63,7 @@ const panel = createControls(
           id: "theme",
           type: "select",
           label: "Theme",
-          value: keep("theme", "midnight"),
+          value: "midnight",
           options: Object.entries(THEMES).map(([k, t]) => [
             k,
             `${t.name}${t.dark ? "" : " (light)"}`,
@@ -75,7 +73,7 @@ const panel = createControls(
           id: "font",
           type: "select",
           label: "Font",
-          value: keep("font", "JetBrains Mono"),
+          value: "JetBrains Mono",
           options: MONO.map((f) => [f.family, f.family]),
         },
         {
@@ -84,7 +82,7 @@ const panel = createControls(
           label: "Font size",
           min: 10,
           max: 28,
-          value: keep("fontSize", 15),
+          value: 15,
           unit: "px",
         },
         {
@@ -94,13 +92,13 @@ const panel = createControls(
           min: 1.1,
           max: 2.2,
           step: 0.05,
-          value: keep("lineHeight", 1.6),
+          value: 1.6,
         },
         {
           id: "tabSize",
           type: "segmented",
           label: "Tab width",
-          value: keep("tabSize", "2"),
+          value: "2",
           options: [
             ["2", "2"],
             ["4", "4"],
@@ -116,7 +114,7 @@ const panel = createControls(
           id: "chrome",
           type: "segmented",
           label: "Title bar",
-          value: keep("chrome", "dots"),
+          value: "dots",
           options: [
             ["dots", "Dots"],
             ["right", "Buttons"],
@@ -128,7 +126,7 @@ const panel = createControls(
           id: "title",
           type: "text",
           label: "File name",
-          value: keep("title", "debounce.ts"),
+          value: "debounce.ts",
           showIf: (st) => st.chrome !== "none",
           placeholder: "app.js",
         },
@@ -136,7 +134,7 @@ const panel = createControls(
           id: "lineNumbers",
           type: "toggle",
           label: "Line numbers",
-          value: keep("lineNumbers", true),
+          value: true,
         },
         {
           id: "startLine",
@@ -144,14 +142,14 @@ const panel = createControls(
           label: "First line number",
           min: 0,
           max: 99999,
-          value: keep("startLine", 1),
+          value: 1,
           showIf: (st) => st.lineNumbers,
         },
         {
           id: "highlight",
           type: "text",
           label: "Highlight lines",
-          value: keep("highlight", "7-10"),
+          value: "7-10",
           placeholder: "e.g. 3, 5-7",
           hint: "Or click lines in the preview.",
         },
@@ -161,7 +159,7 @@ const panel = createControls(
           label: "Corner radius",
           min: 0,
           max: 24,
-          value: keep("radius", 12),
+          value: 12,
           unit: "px",
         },
         {
@@ -170,7 +168,7 @@ const panel = createControls(
           label: "Shadow",
           min: 0,
           max: 100,
-          value: keep("shadow", 60),
+          value: 60,
           unit: "%",
         },
         {
@@ -180,7 +178,7 @@ const panel = createControls(
           min: 0,
           max: 1400,
           step: 20,
-          value: keep("minWidth", 0),
+          value: 0,
           format: (v) => (v ? `${v}px` : "Auto"),
         },
       ],
@@ -192,7 +190,7 @@ const panel = createControls(
           id: "bg",
           type: "segmented",
           label: "Type",
-          value: keep("bg", "gradient"),
+          value: "gradient",
           options: [
             ["gradient", "Gradient"],
             ["solid", "Solid"],
@@ -203,7 +201,7 @@ const panel = createControls(
           id: "gradient",
           type: "swatches",
           label: "Gradient",
-          value: keep("gradient", "sunset"),
+          value: "sunset",
           showIf: (st) => st.bg === "gradient",
           options: GRADIENTS.map((g) => ({
             label: g.label,
@@ -217,7 +215,7 @@ const panel = createControls(
           label: "Angle",
           min: 0,
           max: 360,
-          value: keep("gAngle", 135),
+          value: 135,
           unit: "°",
           showIf: (st) => st.bg === "gradient",
         },
@@ -225,7 +223,7 @@ const panel = createControls(
           id: "bgColor",
           type: "color",
           label: "Color",
-          value: keep("bgColor", "#e9ecf2"),
+          value: "#e9ecf2",
           showIf: (st) => st.bg === "solid",
         },
         {
@@ -234,15 +232,15 @@ const panel = createControls(
           label: "Padding",
           min: 0,
           max: 160,
-          value: keep("padding", 64),
+          value: 64,
           unit: "px",
         },
       ],
     },
   ],
   {
+    persist: "code-screenshot",
     onChange: (st, id) => {
-      store.set("opts:code-screenshot", st);
       if (id === "font") loadFont();
       draw();
     },

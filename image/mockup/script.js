@@ -34,6 +34,7 @@ import {
   drawDevice,
   drawFakeUI,
 } from "./devices.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const $ = (id) => document.getElementById(id);
 const canvas = $("preview");
@@ -58,8 +59,6 @@ const devices = [newDevice("laptop"), newDevice("phone", { color: "silver" })];
 let selected = devices[0];
 
 /* ---------- Scene panel ---------- */
-const saved = store.get("opts:mockup", {});
-const keep = (id, v) => saved[id] ?? v;
 const ASPECTS = [
   ["auto", "Auto"],
   ["16:9", "16:9"],
@@ -79,7 +78,7 @@ const panel = createControls(
           id: "aspect",
           type: "select",
           label: "Canvas",
-          value: keep("aspect", "16:9"),
+          value: "16:9",
           options: ASPECTS,
         },
         {
@@ -88,7 +87,7 @@ const panel = createControls(
           label: "Padding",
           min: 0,
           max: 30,
-          value: keep("padding", 10),
+          value: 10,
           unit: "%",
         },
         {
@@ -97,7 +96,7 @@ const panel = createControls(
           label: "Spacing",
           min: -40,
           max: 30,
-          value: keep("gap", -6),
+          value: -6,
           unit: "%",
           hint: "Negative values overlap devices; later ones in the list sit in front.",
         },
@@ -105,7 +104,7 @@ const panel = createControls(
           id: "align",
           type: "segmented",
           label: "Align",
-          value: keep("align", "bottom"),
+          value: "bottom",
           options: [
             ["bottom", "Bottom"],
             ["center", "Center"],
@@ -122,7 +121,7 @@ const panel = createControls(
           label: "Turn",
           min: -35,
           max: 35,
-          value: keep("ry", 0),
+          value: 0,
           unit: "°",
         },
         {
@@ -131,7 +130,7 @@ const panel = createControls(
           label: "Tilt",
           min: -30,
           max: 30,
-          value: keep("rx", 0),
+          value: 0,
           unit: "°",
         },
         {
@@ -140,7 +139,7 @@ const panel = createControls(
           label: "Rotate",
           min: -20,
           max: 20,
-          value: keep("rz", 0),
+          value: 0,
           unit: "°",
         },
         {
@@ -149,7 +148,7 @@ const panel = createControls(
           label: "Shadow",
           min: 0,
           max: 100,
-          value: keep("shadow", 45),
+          value: 45,
           unit: "%",
         },
       ],
@@ -161,7 +160,7 @@ const panel = createControls(
           id: "bg",
           type: "segmented",
           label: "Type",
-          value: keep("bg", "gradient"),
+          value: "gradient",
           options: [
             ["gradient", "Gradient"],
             ["solid", "Solid"],
@@ -173,7 +172,7 @@ const panel = createControls(
           id: "gradient",
           type: "swatches",
           label: "Gradient",
-          value: keep("gradient", "ocean"),
+          value: "ocean",
           showIf: (st) => st.bg === "gradient",
           options: GRADIENTS.map((g) => ({
             label: g.label,
@@ -187,7 +186,7 @@ const panel = createControls(
           label: "Angle",
           min: 0,
           max: 360,
-          value: keep("gAngle", 135),
+          value: 135,
           unit: "°",
           showIf: (st) => st.bg === "gradient",
         },
@@ -195,7 +194,7 @@ const panel = createControls(
           id: "bgColor",
           type: "color",
           label: "Color",
-          value: keep("bgColor", "#eef0f5"),
+          value: "#eef0f5",
           showIf: (st) => st.bg === "solid",
         },
         {
@@ -210,7 +209,7 @@ const panel = createControls(
           label: "Blur",
           min: 0,
           max: 60,
-          value: keep("bgBlur", 0),
+          value: 0,
           unit: "px",
           showIf: (st) => st.bg === "image",
         },
@@ -220,7 +219,7 @@ const panel = createControls(
           label: "Darken",
           min: 0,
           max: 80,
-          value: keep("bgDim", 0),
+          value: 0,
           unit: "%",
           showIf: (st) => st.bg === "image",
         },
@@ -228,8 +227,8 @@ const panel = createControls(
     },
   ],
   {
+    persist: "mockup",
     onChange: (st) => {
-      store.set("opts:mockup", st);
       draw();
     },
   },
@@ -796,3 +795,6 @@ createImageExport($("export"), {
 renderList();
 renderEditor();
 draw();
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("mockup", (file) => setShot(selected, file));

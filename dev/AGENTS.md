@@ -11,12 +11,12 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - `related: [...]` on the category renders an "Also useful (in Convert & Encode)" section at the end of the hub, and those tools are included in the hub search (`site.js` → `renderCategory`).
 
 ## Shared layout and code
-Every tool is input on the left, output on the right (`.io-grid`, stacks under 860px), recomputed live, with Copy and Download buttons. Options persist with `remember()`; the input text persists with `rememberInput()`. Generated secrets (passwords, keys) are never persisted.
+Every tool is input on the left, output on the right (`.io-grid`, stacks under 860px), recomputed live, with Copy and Download buttons. Options persist through `createControls(…, { persist: '<id>' })` (which also adds Reset to defaults); the input text persists with `rememberInput()`. CSS Generators keeps each tab's whole state in `css-gen:<tab>` and has its own Reset footer. Generated secrets (passwords, keys) are never persisted.
 
 | Module | Use it for |
 | --- | --- |
 | `assets/js/lib/editor.js` | `createEditor(el, { value, lang, readOnly, wrap, lineNumbers, placeholder, label, onChange })` → `{ value, setLang, setMarks, select, focus, el, ready }`. Shows a `<textarea>` at once, then swaps in CodeMirror 6 (same text, selection and API). `lang`: `json`, `html`, `xml`, `css` or `null`. `setMarks([{ from, to, class }])` highlights ranges (Regex Tester). Setting `value` doesn't fire `onChange`. If the CDN fails it stays a textarea (marks are ignored) and logs one warning. |
-| `assets/js/lib/text-tool.js` | `remember`, `copyButton`, `downloadButton`, `actionButton`, `copyText`, `debounce`, `readText`, plus `rememberInput(key, fallback, max)` (debounced, skips texts over `max` chars, stored as `input:<key>`) and `dropFiles(el, onFiles)` (any element as a drop target; adds `.is-over`). |
+| `assets/js/lib/text-tool.js` | `copyButton`, `downloadButton`, `actionButton`, `copyText`, `debounce`, `readText`, plus `rememberInput(key, fallback, max)` (debounced, skips texts over `max` chars, stored as `input:<key>`) and `dropFiles(el, onFiles)` (any element as a drop target; adds `.is-over`). |
 | `styles.css` §14 | `.code-editor` (+ `--editor-min` / `--editor-max` heights), `.tok-*` syntax colors for both themes, `.dev-tabs` (a full-width `.segmented` that scrolls on phones), `.io-sub` (small section heading inside an `.io-panel`). |
 | `assets/js/lib/cdn.js` | Every library below is pinned here and loaded on first use. |
 
@@ -103,7 +103,7 @@ Every tool is input on the left, output on the right (`.io-grid`, stacks under 8
 - **Generators:** strength assumes the value was generated here; it says nothing about reused or leaked passwords.
 
 ## Checklist: new tool in this category
-- [ ] Copy `_template/tool/`; use `.io-grid` with input left and output right; persist options with `remember()` and input with `rememberInput()`.
+- [ ] Copy `_template/tool/`; use `.io-grid` with input left and output right; persist options with `persist: '<id>'` and input with `rememberInput()`.
 - [ ] Code inputs use `createEditor()`; never insert user HTML/SVG into the page (use `DOMParser`, `<img>` or a sandboxed iframe).
 - [ ] Libraries only through `cdn.js`, pinned and lazy; fail with a readable message.
 - [ ] Give it a `section`, `tags` and a thumbnail; if it overlaps a Convert tool, link that one instead (category `related`).

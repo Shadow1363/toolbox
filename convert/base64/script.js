@@ -2,7 +2,7 @@
 import { createControls } from '/assets/js/lib/controls.js';
 import { createFilePicker } from '/assets/js/lib/upload.js';
 import { h, icon, formatBytes, toast } from '/assets/js/lib/dom.js';
-import { remember, copyButton, downloadButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
+import { copyButton, downloadButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
 import { detect, FORMATS } from '/convert/file-converter/formats.js';
 
 const input = document.getElementById('input');
@@ -16,7 +16,7 @@ let file = null;       // File being encoded (encode mode)
 let result = null;     // { text } or { blob, name } for copy/download
 let previewUrl = null;
 
-const opts = remember('base64', [
+const opts = [
   { title: '', controls: [
     { id: 'mode', type: 'segmented', label: 'Direction', value: 'encode', options: [['encode', 'Encode'], ['decode', 'Decode']] },
     { id: 'variant', type: 'segmented', label: 'Alphabet', value: 'standard', options: [['standard', 'Base64'], ['url', 'Base64URL']] },
@@ -24,9 +24,10 @@ const opts = remember('base64', [
     { id: 'dataUri', type: 'toggle', label: 'Data URI prefix', value: false, showIf: (s) => s.mode === 'encode' && s.variant === 'standard' },
     { id: 'wrap', type: 'segmented', label: 'Line length', value: '0', options: [['0', 'One line'], ['76', '76 (MIME)']], showIf: (s) => s.mode === 'encode' },
   ]},
-]);
-const panel = createControls(document.getElementById('options'), opts.sections, {
-  onChange: (s, id) => { opts.save(s); if (id === 'mode') { file = null; input.value = ''; } run(); },
+];
+const panel = createControls(document.getElementById('options'), opts, {
+  persist: 'base64',
+  onChange: (s, id) => { if (id === 'mode') { file = null; input.value = ''; } run(); },
 });
 const s = panel.state;
 
@@ -47,7 +48,6 @@ document.getElementById('out-actions').append(
     if (result?.text == null) return toast('Nothing to swap yet.');
     const text = result.text;
     panel.set({ mode: s.mode === 'encode' ? 'decode' : 'encode' }, { silent: true });
-    opts.save(s);
     file = null;
     input.value = text;
     run();

@@ -3,7 +3,7 @@
  * own controls and preview; it calls ctx.output({ css, tailwind, note }) whenever its result changes.
  * mount may return a cleanup function (stops animations, listeners) that runs when the tab is left.
  */
-import { h, store } from '/assets/js/lib/dom.js';
+import { h, icon, toast, store } from '/assets/js/lib/dom.js';
 import { copyButton, downloadButton } from '/assets/js/lib/text-tool.js';
 import gradient from './gradient.js';
 import shadow from './shadow.js';
@@ -44,6 +44,13 @@ function show(id) {
   preview.replaceChildren();
   preview.className = `cg-preview cg-${id}`;
   cleanup = TABS.find((t) => t.id === id).mount({ controls, preview, output }) || null;
+  // Same footer as createControls' `persist`, but it resets the whole tab (stops, points, layers too).
+  controls.append(h('div', { class: 'ctrl-reset' },
+    h('button', { type: 'button', class: 'btn btn-sm btn-ghost', html: `${icon('restart')} Reset to defaults`, onclick: () => {
+      store.remove(`css-gen:${id}`);
+      show(id);
+      toast('Settings reset');
+    } })));
 }
 
 show(active);

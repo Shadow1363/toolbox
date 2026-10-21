@@ -135,6 +135,7 @@ const panel = createControls(document.getElementById('controls'), [
     ],
   },
 ], {
+  persist: { key: 'magic-mask', skip: ['aIn', 'aOut', 'bIn', 'bOut'] },
   onChange: (st, id) => {
     mp.handle(st, id);
     if (id === 'maskFrom') { mp.mediaChanged(maskClip()); autoSetup({ keepTiming: true }); }

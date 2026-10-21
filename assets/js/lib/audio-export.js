@@ -25,6 +25,7 @@ import {
 import { createControls } from "./controls.js";
 import { loadLib, LIBS } from "./cdn.js";
 import { progressModal } from "./exporter.js";
+import { createOpenIn } from "./handoff.js";
 import { audioContext, resample } from "./audio-io.js";
 
 /* ---------- Buffers ---------- */
@@ -466,6 +467,7 @@ export function createAudioExport(root, opts) {
     actions = [],
     enabled = () => true,
     info,
+    openIn: withOpenIn = true,
   } = opts;
   const saved = store.get(`audio-export:${id}`, {});
   const formatOptions = [
@@ -489,6 +491,14 @@ export function createAudioExport(root, opts) {
     b.addEventListener("click", () => a.onClick(panel.state, b));
     return b;
   });
+  // Sends the current audio as a lossless WAV to another audio tool (`openIn: false` for tools with their own).
+  const openIn = createOpenIn({
+    kind: "audio",
+    getFile: async () => {
+      const buffer = await getBuffer();
+      return buffer && new File([encodeWav(buffer)], `${filename()}.wav`, { type: "audio/wav" });
+    },
+  });
   root.classList.add("audio-export");
   root.replaceChildren(
     ctrlRoot,
@@ -497,6 +507,7 @@ export function createAudioExport(root, opts) {
       { class: "audio-export-row" },
       go,
       ...extraBtns,
+      withOpenIn && openIn.el,
       h("span", { class: "spacer" }),
       estimate,
     ),
@@ -645,6 +656,7 @@ export function createAudioExport(root, opts) {
     const on = enabled();
     const x = isExtra(s);
     go.disabled = busy || !on || (x && !x.available());
+    openIn.el.hidden = !withOpenIn || busy || !on;
     extraBtns.forEach((b, i) => {
       b.disabled = busy || !on;
       b.hidden = !(

@@ -4,7 +4,7 @@
  */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, store, toast } from '/assets/js/lib/dom.js';
-import { remember, copyText, downloadButton, actionButton } from '/assets/js/lib/text-tool.js';
+import { copyText, downloadButton, actionButton } from '/assets/js/lib/text-tool.js';
 import { LIBS } from '/assets/js/lib/cdn.js';
 import { passwordSets, password, passphrase, uuid4, uuid7, token, ALPHABETS, SYMBOLS, bits, strength } from './random.js';
 
@@ -104,10 +104,8 @@ function show(id) {
   active = id;
   store.set('opts:generators-tab', id);
   tabBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === id)));
-  // Fresh copies of the specs: remember() writes saved values into them.
-  const opts = remember(`generators-${id}`, TABS[id].sections.map((sec) => ({ ...sec, controls: sec.controls.map((c) => ({ ...c })) })));
   $('controls').replaceChildren();
-  panel = createControls($('controls'), opts.sections, { onChange: (st) => { opts.save(st); generate(); } });
+  panel = createControls($('controls'), TABS[id].sections, { persist: `generators-${id}`, onChange: () => generate() });
   $('out-title').textContent = id === 'password' ? 'Passwords' : id === 'uuid' ? 'UUIDs' : 'API keys';
   generate();
 }

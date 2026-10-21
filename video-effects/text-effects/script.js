@@ -77,7 +77,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'g2', type: 'color', label: 'To', value: '#7597de', showIf: (s) => s.bg === 'gradient' },
     { id: 'gAngle', type: 'range', label: 'Angle', min: 0, max: 360, value: 135, unit: '°', showIf: (s) => s.bg === 'gradient' },
   ]},
-], { onChange: (s, id) => {
+], { persist: 'text-effects', onChange: (s, id) => {
   if (id === 'anim') panel.set({ easing: DEFAULT_EASING[s.anim] }, { silent: true });
   if (id === 'family' || id === 'weight' || id === 'preset') ensureFont(s.family, s.weight, () => stage.invalidate());
   resize();

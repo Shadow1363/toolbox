@@ -106,7 +106,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'ocr', type: 'toggle', label: 'Read text in screenshots', value: true, hint: `Helps match screenshots to what you say. First use downloads ~${formatBytes(OCR_BYTES)}.` },
     { id: 'trackFace', type: 'toggle', label: 'Follow my face', value: true, hint: 'Keeps you centred when reframing, and aims zooms at you.' },
   ] },
-], { onChange });
+], { persist: 'auto-editor', onChange });
 const s = panel.state;
 
 function onChange(st, id) {

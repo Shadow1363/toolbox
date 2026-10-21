@@ -14,7 +14,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'indent', type: 'segmented', label: 'Indent', value: '2', options: [['2', '2 spaces'], ['4', '4 spaces'], ['tab', 'Tab']] },
     { id: 'sortKeys', type: 'toggle', label: 'Sort keys', value: false },
   ]},
-], { onChange: run });
+], { onChange: run, persist: 'template' }); // persist: the tool id (saves settings, adds Reset to defaults)
 
 function run() {
   const s = panel.state;

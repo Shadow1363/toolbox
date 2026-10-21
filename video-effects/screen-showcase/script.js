@@ -7,6 +7,7 @@ import { roundRectPath } from '/assets/js/lib/canvas.js';
 import { createPerspective } from '/assets/js/lib/perspective.js';
 import { fontString } from '/assets/js/lib/fonts.js';
 import { backgroundSection, frameSection, drawShowcaseBackground, fitInFrame, buildFrameCard, cardMotion, drawCard } from '/assets/js/lib/showcase-frame.js';
+import { receiveHandoff } from '/assets/js/lib/handoff.js';
 
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
@@ -42,7 +43,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'rx', type: 'range', label: 'Tilt X', min: -40, max: 40, value: 18, unit: '°', showIf: (s) => s.tilt !== 'none' },
     { id: 'ry', type: 'range', label: 'Tilt Y', min: -40, max: 40, value: -14, unit: '°', showIf: (s) => s.tilt !== 'none' },
   ]},
-], { onChange: () => { resize(); exportBar.refresh(); stage.invalidate(); } });
+], { persist: 'screen-showcase', onChange: () => { resize(); exportBar.refresh(); stage.invalidate(); } });
 
 const s = panel.state;
 function isVideo() { return media?.kind === 'video'; }
@@ -87,7 +88,7 @@ const demo = demoShot();
 const src = () => media || demo;
 
 /* ---------- Upload ---------- */
-createDropzone(document.getElementById('upload'), {
+const drop = createDropzone(document.getElementById('upload'), {
   accept: ['video', 'image'],
   label: 'Drop a screen recording or screenshot',
   onLoad: (m) => { media = m; onMediaChange(); },
@@ -153,3 +154,6 @@ overlay.innerHTML = '<div><strong>Showing a demo screenshot.</strong> Drop your 
 
 resize();
 stage.play().catch(() => {});
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff('screen-showcase', (file) => drop.load(file));

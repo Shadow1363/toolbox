@@ -287,6 +287,17 @@ function renderOptions() {
       autoConvert();
     },
   });
+  // Options are shared across formats (fc-options), so this resets all of them, not just the ones shown.
+  optionsEl.append(h('div', { class: 'ctrl-reset' },
+    h('button', { type: 'button', class: 'btn btn-sm btn-ghost', html: `${icon('restart')} Reset to defaults`, onclick: () => {
+      options = {};
+      store.remove('fc-options');
+      optionIds = '';
+      renderOptions();
+      render();
+      autoConvert();
+      toast('Settings reset');
+    } })));
 }
 
 function renderActions() {

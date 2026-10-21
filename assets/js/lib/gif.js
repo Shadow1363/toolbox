@@ -1,5 +1,5 @@
 /**
- * Animated GIF helpers around gifenc (loaded lazily from jsDelivr).
+ * Animated GIF helpers around gifenc (pinned in cdn.js, loaded on first use).
  *
  *   const lib = await loadGifenc();
  *   const gif = lib.GIFEncoder();
@@ -7,14 +7,9 @@
  *   gif.writeFrame(q.index, w, h, { ...frameOptions(q), delay: gifDelay(ms), repeat: 0 });
  *   gif.finish(); new Blob([gif.bytes()], { type: 'image/gif' });
  */
-export const GIFENC_URL = 'https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js';
+import { loadLib } from './cdn.js';
 
-let gifenc;
-export const loadGifenc = () =>
-  (gifenc ||= import(GIFENC_URL).catch(() => {
-    gifenc = null;
-    throw new Error('Could not load the GIF encoder. Check your connection.');
-  }));
+export const loadGifenc = () => loadLib('gifenc');
 
 // A 4×4 ordered-dither matrix. GIFs only get 256 colours per frame, so smooth
 // gradients (vignettes, blur falloff, fades) would band into rings without it.

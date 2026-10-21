@@ -1,7 +1,7 @@
 /* Diff Checker: line diff (jsdiff) with word/character highlights inside changed lines, side by side or inline; JSON mode; .patch export. */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, toast } from '/assets/js/lib/dom.js';
-import { remember, copyButton, downloadButton, actionButton, debounce, rememberInput, readText, dropFiles } from '/assets/js/lib/text-tool.js';
+import { copyButton, downloadButton, actionButton, debounce, rememberInput, readText, dropFiles } from '/assets/js/lib/text-tool.js';
 import { createEditor } from '/assets/js/lib/editor.js';
 import { pickFile } from '/assets/js/lib/image-io.js';
 import { loadLib } from '/assets/js/lib/cdn.js';
@@ -21,7 +21,7 @@ const SAMPLES = {
   ],
 };
 
-const opts = remember('diff', [{ title: '', controls: [
+const opts = [{ title: '', controls: [
   { id: 'view', type: 'segmented', label: 'View', value: 'split', options: [['split', 'Side by side'], ['inline', 'Inline']] },
   { id: 'detail', type: 'segmented', label: 'Highlight', value: 'words', options: [['words', 'Words'], ['chars', 'Characters'], ['lines', 'Lines only']] },
   { id: 'mode', type: 'segmented', label: 'Compare as', value: 'text', options: [['text', 'Text'], ['json', 'JSON']], hint: '' },
@@ -29,9 +29,8 @@ const opts = remember('diff', [{ title: '', controls: [
   { id: 'ignoreCase', type: 'toggle', label: 'Ignore case', value: false },
   { id: 'collapse', type: 'toggle', label: 'Hide unchanged lines', value: true },
   { id: 'swap', type: 'button', text: 'Swap sides', onClick: () => swap() },
-]}]);
-const panel = createControls(document.getElementById('options'), opts.sections, { onChange: (st, id) => {
-  opts.save(st);
+]}];
+const panel = createControls(document.getElementById('options'), opts, { persist: 'diff', onChange: (st, id) => {
   if (id === 'mode') onModeChange();
   else if (['view', 'collapse'].includes(id)) render();
   else run();

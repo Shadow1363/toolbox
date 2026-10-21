@@ -12,6 +12,7 @@ import { h, icon, toast, downloadBlob, formatBytes, store } from "./dom.js";
 import { createDropzone } from "./upload.js";
 import { loadMedia } from "./media.js";
 import { loadLib } from "./cdn.js";
+import { createOpenIn } from "./handoff.js";
 
 /* ---------- Paste ---------- */
 
@@ -398,6 +399,15 @@ export function createImageExport(root, opts) {
     b.addEventListener("click", () => a.onClick(b));
     return b;
   });
+  // Renders the current format (an SVG export goes out as PNG) and sends it to another image tool.
+  const openIn = createOpenIn({
+    kind: "image",
+    getFile: async () => {
+      const format = st.format === "svg" ? "png" : st.format;
+      const blob = await encodeCanvas(await getCanvas(st.scale), format, st.quality, matte());
+      return new File([blob], `${filename()}.${FORMATS[format].ext}`, { type: blob.type });
+    },
+  });
   const info = h("span", { class: "hint" });
   root.classList.add("export-bar", "img-export");
   root.replaceChildren(
@@ -409,6 +419,7 @@ export function createImageExport(root, opts) {
     dlBtn,
     cpBtn,
     ...extra,
+    openIn.el,
   );
 
   function paint() {
@@ -426,6 +437,7 @@ export function createImageExport(root, opts) {
     cpBtn.title = st.format === "svg" ? "Copy the SVG markup" : "Copy as PNG";
     const on = enabled();
     dlBtn.disabled = cpBtn.disabled = !on;
+    openIn.el.hidden = !on;
     extra.forEach((b) => {
       b.disabled = !on;
     });

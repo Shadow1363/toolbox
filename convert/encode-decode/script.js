@@ -1,7 +1,7 @@
 /* Encode / Decode: URL, HTML entities, Unicode escapes, hex, binary, and JWT decoding (never verified). */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, toast } from '/assets/js/lib/dom.js';
-import { remember, copyButton, downloadButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
+import { copyButton, downloadButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
 
 const input = document.getElementById('input');
 const output = document.getElementById('output');
@@ -9,7 +9,7 @@ const statusEl = document.getElementById('status');
 const extra = document.getElementById('out-extra');
 
 const CODECS = [['url', 'URL'], ['html', 'HTML entities'], ['unicode', 'Unicode escapes'], ['hex', 'Hex'], ['binary', 'Binary'], ['jwt', 'JWT']];
-const opts = remember('encode-decode', [
+const opts = [
   { title: '', controls: [
     { id: 'codec', type: 'segmented', label: 'Format', value: 'url', options: CODECS },
     { id: 'mode', type: 'segmented', label: 'Direction', value: 'encode', options: [['encode', 'Encode'], ['decode', 'Decode']], showIf: (s) => s.codec !== 'jwt' },
@@ -21,8 +21,8 @@ const opts = remember('encode-decode', [
     { id: 'hexSep', type: 'segmented', label: 'Separator', value: ' ', options: [['', 'None'], [' ', 'Space'], [':', 'Colon']], showIf: (s) => s.codec === 'hex' && s.mode === 'encode' },
     { id: 'hexUpper', type: 'toggle', label: 'Uppercase', value: false, showIf: (s) => s.codec === 'hex' && s.mode === 'encode' },
   ]},
-]);
-const panel = createControls(document.getElementById('options'), opts.sections, { onChange: (st) => { opts.save(st); run(); } });
+];
+const panel = createControls(document.getElementById('options'), opts, { persist: 'encode-decode', onChange: () => run() });
 const s = panel.state;
 
 document.getElementById('in-actions').append(actionButton('Clear', 'trash', () => { input.value = ''; run(); }));
@@ -34,7 +34,6 @@ document.getElementById('out-actions').append(
     if (!output.value) return toast('Nothing to swap yet.');
     input.value = output.value;
     panel.set({ mode: s.mode === 'encode' ? 'decode' : 'encode' }, { silent: true });
-    opts.save(s);
     run();
   }, { title: 'Use the output as input and flip the direction' }));
 input.addEventListener('input', debounce(run, 60));

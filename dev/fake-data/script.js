@@ -1,7 +1,7 @@
 /* Fake Data Generator: schema builder → seeded faker rows → JSON / CSV / SQL / TypeScript; plus lorem ipsum. */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, store, formatBytes } from '/assets/js/lib/dom.js';
-import { remember, copyButton, downloadButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
+import { copyButton, downloadButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
 import { LIBS } from '/assets/js/lib/cdn.js';
 import { stringifyDelimited } from '/assets/js/lib/codecs.js';
 import { TYPES, DEFAULT_SCHEMA, LOCALES } from './fields.js';
@@ -11,7 +11,7 @@ const SHOW_CHARS = 1_000_000; // shown in the box; Copy/Download get everything
 const FORMATS = [['json', 'JSON'], ['csv', 'CSV'], ['sql', 'SQL'], ['ts', 'TypeScript']];
 const EXT = { json: 'json', csv: 'csv', sql: 'sql', ts: 'ts', lorem: 'txt', html: 'html' };
 
-const opts = remember('fake-data', [
+const opts = [
   { title: '', controls: [
     { id: 'mode', type: 'segmented', label: 'Generate', value: 'data', options: [['data', 'Data rows'], ['lorem', 'Lorem ipsum']] },
     { id: 'rows', type: 'number', label: 'Rows', min: 1, max: MAX_ROWS, value: 25, showIf: (st) => st.mode === 'data' },
@@ -31,8 +31,8 @@ const opts = remember('fake-data', [
   { title: '', showIf: (st) => st.mode === 'data' && st.format === 'json', controls: [
     { id: 'jsonStyle', type: 'segmented', label: 'JSON style', value: 'pretty', options: [['pretty', 'Pretty array'], ['compact', 'Compact'], ['ndjson', 'One per line (NDJSON)']] },
   ]},
-]);
-const panel = createControls(document.getElementById('options'), opts.sections, { onChange: (st) => { opts.save(st); paintMode(); run(); } });
+];
+const panel = createControls(document.getElementById('options'), opts, { persist: 'fake-data', onChange: () => { paintMode(); run(); } });
 const s = panel.state;
 
 const $ = (id) => document.getElementById(id);
@@ -97,12 +97,12 @@ function changed(redraw = false) {
 $('in-actions').append(actionButton('Reset', 'restart', () => { schema = structuredClone(DEFAULT_SCHEMA); changed(true); }));
 
 /* ---------- Lorem options ---------- */
-const lorem = createControls($('lorem'), remember('fake-data-lorem', [{ title: '', controls: [
+const lorem = createControls($('lorem'), [{ title: '', controls: [
   { id: 'unit', type: 'segmented', label: 'Unit', value: 'paragraphs', options: [['paragraphs', 'Paragraphs'], ['sentences', 'Sentences'], ['words', 'Words']] },
   { id: 'count', type: 'range', label: 'How many', min: 1, max: 50, value: 3 },
   { id: 'classic', type: 'toggle', label: 'Start with “Lorem ipsum dolor sit amet”', value: true },
   { id: 'html', type: 'toggle', label: 'Wrap paragraphs in <p> tags', value: false },
-]}]).sections, { onChange: (st) => { store.set('opts:fake-data-lorem', st); run(); } });
+]}], { persist: 'fake-data-lorem', onChange: () => run() });
 
 function paintMode() {
   $('schema').hidden = s.mode !== 'data';

@@ -15,12 +15,12 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 | --- | --- |
 | `assets/js/lib/cdn.js` | `LIBS` (every pinned CDN URL) and `loadLib(name)`: loads a library on first use, once. `workerUrl(url)` runs a CDN worker script (pdf.js, ffmpeg) through a same-origin blob. Add new libraries here, never inline. |
 | `assets/js/lib/codecs.js` | CSV/TSV parse + stringify (in-house, RFC 4180, delimiter detection), `rowsToObjects`/`objectsToRows`/`findRecords`, JSON with line/column errors (`jsonErrorAt`), YAML, XML, TOML. Throws `CodecError` with readable messages. |
-| `assets/js/lib/text-tool.js` | `remember(key, sections)` (options persist in localStorage), `copyButton`, `downloadButton`, `actionButton`, `debounce`, `readText` |
+| `assets/js/lib/text-tool.js` | `rememberInput`, `copyButton`, `downloadButton`, `actionButton`, `debounce`, `readText` |
 | `assets/js/lib/upload.js` | `createFilePicker(root, { multiple, accept, label, hint, onFiles })`: any file type; add `.is-compact` to its `el` for a one-line zone |
 | `styles.css` §12 | `.io-options` (options bar), `.io-grid` (input left, output right; stacks under 860px), `.io-panel`, `.io-head`, `.io-status`, `.io-rows`/`.io-row` (label · value · copy), `.io-banner` |
 
 ## Small tools (input → output, live)
-Each is `index.html` + `script.js` (+ `style.css` when needed): `createControls` options in `#options` wrapped in `remember('<tool-id>', …)`, input panel left, output right, recomputed on input (`debounce`), Copy/Download buttons.
+Each is `index.html` + `script.js` (+ `style.css` when needed): `createControls` options in `#options` with `persist: '<tool-id>'` (saved as `opts:<tool-id>`, plus a Reset to defaults button), input panel left, output right, recomputed on input (`debounce`), Copy/Download buttons.
 - **base64**: text (UTF-8) or a file → Base64 / Base64URL / data URI; decodes standard, URL-safe, unpadded or `data:` input. Binary output is typed with `detect()` from the file converter's `formats.js` and previewed when it's an image. Output box shows the first 1M characters; copy/download get everything.
 - **encode-decode**: URL (component or full), HTML entities (decoded through a `<textarea>`, so nothing executes), Unicode escapes (`\uXXXX` incl. surrogates, `\u{X}`, `U+`), hex and binary over UTF-8 bytes, JWT (decode only, always labelled "Not verified"; JWE refused).
 - **hash**: MD5 via hash-wasm, SHA-1/256/512 via Web Crypto; files over 256 MB stream in 8 MB chunks through hash-wasm. "Compare" matches hex (any case) or Base64.
@@ -34,7 +34,7 @@ Each is `index.html` + `script.js` (+ `style.css` when needed): `createControls`
 - Files: `script.js` (queue UI, conversion runner, downloads), `formats.js` (`FORMATS`, `detect`, `detectText`), `registry.js` (`Item`, `register`, `targets`, `run`), `preview.js`, `converters/*.js`, `style.css`.
 - Flow: drop/paste → `detect()` (signature bytes → extension → content sniff for text) → targets = every format reachable through the registry → convert → preview → download (one file, or a ZIP for several).
 - Light conversions (no `heavy` step, ≤ 25 MB) run automatically when files, targets or options change; audio/video waits for **Convert**. Failed or cancelled items don't auto-retry until something changes (`stale()` vs `retryable()`).
-- Options shown = the union of option specs of every queued chain, persisted in `fc-options`; the last target per source format is remembered (`fc-target:<format>`).
+- Options shown = the union of option specs of every queued chain, persisted in `fc-options` (Reset to defaults clears all of them); the last target per source format is remembered (`fc-target:<format>`).
 - Two or more images targeting PDF combine into one `images.pdf` (toggle in the queue).
 - PDF → PNG/JPG has two modes (`pdfExtract`): "Each page" renders pages at 72/150/300 dpi; "Images inside" (`extractImages` in `converters/pdf.js`) walks each page's operator list for `paintImageXObject`/`paintInlineImageXObject`, saves every embedded image at its native size (deduplicated by PDF object `ref`, so a logo on every page is saved once), skips ones smaller than `pdfMinSize`, and keeps alpha in PNG (JPG flattens onto white). pdf.js hands images over as decoded RGB/RGBA/1-bit pixels or an `ImageBitmap`; JPEGs come out re-encoded, not as the original bytes. Stencil masks (one-colour shapes) are skipped.
 - Preview: HTML (and DOCX via mammoth) in an `iframe sandbox=""` with scripts stripped; PDF in the browser viewer; CSV/TSV/XLSX as a table (first 200 rows); text capped at 200 KB.
@@ -84,7 +84,7 @@ Each is `index.html` + `script.js` (+ `style.css` when needed): `createControls`
 - **Audio/video**: ffmpeg runs single-threaded in memory: roughly real time or slower, and large files can run out of memory. WebM output is VP8 + Vorbis (fast); MP4/MOV are H.264 + AAC.
 
 ## Checklist: new tool in this category
-- [ ] Copy `_template/tool/`; use the `.io-*` layout and `text-tool.js` helpers; persist options with `remember()`.
+- [ ] Copy `_template/tool/`; use the `.io-*` layout and `text-tool.js` helpers; persist options with `persist: '<id>'`.
 - [ ] Give it a `section` and format-rich `tags` in `tools.js`, plus a thumbnail.
 - [ ] Libraries only through `cdn.js`, pinned and lazy.
 - [ ] Clear error messages for bad input (line/column where possible); nothing auto-opens or executes user content.

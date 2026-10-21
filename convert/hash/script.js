@@ -3,7 +3,7 @@ import { createControls } from '/assets/js/lib/controls.js';
 import { createFilePicker } from '/assets/js/lib/upload.js';
 import { h, icon, formatBytes } from '/assets/js/lib/dom.js';
 import { loadLib } from '/assets/js/lib/cdn.js';
-import { remember, copyText, actionButton, debounce } from '/assets/js/lib/text-tool.js';
+import { copyText, actionButton, debounce } from '/assets/js/lib/text-tool.js';
 
 const input = document.getElementById('input');
 const rowsEl = document.getElementById('rows');
@@ -25,11 +25,11 @@ const ALGOS = [
 let file = null;
 let digests = null; // label → Uint8Array
 
-const opts = remember('hash', [{ title: '', controls: [
+const opts = [{ title: '', controls: [
   { id: 'encoding', type: 'segmented', label: 'Output', value: 'hex', options: [['hex', 'Hex'], ['base64', 'Base64']] },
   { id: 'upper', type: 'toggle', label: 'Uppercase hex', value: false, showIf: (s) => s.encoding === 'hex' },
-]}]);
-const panel = createControls(document.getElementById('options'), opts.sections, { onChange: (st) => { opts.save(st); renderRows(); } });
+]}];
+const panel = createControls(document.getElementById('options'), opts, { persist: 'hash', onChange: () => renderRows() });
 const s = panel.state;
 
 createFilePicker(document.getElementById('drop'), { label: 'Or drop a file to hash', onFiles: ([f]) => { file = f; run(); } }).el.classList.add('is-compact');

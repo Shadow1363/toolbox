@@ -20,7 +20,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'color', type: 'color', label: 'Tint', value: '#7c6cff' },
     { id: 'clip', type: 'range', label: 'Clip length (images)', min: 1, max: 20, value: 5, unit: 's', showIf: () => !isVideo() },
   ]},
-], { onChange: () => stage.invalidate() });
+], { onChange: () => stage.invalidate(), persist: 'template' }); // persist: the tool id (saves settings, adds Reset to defaults)
 const s = panel.state;
 
 createDropzone(document.getElementById('upload'), {

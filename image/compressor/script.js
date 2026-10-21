@@ -16,7 +16,6 @@ import {
   toast,
   downloadBlob,
   formatBytes,
-  store,
 } from "/assets/js/lib/dom.js";
 import {
   onPasteImages,
@@ -31,6 +30,7 @@ import {
 } from "/assets/js/lib/image-io.js";
 import { loadLib } from "/assets/js/lib/cdn.js";
 import { debounce } from "/assets/js/lib/text-tool.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const $ = (id) => document.getElementById(id);
 const MAX_BYTES = 100 * 1024 * 1024;
@@ -40,7 +40,6 @@ let nextId = 1;
 let runToken = 0;
 
 /* ---------- Settings ---------- */
-const saved = store.get("opts:compressor", {});
 const panel = createControls(
   $("controls"),
   [
@@ -51,7 +50,7 @@ const panel = createControls(
           id: "format",
           type: "select",
           label: "Convert to",
-          value: saved.format ?? "webp",
+          value: "webp",
           options: [
             ["same", "Same as original"],
             ["jpg", "JPG"],
@@ -66,14 +65,14 @@ const panel = createControls(
           label: "Quality",
           min: 10,
           max: 100,
-          value: saved.quality ?? 80,
+          value: 80,
           showIf: (s) => s.format !== "png",
         },
         {
           id: "pngColors",
           type: "select",
           label: "PNG colors",
-          value: saved.pngColors ?? "0",
+          value: "0",
           showIf: (s) => s.format === "png" || s.format === "same",
           options: [
             ["0", "All (lossless)"],
@@ -88,7 +87,7 @@ const panel = createControls(
           id: "matte",
           type: "color",
           label: "JPG background",
-          value: saved.matte ?? "#ffffff",
+          value: "#ffffff",
           showIf: (s) => s.format === "jpg" || s.format === "same",
           hint: "JPG has no transparency; clear pixels get this color.",
         },
@@ -101,7 +100,7 @@ const panel = createControls(
           id: "resize",
           type: "segmented",
           label: "Mode",
-          value: saved.resize ?? "none",
+          value: "none",
           options: [
             ["none", "Original"],
             ["max", "Max size"],
@@ -114,7 +113,7 @@ const panel = createControls(
           label: "Max width (px)",
           min: 1,
           max: 20000,
-          value: saved.maxW ?? 1920,
+          value: 1920,
           showIf: (s) => s.resize === "max",
         },
         {
@@ -123,7 +122,7 @@ const panel = createControls(
           label: "Max height (px)",
           min: 1,
           max: 20000,
-          value: saved.maxH ?? 1920,
+          value: 1920,
           showIf: (s) => s.resize === "max",
           hint: "Images keep their aspect ratio and are never enlarged.",
         },
@@ -133,7 +132,7 @@ const panel = createControls(
           label: "Scale",
           min: 5,
           max: 100,
-          value: saved.pct ?? 50,
+          value: 50,
           unit: "%",
           showIf: (s) => s.resize === "pct",
         },
@@ -146,21 +145,21 @@ const panel = createControls(
           id: "strip",
           type: "toggle",
           label: "Strip metadata",
-          value: saved.strip ?? true,
+          value: true,
           hint: "Removes EXIF (camera, GPS location, date). Turning this off keeps EXIF only for JPG → JPG.",
         },
         {
           id: "keepSmaller",
           type: "toggle",
           label: "Keep the original if it’s smaller",
-          value: saved.keepSmaller ?? true,
+          value: true,
         },
       ],
     },
   ],
   {
+    persist: "compressor",
     onChange: (s) => {
-      store.set("opts:compressor", s);
       scheduleAll();
     },
   },
@@ -704,3 +703,6 @@ stage.addEventListener("pointercancel", () => {
 });
 
 renderList();
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("compressor", (file) => add([file]));

@@ -13,7 +13,6 @@ import {
   toast,
   downloadBlob,
   formatBytes,
-  store,
 } from "/assets/js/lib/dom.js";
 import {
   createImageDrop,
@@ -25,6 +24,7 @@ import {
 import { roundRectPath, linearGradient, fit } from "/assets/js/lib/canvas.js";
 import { FONTS, ensureFont, fontStack } from "/assets/js/lib/fonts.js";
 import { copyText, debounce } from "/assets/js/lib/text-tool.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const $ = (id) => document.getElementById(id);
 const EMOJI_STACK =
@@ -33,8 +33,6 @@ let media = null; // { el, width, height, kind } from the drop zone
 let svgText = null; // original SVG markup when the source is an .svg
 
 /* ---------- Panel ---------- */
-const saved = store.get("opts:favicon", {});
-const keep = (id, v) => saved[id] ?? v;
 const panel = createControls(
   $("controls"),
   [
@@ -45,7 +43,7 @@ const panel = createControls(
           id: "mode",
           type: "segmented",
           label: "Make it from",
-          value: keep("mode", "text"),
+          value: "text",
           options: [
             ["text", "Text / emoji"],
             ["image", "Image / SVG"],
@@ -61,14 +59,14 @@ const panel = createControls(
           id: "text",
           type: "text",
           label: "Letters or emoji",
-          value: keep("text", "T"),
+          value: "T",
           placeholder: "A, Ab, 🚀…",
         },
         {
           id: "font",
           type: "select",
           label: "Font",
-          value: keep("font", "Inter"),
+          value: "Inter",
           options: [
             ["emoji", "Emoji (system)"],
             ...FONTS.map((f) => [f.family, f.family]),
@@ -78,7 +76,7 @@ const panel = createControls(
           id: "weight",
           type: "segmented",
           label: "Weight",
-          value: keep("weight", "900"),
+          value: "900",
           options: [
             ["400", "Regular"],
             ["700", "Bold"],
@@ -90,7 +88,7 @@ const panel = createControls(
           id: "fg",
           type: "color",
           label: "Text color",
-          value: keep("fg", "#ffffff"),
+          value: "#ffffff",
           showIf: (st) => st.font !== "emoji",
         },
         {
@@ -99,7 +97,7 @@ const panel = createControls(
           label: "Size",
           min: 30,
           max: 100,
-          value: keep("textSize", 72),
+          value: 72,
           unit: "%",
         },
       ],
@@ -111,7 +109,7 @@ const panel = createControls(
           id: "shape",
           type: "segmented",
           label: "Shape",
-          value: keep("shape", "rounded"),
+          value: "rounded",
           options: [
             ["none", "None"],
             ["square", "Square"],
@@ -125,7 +123,7 @@ const panel = createControls(
           label: "Corner radius",
           min: 5,
           max: 45,
-          value: keep("radius", 22),
+          value: 22,
           unit: "%",
           showIf: (st) => st.shape === "rounded",
         },
@@ -133,7 +131,7 @@ const panel = createControls(
           id: "fill",
           type: "segmented",
           label: "Fill",
-          value: keep("fill", "gradient"),
+          value: "gradient",
           options: [
             ["solid", "Solid"],
             ["gradient", "Gradient"],
@@ -144,14 +142,14 @@ const panel = createControls(
           id: "bg1",
           type: "color",
           label: "Color",
-          value: keep("bg1", "#7c5cff"),
+          value: "#7c5cff",
           showIf: (st) => st.shape !== "none",
         },
         {
           id: "bg2",
           type: "color",
           label: "Second color",
-          value: keep("bg2", "#2bb5ff"),
+          value: "#2bb5ff",
           showIf: (st) => st.shape !== "none" && st.fill === "gradient",
         },
         {
@@ -160,7 +158,7 @@ const panel = createControls(
           label: "Angle",
           min: 0,
           max: 360,
-          value: keep("angle", 135),
+          value: 135,
           unit: "°",
           showIf: (st) => st.shape !== "none" && st.fill === "gradient",
         },
@@ -170,7 +168,7 @@ const panel = createControls(
           label: "Padding",
           min: 0,
           max: 30,
-          value: keep("padding", 8),
+          value: 8,
           unit: "%",
         },
       ],
@@ -182,39 +180,40 @@ const panel = createControls(
           id: "appName",
           type: "text",
           label: "App name",
-          value: keep("appName", "My Website"),
+          value: "My Website",
         },
         {
           id: "shortName",
           type: "text",
           label: "Short name",
-          value: keep("shortName", "Website"),
+          value: "Website",
           hint: "Shown under the icon on phones (about 12 characters).",
         },
         {
           id: "theme",
           type: "color",
           label: "Theme color",
-          value: keep("theme", "#7c5cff"),
+          value: "#7c5cff",
         },
         {
           id: "touchBg",
           type: "color",
           label: "Apple touch / maskable background",
-          value: keep("touchBg", "#ffffff"),
+          value: "#ffffff",
           hint: "Phones don’t show transparency: used when the shape is “None”, and around maskable icons.",
         },
         {
           id: "path",
           type: "text",
           label: "Files live at",
-          value: keep("path", "/"),
+          value: "/",
           hint: "URL folder used in the HTML tags and manifest.",
         },
       ],
     },
   ],
   {
+    persist: "favicon",
     onChange: (st, id) => {
       if (id === "mode") syncMode();
       onChange();
@@ -225,7 +224,7 @@ const s = panel.state;
 // The image drop zone sits right under the Source switch.
 $("controls").firstElementChild.after($("upload-section"));
 
-createImageDrop($("upload"), {
+const drop = createImageDrop($("upload"), {
   label: "Drop an image or SVG",
   onLoad: async (m) => {
     media = m;
@@ -249,7 +248,6 @@ function syncMode() {
 }
 
 function onChange() {
-  store.set("opts:favicon", s);
   const fam = s.font;
   if (
     s.mode === "text" &&
@@ -711,3 +709,6 @@ $("actions").append(
 
 syncMode();
 onChange();
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("favicon", (file) => drop.load(file));

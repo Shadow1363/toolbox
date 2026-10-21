@@ -630,6 +630,7 @@ const panel = createControls(
     },
   ],
   {
+    persist: "waveform-video",
     onChange: (st, id) => {
       if (id === "aspect") resize();
       if (id === "model") updateModelInfo();

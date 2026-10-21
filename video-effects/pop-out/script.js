@@ -194,6 +194,7 @@ const panel = createControls(document.getElementById('controls'), [
     ],
   },
 ], {
+  persist: { key: 'pop-out', skip: ['popTimes', 'popStart', 'mediaZoom', 'mediaX', 'mediaY'] },
   onChange: (st, id) => {
     mp.handle(st, id);
     if (id === 'size') applySize();

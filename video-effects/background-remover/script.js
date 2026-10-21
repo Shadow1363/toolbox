@@ -44,6 +44,7 @@ import {
   pickMask,
 } from "/assets/js/lib/subject.js";
 import { colorKey } from "./color-key.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
@@ -414,6 +415,7 @@ const panel = createControls(
     },
   ],
   {
+    persist: { key: "background-remover", skip: ["keyColor", "showMask"] },
     onChange: (s, id) => {
       if (id === "model") {
         segmenter = null;
@@ -444,7 +446,7 @@ const s = panel.state;
 const KEY_IDS = ["keyColor", "keyTolerance", "keySoftness", "keyEdges"];
 
 /* ---------- Uploads ---------- */
-createDropzone(document.getElementById("upload"), {
+const drop = createDropzone(document.getElementById("upload"), {
   accept: ["video", "image"],
   label: "Drop a photo or video of a person",
   onLoad: (m) => {
@@ -1307,3 +1309,6 @@ loadSegmenter(s.model)
     if (s.model === "landscape" && !segmenter) segmenter = seg;
   })
   .catch(() => {});
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("background-remover", (file) => drop.load(file));

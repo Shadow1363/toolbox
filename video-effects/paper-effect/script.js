@@ -128,7 +128,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'choppy', type: 'toggle', label: 'Choppy video frames', value: true, hint: 'Hold each video frame for a whole step.', showIf: (s) => s.stopMotion && (collage(s) ? hasCollageVideo() : media?.kind === 'video') },
     { id: 'clip', type: 'range', label: 'Clip length (images)', min: 1, max: 20, step: 0.5, value: 4, unit: 's', decimals: 1, showIf: (s) => single(s) && media?.kind !== 'video' },
   ]},
-], { onChange: (s, id) => {
+], { persist: 'paper-effect', onChange: (s, id) => {
   if (id === 'enter' && TRANSITION_DEFAULTS[s.enter]) {
     const [easing, duration] = TRANSITION_DEFAULTS[s.enter];
     panel.set({ enterEasing: easing, enterDuration: duration }, { silent: true });

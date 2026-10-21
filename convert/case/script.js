@@ -1,16 +1,16 @@
 /* Case converter: every case at once, live, with one-click copy. Splits words at spaces, punctuation and camelCase humps. */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, store } from '/assets/js/lib/dom.js';
-import { remember, copyText, actionButton, debounce } from '/assets/js/lib/text-tool.js';
+import { copyText, actionButton, debounce } from '/assets/js/lib/text-tool.js';
 
 const input = document.getElementById('input');
 const rowsEl = document.getElementById('rows');
 
-const opts = remember('case', [{ title: '', controls: [
+const opts = [{ title: '', controls: [
   { id: 'perLine', type: 'toggle', label: 'Convert each line separately', value: true },
   { id: 'smallWords', type: 'toggle', label: 'Title Case keeps small words lowercase', value: true, hint: 'a, an, the, and, of, in, on…' },
-]}]);
-const panel = createControls(document.getElementById('options'), opts.sections, { onChange: (st) => { opts.save(st); run(); } });
+]}];
+const panel = createControls(document.getElementById('options'), opts, { persist: 'case', onChange: () => run() });
 const s = panel.state;
 
 /** "XMLHttpRequest v2_final-file" → ["XML", "Http", "Request", "v2", "final", "file"]. */

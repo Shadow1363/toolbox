@@ -16,6 +16,8 @@
  *            'beta' for tools still being shaped, 'new' only for a short while after launch; most tools have none.
  *   tags:    extra words for search (home page and hub); list file formats here
  *   section: heading the tool is grouped under on its hub (category `sections` sets the order)
+ *   accepts: ['image' | 'video' | 'audio'] files it can receive from another tool's "Open in…" menu
+ *            (lib/handoff.js); the tool must call receiveHandoff(id, load) on load
  *
  * Optional category fields:
  *   sections: hub headings, in order
@@ -82,6 +84,7 @@ export const tools = [
   {
     id: "screen-showcase",
     category: "video-effects",
+    accepts: ["video"],
     name: "Screen Showcase",
     description: "Turn screen recordings into polished product demos.",
     thumbnail: "/assets/img/screen-showcase.svg",
@@ -126,6 +129,7 @@ export const tools = [
   {
     id: "shape-crop",
     category: "video-effects",
+    accepts: ["video"],
     name: "Shape Crop",
     description:
       "Crop a video or image to a circle, heart, star or your own SVG, with a transparent background.",
@@ -145,6 +149,7 @@ export const tools = [
   {
     id: "auto-captions",
     category: "video-effects",
+    accepts: ["video"],
     name: "Auto Captions",
     description:
       "Transcribe speech on your device and add word-by-word animated captions. Export video, SRT or VTT.",
@@ -154,6 +159,7 @@ export const tools = [
   {
     id: "background-remover",
     category: "video-effects",
+    accepts: ["image", "video"],
     name: "Background Remover",
     description:
       "Remove the background behind people, objects, logos or text (or click what to keep), or swap it for a color, blur, image or looping video.",
@@ -163,6 +169,7 @@ export const tools = [
   {
     id: "zoom-on-click",
     category: "video-effects",
+    accepts: ["video"],
     name: "Zoom on Click",
     description:
       "Smooth automatic zooms on screen recordings: follow clicks, add your own points, or let it suggest them.",
@@ -172,6 +179,7 @@ export const tools = [
   {
     id: "progress-overlay",
     category: "video-effects",
+    accepts: ["video"],
     name: "Progress Overlay",
     description:
       "A progress bar or countdown timer over your video, with chapters. Export it alone on a transparent background.",
@@ -181,6 +189,7 @@ export const tools = [
   {
     id: "retro",
     category: "video-effects",
+    accepts: ["video"],
     name: "Retro Looks",
     description:
       "VHS, CRT, film grain, 8mm, dithering and ASCII art. Stack them; WebGL keeps it smooth at full resolution.",
@@ -190,6 +199,7 @@ export const tools = [
   {
     id: "speed-ramp",
     category: "video-effects",
+    accepts: ["video"],
     name: "Speed Ramp",
     description:
       "Draw a speed curve: slow motion and fast forward from 0.25× to 4× with smooth easing and pitch-corrected audio.",
@@ -312,6 +322,7 @@ export const tools = [
   {
     id: "mockup",
     category: "image",
+    accepts: ["image"],
     section: "Create",
     name: "Mockup Generator",
     description: "Put screenshots into phone, tablet, laptop, monitor and browser frames, side by side.",
@@ -339,6 +350,7 @@ export const tools = [
   {
     id: "favicon",
     category: "image",
+    accepts: ["image"],
     section: "Create",
     name: "Favicon Generator",
     description: "Every favicon size from an image, an SVG or an emoji: ICO, PNGs, SVG, manifest and the HTML tags.",
@@ -348,6 +360,7 @@ export const tools = [
   {
     id: "before-after",
     category: "image",
+    accepts: ["image"],
     section: "Create",
     name: "Before/After Slider",
     description: "Compare two images with a slider. Export a GIF, a video or embeddable HTML.",
@@ -357,6 +370,7 @@ export const tools = [
   {
     id: "compressor",
     category: "image",
+    accepts: ["image"],
     section: "Optimize",
     name: "Image Compressor",
     description: "Shrink many images at once: resize, convert to WebP, AVIF or JPG, compare and download a ZIP.",
@@ -366,6 +380,7 @@ export const tools = [
   {
     id: "palette",
     category: "image",
+    accepts: ["image"],
     section: "Optimize",
     name: "Palette Extractor",
     description: "Pull the main colors out of an image, check their contrast and export CSS, Tailwind or JSON.",
@@ -475,6 +490,7 @@ export const tools = [
   {
     id: "extractor",
     category: "audio",
+    accepts: ["video", "audio"],
     name: "Audio Extractor + Transcript",
     description: "Pull the audio out of any video (MP4, MOV, MKV, AVI…), export WAV/MP3/OGG or the original stream, and transcribe it with Whisper.",
     thumbnail: "/assets/img/audio-extractor.svg",
@@ -483,6 +499,7 @@ export const tools = [
   {
     id: "trimmer",
     category: "audio",
+    accepts: ["audio"],
     name: "Audio Trimmer + Fade",
     description: "Cut audio on a waveform, fade in and out with a curve, split into parts, or make a 30-second ringtone.",
     thumbnail: "/assets/img/audio-trimmer.svg",
@@ -491,6 +508,7 @@ export const tools = [
   {
     id: "waveform-video",
     category: "audio",
+    accepts: ["audio"],
     name: "Waveform Video",
     description: "Turn a podcast clip into a shareable video with an animated visualizer, cover art, titles and captions.",
     thumbnail: "/assets/img/waveform-video.svg",
@@ -499,6 +517,7 @@ export const tools = [
   {
     id: "cleanup",
     category: "audio",
+    accepts: ["audio"],
     name: "Noise Reduction + Normalizer",
     description: "Remove background noise from voice, cut rumble, add EQ and compression, and normalize to −16 or −14 LUFS.",
     thumbnail: "/assets/img/audio-cleanup.svg",
@@ -513,6 +532,8 @@ export const getTool = (id) => tools.find((t) => t.id === id);
 export const toolsIn = (categoryId) =>
   tools.filter((t) => t.category === categoryId);
 export const standaloneTools = () => tools.filter((t) => !t.category);
+export const toolsAccepting = (kind) =>
+  tools.filter((t) => t.accepts?.includes(kind) && t.status !== "soon");
 export const categoryUrl = (c) => `/${c.id}/`;
 export const toolUrl = (t) =>
   t.category ? `/${t.category}/${t.id}/` : `/${t.id}/`;

@@ -1,7 +1,7 @@
 /* Cron Expression Builder: validate (cron.js), describe (cronstrue), next runs in a time zone (croner). */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, store } from '/assets/js/lib/dom.js';
-import { remember, copyButton, downloadButton, debounce, rememberInput } from '/assets/js/lib/text-tool.js';
+import { copyButton, downloadButton, debounce, rememberInput } from '/assets/js/lib/text-tool.js';
 import { loadLib } from '/assets/js/lib/cdn.js';
 import { parseCron, forCroner, dayOr, describeField, build, infer, FREQS, DAY_NAMES, MONTH_NAMES } from './cron.js';
 
@@ -32,7 +32,7 @@ $('presets').append(...PRESETS.map(([label, expr]) => h('button', { type: 'butto
 /* ---------- Builder ---------- */
 const timeEl = h('input', { type: 'time', value: '09:00', 'aria-label': 'Time' });
 const dayBtns = [1, 2, 3, 4, 5, 6, 0].map((d) => h('button', { type: 'button', class: 'chip', 'data-d': d, 'aria-pressed': 'false' }, DAY_NAMES[d].slice(0, 3)));
-const opts = remember('cron', [{ title: '', controls: [
+const opts = [{ title: '', controls: [
   { id: 'freq', type: 'select', label: 'Run', value: 'weekly', options: [...FREQS, ['custom', 'Custom (edited by hand)']] },
   { id: 'every', type: 'number', label: 'Every … minutes', min: 1, max: 59, value: 5, showIf: (st) => st.freq === 'minutes' },
   { id: 'minute', type: 'number', label: 'At minute', min: 0, max: 59, value: 0, showIf: (st) => st.freq === 'hourly' },
@@ -41,8 +41,8 @@ const opts = remember('cron', [{ title: '', controls: [
   { id: 'month', type: 'select', label: 'Month', value: '1', options: MONTH_NAMES.map((m, i) => [String(i + 1), m]), showIf: (st) => st.freq === 'yearly' },
   { id: 'dom', type: 'select', label: 'Day of month', value: '1', options: [...Array.from({ length: 31 }, (_, i) => [String(i + 1), String(i + 1)]), ['L', 'Last day']], showIf: (st) => st.freq === 'monthly' || st.freq === 'yearly' },
   { type: 'custom', label: 'At', el: timeEl, showIf: (st) => ['daily', 'weekly', 'monthly', 'yearly'].includes(st.freq) },
-]}]);
-const panel = createControls($('builder'), opts.sections, { onChange: (st) => { opts.save(st); fromBuilder(); } });
+]}];
+const panel = createControls($('builder'), opts, { persist: 'cron', onChange: () => fromBuilder() });
 const b = panel.state;
 let days = [1, 2, 3, 4, 5];
 dayBtns.forEach((btn) => btn.addEventListener('click', () => {

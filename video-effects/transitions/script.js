@@ -98,7 +98,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'gifFps', type: 'segmented', label: 'Frame rate', value: '15', options: [['10', '10'], ['12', '12'], ['15', '15'], ['20', '20']] },
     { id: 'gifScale', type: 'range', label: 'Scale', min: 20, max: 100, step: 5, value: 40, unit: '%', hint: 'WebM and PNG are always full size.' },
   ]},
-], { onChange: (st, id) => { if (id === 'size') resize(); changed(); } });
+], { persist: 'transitions', onChange: (st, id) => { if (id === 'size') resize(); changed(); } });
 const s = panel.state;
 
 /* ---------- Upload (several files at once) ---------- */

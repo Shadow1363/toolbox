@@ -20,7 +20,7 @@ import {
 } from "/assets/js/lib/dom.js";
 import { createFilePicker } from "/assets/js/lib/upload.js";
 import { progressModal } from "/assets/js/lib/exporter.js";
-import { sendFile } from "/assets/js/lib/handoff.js";
+import { sendFile, receiveHandoff } from "/assets/js/lib/handoff.js";
 import { downloadZip } from "/assets/js/lib/image-io.js";
 import { copyText } from "/assets/js/lib/text-tool.js";
 import {
@@ -154,6 +154,7 @@ const panel = createControls(
     },
   ],
   {
+    persist: "extractor",
     onChange: (st, id) => {
       if (id === "model") store.set("extractor:model", st.model);
       if (id === "model" || id === "device") updateModelInfo();
@@ -576,6 +577,7 @@ const baseName = (it = selected) =>
   (it?.file.name || "audio").replace(/\.[^.]+$/, "");
 const exportBar = createAudioExport(document.getElementById("export"), {
   id: "extractor",
+  openIn: false, // its own "Open in:" row also passes the transcript
   getBuffer: async () => {
     const it = selected;
     if (!it?.buffer) return null;
@@ -1232,3 +1234,6 @@ mainEl.addEventListener("drop", (e) => {
 showSelected();
 renderQueue();
 updateModelInfo();
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("extractor", (file) => addFiles([file]));

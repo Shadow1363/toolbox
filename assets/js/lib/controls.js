@@ -17,17 +17,44 @@
  * Every control accepts: id, label, value, hint, showIf(state).
  * Sections accept: id, title, controls, showIf(state), collapsed (true = a closed <details>; false = open but
  *   collapsible), and subhead controls ({ type: 'subhead', label }) to group long sections.
+ *
+ * `persist: 'tool-id'` (or `{ key, skip: [ids], resetButton: false }`) saves the values in localStorage
+ *   (`opts:<key>`), restores them on the next visit and adds a "Reset to defaults" button under the panel
+ *   (`api.reset()`). Controls with `persist: false` or listed in `skip` (per-file values: trims, click times,
+ *   the selected layer's fields) always start at their default.
  */
-import { h } from './dom.js';
+import { h, icon, toast, store } from './dom.js';
 
-export function createControls(root, sections, { onChange } = {}) {
+const UNSAVED = new Set(['button', 'custom', 'subhead']);
+
+export function createControls(root, sections, { onChange, persist } = {}) {
   const state = {};
   const setters = {};      // id → (value) => update the DOM without emitting
   const conditionals = []; // [{ el, showIf }]
   const sectionEls = {};   // section id → element (sections with an `id`)
+  const defaults = {};     // id → spec value, for reset()
+  const saveKey = persist && `opts:${typeof persist === 'string' ? persist : persist.key}`;
+  const saved = saveKey ? store.get(saveKey, {}) : {};
+  const skip = new Set(persist?.skip); // ids that always start at their default
+  let saveTimer = 0;
+
+  const save = () => {
+    if (!saveKey) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 300);
+  };
+  const flush = () => {
+    clearTimeout(saveTimer);
+    saveTimer = 0;
+    const out = {};
+    for (const id of Object.keys(defaults)) if (!skip.has(id) && id in state) out[id] = state[id];
+    store.set(saveKey, out);
+  };
+  if (saveKey) addEventListener('pagehide', () => saveTimer && flush());
 
   const emit = (id) => {
     refresh();
+    save();
     onChange?.(state, id);
   };
 
@@ -42,7 +69,8 @@ export function createControls(root, sections, { onChange } = {}) {
       ? h('details', { class: 'ctrl-section ctrl-fold', open: !section.collapsed }, h('summary', {}, h('h3', {}, section.title)))
       : h('section', { class: 'ctrl-section' }, section.title && h('h3', {}, section.title));
     if (section.showIf) conditionals.push({ el: sec, showIf: section.showIf });
-    for (const c of section.controls) {
+    for (const spec of section.controls) {
+      const c = restore(spec);
       const el = buildControl(c);
       if (!el) continue;
       if (c.showIf) conditionals.push({ el, showIf: c.showIf });
@@ -51,7 +79,47 @@ export function createControls(root, sections, { onChange } = {}) {
     root.append(sec);
     if (section.id) sectionEls[section.id] = sec;
   }
+  const resettable = saveKey && persist.resetButton !== false;
+  if (resettable) {
+    root.append(h('div', { class: 'ctrl-reset' },
+      h('button', { type: 'button', class: 'btn btn-sm btn-ghost', html: `${icon('restart')} Reset to defaults`, onclick: () => {
+        api.reset();
+        toast('Settings reset');
+      } })));
+  }
   refresh();
+
+  /** The spec with its saved value (when there is a valid one), recording the default. */
+  function restore(c) {
+    if (!c.id || UNSAVED.has(c.type)) return c;
+    if (c.value !== undefined) defaults[c.id] = c.value;
+    if (c.persist === false) skip.add(c.id);
+    if (skip.has(c.id)) return c;
+    if (!(c.id in saved)) return c;
+    const v = valid(c, saved[c.id]);
+    return v === undefined ? c : { ...c, value: v };
+  }
+
+  function valid(c, v) {
+    switch (c.type) {
+      case 'range':
+      case 'number':
+        if (typeof v !== 'number' || !Number.isFinite(v)) return undefined;
+        return Math.min(c.max ?? (c.type === 'range' ? 100 : Infinity), Math.max(c.min ?? (c.type === 'range' ? 0 : -Infinity), v));
+      case 'select':
+      case 'segmented':
+        return c.options.some(([o]) => String(o) === String(v)) ? v : undefined;
+      case 'presets':
+      case 'swatches':
+        return c.options.some((o) => String(o.value) === String(v)) ? v : undefined;
+      case 'toggle':
+        return typeof v === 'boolean' ? v : undefined;
+      case 'color':
+        return typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v : undefined;
+      default:
+        return typeof v === typeof c.value || c.value === undefined ? v : undefined;
+    }
+  }
 
   function refresh() {
     for (const { el, showIf } of conditionals) el.hidden = !showIf(state);
@@ -185,7 +253,18 @@ export function createControls(root, sections, { onChange } = {}) {
         setters[k]?.(v);
       }
       refresh();
+      save();
       if (!silent) onChange?.(state, Object.keys(patch)[0]);
+    },
+    /** Back to the spec values (skipped per-file ids stay) and forget the saved ones. onChange fires once
+     *  per control that changed, so handlers that branch on the id (resize on `size`, …) still run. */
+    reset() {
+      const changed = Object.keys(defaults).filter((id) => !skip.has(id) && state[id] !== defaults[id]);
+      api.set(Object.fromEntries(changed.map((id) => [id, defaults[id]])), { silent: true });
+      clearTimeout(saveTimer);
+      saveTimer = 0;
+      if (saveKey) store.remove(saveKey);
+      for (const id of changed) onChange?.(state, id);
     },
     get: (id) => state[id],
     /** The element of the section with this `id` (e.g. to open a collapsed one). */

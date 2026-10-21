@@ -1,7 +1,7 @@
 /* Meta Tag Previewer: pasted HTML (or a form) → platform previews, checks and a generated tag set. */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, store } from '/assets/js/lib/dom.js';
-import { remember, copyButton, downloadButton, actionButton, debounce, rememberInput, readText, dropFiles } from '/assets/js/lib/text-tool.js';
+import { copyButton, downloadButton, actionButton, debounce, rememberInput, readText, dropFiles } from '/assets/js/lib/text-tool.js';
 import { createEditor } from '/assets/js/lib/editor.js';
 import { extract, toFields, fromFields, resolve, check, generate, EMPTY } from './meta.js';
 
@@ -26,10 +26,10 @@ const SAMPLE = `<!doctype html>
 `;
 
 const $ = (id) => document.getElementById(id);
-const opts = remember('meta-preview', [{ title: '', controls: [
+const opts = [{ title: '', controls: [
   { id: 'mode', type: 'segmented', label: 'Input', value: 'html', options: [['html', 'Paste HTML'], ['form', 'Fill in fields']] },
-]}]);
-const panel = createControls($('options'), opts.sections, { onChange: (st) => { opts.save(st); switchMode(); } });
+]}];
+const panel = createControls($('options'), opts, { persist: 'meta-preview', onChange: () => switchMode() });
 const s = panel.state;
 
 /* ---------- HTML input ---------- */

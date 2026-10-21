@@ -123,7 +123,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'output', type: 'segmented', label: 'Contents', value: 'video', options: [['video', 'Video + tag'], ['tag', 'Tag only']],
       hint: 'Tag only exports the nametags on a transparent background, ready to overlay in an editor.' },
   ]},
-], { onChange: (st, id) => {
+], { persist: { key: 'nametag', skip: ['name', 'pCustom', 'pColor', 'pBg', 'pSize', 'pOffsetX', 'pOffsetY'] }, onChange: (st, id) => {
   if (id === 'name' || id === 'anyText') sanitizeName();
   if (id === 'name') { const p = selectedPerson(); if (p && hasPeople()) { p.name = st.name; renderPeople(); } }
   if (['textColor', 'textOpacity', 'shadow', 'bgOpacity'].includes(id)) panel.set({ preset: '' }, { silent: true });

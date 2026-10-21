@@ -25,8 +25,8 @@ import {
 import { LANG_OPTIONS } from "./lang.js";
 import { SURFACES, getSurface, renderPhoto } from "./surfaces/index.js";
 import { prepareLogo, demoLogo } from "./logo.js";
+import { loadLib } from "/assets/js/lib/cdn.js";
 
-const JSZIP_URL = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
 const SIZES = {
   "9:16": [1080, 1920],
   "1:1": [1080, 1080],
@@ -591,6 +591,7 @@ const panel = createControls(
     { title: "Your screenshots", controls: [{ type: "custom", el: shotsEl }] },
   ],
   {
+    persist: "text-match-cut",
     onChange: (st, id) => {
       if (id === "frames") syncFrameCount();
       if (id === "mode" || id === "mixPattern" || id === "mixRatio" || id === "mixEnd") assignKinds();
@@ -1560,18 +1561,7 @@ function markWord(img, initial) {
 }
 
 /* ---------- Export: GIF / ZIP ---------- */
-let jszip;
-const loadJSZip = () =>
-  (jszip ||= new Promise((resolve, reject) => {
-    if (window.JSZip) return resolve(window.JSZip);
-    const sc = h("script", { src: JSZIP_URL });
-    sc.onload = () => resolve(window.JSZip);
-    sc.onerror = () => {
-      jszip = null;
-      reject(new Error("Could not load JSZip. Check your connection."));
-    };
-    document.head.append(sc);
-  }));
+const loadJSZip = () => loadLib("jszip");
 
 const slug = () =>
   keyword()

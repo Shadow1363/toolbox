@@ -23,6 +23,7 @@ import {
   ensureFont,
 } from "/assets/js/lib/fonts.js";
 import { h, icon, toast, formatTime, store } from "/assets/js/lib/dom.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
@@ -468,6 +469,7 @@ const panel = createControls(
     },
   ],
   {
+    persist: { key: "progress-overlay", skip: ["start", "end"] },
     onChange: (st, id) => {
       if (id === "end") endFollows = st.end >= clipLength() - 0.05;
       if (id === "clip") syncRanges();
@@ -482,7 +484,7 @@ const panel = createControls(
 const s = panel.state;
 
 /* ---------- Media ---------- */
-createDropzone(document.getElementById("upload"), {
+const drop = createDropzone(document.getElementById("upload"), {
   accept: ["video", "image"],
   label: "Drop a video (optional)",
   onLoad: (m) => {
@@ -666,3 +668,6 @@ syncRanges();
 ensureFont(s.family, s.weight, () => stage.invalidate());
 ensureFont("Inter", 700, () => stage.invalidate());
 stage.play().catch(() => {});
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("progress-overlay", (file) => drop.load(file));

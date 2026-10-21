@@ -125,7 +125,7 @@ const panel = createControls(document.getElementById('controls'), [
     { id: 'clip', type: 'range', label: 'Clip length', min: 1, max: 20, step: 0.5, value: 4, unit: 's', decimals: 1, hint: 'Length of the GIF or video made from a photo.' },
     { type: 'button', text: 'Play animation', onClick: () => playAnimation() },
   ]},
-], { onChange: (st, id) => {
+], { persist: { key: 'text-behind-person', skip: ['delay', 'exitEnd', 'brush'] }, onChange: (st, id) => {
   if (LAYER_KEYS.has(id) && selected) selected[id] = st[id];
   if (id === 'anim' || id === 'imgAnim') setLayer({ easing: DEFAULT_EASING[st[id]] || 'easeOutQuint' });
   if (id === 'exitAnim' || id === 'imgExit') setLayer({ exitEasing: EXIT_EASING[st[id]] || 'easeIn' });

@@ -4,7 +4,7 @@
  */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon, store, toast } from '/assets/js/lib/dom.js';
-import { remember, rememberInput, copyText, downloadButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
+import { rememberInput, copyText, downloadButton, actionButton, debounce } from '/assets/js/lib/text-tool.js';
 import { loadLib } from '/assets/js/lib/cdn.js';
 import { cpf, cnpj, cep, postal, POSTAL, compactPostal, randomCpf, randomCnpj } from './validate.js';
 
@@ -244,8 +244,7 @@ async function show(id) {
     if (tab !== id) return;
   }
   const specs = id === 'phone' ? phoneControls() : t.controls;
-  const opts = remember(`validators-${id}`, [{ title: '', controls: specs.map((c) => ({ ...c })) }]);
-  panel = createControls($('controls'), opts.sections, { onChange: (st) => { opts.save(st); run(); } });
+  panel = createControls($('controls'), [{ title: '', controls: specs }], { persist: `validators-${id}`, onChange: () => run() });
   $('controls').hidden = !specs.length;
   run();
 }

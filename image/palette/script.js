@@ -24,6 +24,7 @@ import {
   readableOn,
 } from "/assets/js/lib/palette.js";
 import { copyText, actionButton } from "/assets/js/lib/text-tool.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const $ = (id) => document.getElementById(id);
 const img = $("source");
@@ -32,7 +33,6 @@ let colors = []; // [{ rgb, share }]
 let pixels = null;
 let demo = false;
 
-const saved = store.get("opts:palette", {});
 const panel = createControls(
   $("controls"),
   [
@@ -45,13 +45,13 @@ const panel = createControls(
           label: "Colors",
           min: 2,
           max: 16,
-          value: saved.count ?? 6,
+          value: 6,
         },
         {
           id: "method",
           type: "segmented",
           label: "Method",
-          value: saved.method ?? "kmeans",
+          value: "kmeans",
           options: [
             ["kmeans", "K-means"],
             ["median", "Median cut"],
@@ -62,7 +62,7 @@ const panel = createControls(
           id: "sort",
           type: "segmented",
           label: "Order",
-          value: saved.sort ?? "share",
+          value: "share",
           options: [
             ["share", "Coverage"],
             ["hue", "Hue"],
@@ -88,19 +88,14 @@ const panel = createControls(
           id: "prefix",
           type: "text",
           label: "Variable prefix",
-          value: saved.prefix ?? "color",
+          value: "color",
         },
       ],
     },
   ],
   {
+    persist: "palette",
     onChange: (s, id) => {
-      store.set("opts:palette", {
-        count: s.count,
-        method: s.method,
-        sort: s.sort,
-        prefix: s.prefix,
-      });
       if (id === "prefix") renderCode();
       else extract();
     },
@@ -108,7 +103,7 @@ const panel = createControls(
 );
 const s = panel.state;
 
-createImageDrop($("upload"), {
+const drop = createImageDrop($("upload"), {
   label: "Drop an image",
   onLoad: (m) => {
     demo = false;
@@ -415,3 +410,6 @@ function loadDemo() {
   img.src = c.toDataURL("image/png");
 }
 loadDemo();
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("palette", (file) => drop.load(file));

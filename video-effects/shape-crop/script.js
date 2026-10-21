@@ -36,6 +36,7 @@ import {
   saveMyShapes,
   forgetShape,
 } from "./custom.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
@@ -551,7 +552,7 @@ const panel = createControls(
     },
     { title: "Keyframes", controls: [{ type: "custom", el: keysUi }] },
   ],
-  { onChange },
+  { persist: { key: "shape-crop", skip: ["trimIn", "trimOut", "zoom"] }, onChange },
 );
 const s = panel.state;
 
@@ -1694,7 +1695,7 @@ function setView(v) {
 
 /* ---------- Upload, stage, export ---------- */
 
-createDropzone(document.getElementById("upload"), {
+const drop = createDropzone(document.getElementById("upload"), {
   accept: ["video", "image"],
   onLoad: (m) => {
     media = m;
@@ -1938,3 +1939,6 @@ renderKeys();
 showDemoNote();
 setView("edit");
 canvas.classList.toggle("checker", isTransparent());
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("shape-crop", (file) => drop.load(file));

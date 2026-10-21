@@ -13,6 +13,7 @@ import { outputSize, scratch, linearGradient } from "/assets/js/lib/canvas.js";
 import { ensureFont, fontString } from "/assets/js/lib/fonts.js";
 import { createRetroEngine } from "./engine.js";
 import { EFFECTS, PALETTES, CHARSETS, buildAtlas } from "./effects.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
@@ -658,6 +659,7 @@ const panel = createControls(
     },
   ],
   {
+    persist: "retro",
     onChange: (st, id) => {
       if (["charset", "customChars", "preset"].includes(id)) rebuildAtlas();
       updateHint();
@@ -672,7 +674,7 @@ function isVideo() {
 }
 
 /* ---------- Upload ---------- */
-createDropzone(document.getElementById("upload"), {
+const drop = createDropzone(document.getElementById("upload"), {
   accept: ["video", "image"],
   label: "Drop a video or image",
   onLoad: (m) => {
@@ -896,3 +898,6 @@ ensureFont("Space Mono", 700, () => {
   stage.invalidate();
 });
 ensureFont("Inter", 900, () => stage.invalidate());
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("retro", (file) => drop.load(file));

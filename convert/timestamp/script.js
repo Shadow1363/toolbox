@@ -1,7 +1,7 @@
 /* Timestamp converter: Unix (s/ms/µs/ns) ↔ ISO 8601 ↔ human-readable, in any IANA time zone. */
 import { createControls } from '/assets/js/lib/controls.js';
 import { h, icon } from '/assets/js/lib/dom.js';
-import { remember, copyText, actionButton, debounce } from '/assets/js/lib/text-tool.js';
+import { copyText, actionButton, debounce } from '/assets/js/lib/text-tool.js';
 
 const input = document.getElementById('input');
 const rowsEl = document.getElementById('rows');
@@ -10,11 +10,11 @@ const LOCAL = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 const ZONES = (() => { try { return Intl.supportedValuesOf('timeZone'); } catch { return ['UTC']; } })();
 if (!ZONES.includes('UTC')) ZONES.unshift('UTC');
 
-const opts = remember('timestamp', [{ title: '', controls: [
+const opts = [{ title: '', controls: [
   { id: 'zone', type: 'select', label: 'Time zone', value: LOCAL, options: [[LOCAL, `${LOCAL} (yours)`], ...ZONES.filter((z) => z !== LOCAL).map((z) => [z, z.replace(/_/g, ' ')])] },
   { id: 'unit', type: 'segmented', label: 'Numbers are', value: 'auto', options: [['auto', 'Detect'], ['s', 'Seconds'], ['ms', 'Milliseconds'], ['us', 'µs'], ['ns', 'ns']] },
-]}]);
-const panel = createControls(document.getElementById('options'), opts.sections, { onChange: (st) => { opts.save(st); run(); } });
+]}];
+const panel = createControls(document.getElementById('options'), opts, { persist: 'timestamp', onChange: () => run() });
 const s = panel.state;
 if (!ZONES.includes(s.zone) && s.zone !== LOCAL) panel.set({ zone: LOCAL }, { silent: true });
 

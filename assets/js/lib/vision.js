@@ -14,9 +14,10 @@
  * VIDEO mode needs strictly increasing timestamps; `nextTimestamp()` guarantees that even when
  * the caller seeks backwards.
  */
-const VERSION = '1.1.0';
-const BUNDLE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VERSION}/vision_bundle.mjs`;
-const WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VERSION}/wasm`;
+import { LIBS } from './cdn.js';
+
+const BUNDLE = LIBS.mediapipe.url;
+const WASM = LIBS.mediapipeWasm.url;
 const MODELS = 'https://storage.googleapis.com/mediapipe-models';
 
 export const SEGMENT_MODELS = {

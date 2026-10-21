@@ -311,6 +311,7 @@ const panel = createControls(
     frameSection({ frame: "none", padding: 7 }),
   ],
   {
+    persist: { key: "zoom-on-click", skip: ["pZoom", "pDur", "pHold"] },
     onChange: (st, id) => {
       if (POINT_IDS.includes(id) && selected()) {
         const p = selected();

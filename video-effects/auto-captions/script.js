@@ -51,6 +51,7 @@ import {
   toVTT,
 } from "/assets/js/lib/transcript.js";
 import { drawCaption, CAPTION_PRESETS } from "/assets/js/lib/captions.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
@@ -284,6 +285,7 @@ const panel = createControls(
     },
   ],
   {
+    persist: { key: "auto-captions", skip: ["offset"] },
     onChange: (s, id) => {
       if (["model", "device"].includes(id)) updateModelInfo();
       if (["family", "weight", "preset"].includes(id))
@@ -327,7 +329,7 @@ async function updateModelInfo() {
 }
 
 /* ---------- Upload ---------- */
-createDropzone(document.getElementById("upload"), {
+const drop = createDropzone(document.getElementById("upload"), {
   accept: ["video"],
   label: "Drop a video with speech",
   onLoad: (m) => {
@@ -754,3 +756,6 @@ canvas.height = 720;
 showHint();
 updateModelInfo();
 ensureFont(s.family, s.weight, () => stage.invalidate());
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("auto-captions", (file) => drop.load(file));

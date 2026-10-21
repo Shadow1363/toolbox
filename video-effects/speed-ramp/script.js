@@ -29,6 +29,7 @@ import {
   presetPoints,
   formatSpeed,
 } from "./curve.js";
+import { receiveHandoff } from "/assets/js/lib/handoff.js";
 
 const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
@@ -126,6 +127,7 @@ const panel = createControls(
     },
   ],
   {
+    persist: "speed-ramp",
     onChange: (s, id) => {
       if (id === "preset") applyPreset(s.preset);
       if (id === "smooth") rebuild();
@@ -139,7 +141,7 @@ const s = panel.state;
 const smooth = () => s.smooth === "smooth";
 
 /* ---------- Upload ---------- */
-createDropzone(document.getElementById("upload"), {
+const drop = createDropzone(document.getElementById("upload"), {
   accept: ["video"],
   label: "Drop a video",
   onLoad: (m) => {
@@ -617,3 +619,6 @@ const exportBar = createExportBar(document.getElementById("export"), {
 showIntro();
 updateInfo();
 sizeEditor();
+
+// A file sent from another tool's "Open in…" menu.
+receiveHandoff("speed-ramp", (file) => drop.load(file));

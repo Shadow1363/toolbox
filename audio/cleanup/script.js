@@ -188,7 +188,7 @@ const panel = createControls(
       ],
     },
   ],
-  { onChange: () => schedule() },
+  { persist: "cleanup", onChange: () => schedule() },
 );
 const s = panel.state;
 

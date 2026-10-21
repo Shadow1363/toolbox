@@ -7,8 +7,8 @@
   <rect width="320" height="200" fill="url(#bg)"/>
   <g fill="url(#p)"><circle cx="160" cy="70" r="30"/><path d="M92 200c4-56 32-90 68-90s64 34 68 90z"/></g>
   <g font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="30" text-anchor="middle" stroke="#000" stroke-width="6" paint-order="stroke" stroke-linejoin="round">
-    <text x="104" y="160" fill="#fff">SAY</text>
-    <text x="186" y="160" fill="#ffe14d">EVERY</text>
+    <text x="96" y="160" fill="#fff">SAY</text>
+    <text x="200" y="160" fill="#ffe14d">EVERY</text>
     <text x="160" y="190" fill="#fff" opacity=".9">WORD</text>
   </g>
   <g fill="#fff" opacity=".85"><rect x="18" y="18" width="44" height="18" rx="9" fill="#ff4d6d"/><circle cx="30" cy="27" r="4"/><rect x="38" y="24" width="16" height="6" rx="3"/></g>

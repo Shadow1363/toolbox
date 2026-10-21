@@ -111,4 +111,7 @@ export const store = {
   set(key, value) {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
   },
+  remove(key) {
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
+  },
 };

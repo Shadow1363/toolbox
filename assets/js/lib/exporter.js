@@ -25,6 +25,7 @@
  *   });
  */
 import { h, icon, toast, downloadBlob, formatTime, formatBytes, store } from './dom.js';
+import { createOpenIn } from './handoff.js';
 import { createControls } from './controls.js';
 import { loadGifenc, quantizeFrame, frameOptions, gifDelays } from './gif.js';
 import { scratch } from './canvas.js';
@@ -324,8 +325,15 @@ export function createExportBar(root, opts) {
     return b;
   });
   const hint = h('span', { class: 'hint' });
+  // "Open in…" appears after an export and sends that file (video or PNG) to another tool.
+  let last = null; // { file, kind }
+  const openIn = createOpenIn({ kind: () => last?.kind, getFile: () => last?.file });
+  const keep = (blob, name, kind) => {
+    last = { file: new File([blob], name, { type: blob.type }), kind };
+    openIn.refresh();
+  };
   root.className = 'export-bar';
-  root.replaceChildren(videoBtn, gifBtn, pngBtn, ...actions, h('span', { class: 'spacer' }), hint, audioLabel);
+  root.replaceChildren(videoBtn, gifBtn, pngBtn, ...actions, openIn.el, h('span', { class: 'spacer' }), hint, audioLabel);
 
   let busy = false;
   let lockedOut = false;
@@ -365,6 +373,7 @@ export function createExportBar(root, opts) {
         if (!result) return null;
         const name = `${filename()}.${result.ext}`;
         downloadBlob(result.blob, name);
+        keep(result.blob, name, 'video');
         return `${name} (${formatBytes(result.blob.size)})`;
       });
       return;
@@ -379,6 +388,7 @@ export function createExportBar(root, opts) {
         if (!result) return null;
         const name = `${filename()}.${result.ext}`;
         downloadBlob(result.blob, name);
+        keep(result.blob, name, 'video');
         return `${name} (${formatBytes(result.blob.size)})`;
       } finally {
         document.removeEventListener('visibilitychange', onHidden);
@@ -405,7 +415,8 @@ export function createExportBar(root, opts) {
     try {
       stage.invalidate();
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await exportPNG(stage.canvas, filename());
+      const name = filename();
+      keep(await exportPNG(stage.canvas, name), `${name}.png`, 'image');
     } catch (err) {
       toast(err.message || 'PNG export failed.', 'error');
     }

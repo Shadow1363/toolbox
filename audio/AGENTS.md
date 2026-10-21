@@ -13,7 +13,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 `createAudioDrop` / `createFilePicker` → `loadAudio(WithProgress)` (AudioBuffer) → `createWaveform` + `createPlayer` → the tool builds the final AudioBuffer (`renderOffline`, `sliceBuffer`, `concatBuffers`) → `createAudioExport` encodes it.
 - The buffer the player plays is the buffer that gets encoded, so exports match the preview. Live effects in the player (the Trimmer's fades) use `envelopeCurve`, the same 200 Hz gain curve the offline render applies.
 - Decoding resamples to the shared `AudioContext` rate (usually 48 kHz; 44.1 kHz on some machines and in headless Chrome).
-- Hand-offs: the Extractor sends a file with `sendFile('<tool id>', file, meta)`; Trimmer, Cleanup and Waveform Video call `takeFile('<own id>')` on load. `meta = { from, words?, language? }`; `words` are seconds relative to the sent file (Waveform Video turns them into captions).
+- Hand-offs: the Extractor sends a file with `sendFile('<tool id>', file, meta)` from its own "Open in:" row (so its `createAudioExport` passes `openIn: false`); every other audio export bar has the shared **Open in…** menu, which sends the current audio as WAV to tools whose registry entry `accepts: ['audio']`. Trimmer, Cleanup and Waveform Video call `takeFile('<own id>')` on load; the Extractor calls `receiveHandoff('extractor', …)` and also takes video. `meta = { from, words?, language? }`; `words` are seconds relative to the sent file (Waveform Video turns them into captions).
 
 ## Shared code (`assets/js/lib/`)
 | Module | Use it for |
@@ -83,6 +83,7 @@ Site-wide rules, shared modules and checklists: [root AGENTS.md](../AGENTS.md).
 - [ ] Build the final audio from one function and play that same buffer (or the same `envelopeCurve`) so the export matches.
 - [ ] Export through `createAudioExport` (WAV / MP3 / OGG / WebM); add an `extra` format only for something the encoders can't do.
 - [ ] Lazy-load any new library through `cdn.js`; show download sizes before large ones.
-- [ ] Accept hand-offs with `takeFile('<id>')` if other tools should send audio here, and add the tool to the Extractor's "Open in" list.
+- [ ] Accept hand-offs with `receiveHandoff('<id>', load)` (or `takeFile` when you need `meta.words`), add `accepts: ['audio']` in the registry, and add the tool to the Extractor's "Open in" list.
+- [ ] Pass `persist: '<id>'` to `createControls`.
 - [ ] Test: no console errors, exports have the expected duration (`ffprobe`), Space/selection/loop work, 390 px layout, light and dark themes.
 - [ ] Register in `assets/js/tools.js`, add a thumbnail, add a section above and to the issue templates.

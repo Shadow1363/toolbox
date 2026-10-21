@@ -38,6 +38,7 @@ export const LIBS = {
   ffmpegCore: { kind: 'url', url: `${NPM}/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js` },
   ffmpegWasm: { kind: 'url', url: `${NPM}/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm` },
   qrcode: { kind: 'esm', url: `${NPM}/qrcode-generator@2.0.4/+esm` },
+  gifenc: { kind: 'esm', url: `${NPM}/gifenc@1.0.3/dist/gifenc.esm.js` },
   jsqr: { kind: 'esm', url: `${NPM}/jsqr@1.4.0/+esm` },
   hashWasm: { kind: 'esm', url: `${NPM}/hash-wasm@4.12.0/+esm` },
   // Image category. Set `window.Prism = { manual: true }` before loading the Prism core (image/code-screenshot does).
@@ -86,6 +87,9 @@ export const LIBS = {
   tesseractWorker: { kind: 'url', url: `${NPM}/tesseract.js@7.0.0/dist/worker.min.js` },
   tesseractCore: { kind: 'url', url: `${NPM}/tesseract.js-core@7.0.0` },
   tesseractLang: { kind: 'url', url: `${NPM}/@tesseract.js-data` },
+  // MediaPipe Tasks Vision (lib/vision.js): the bundle and the folder its WASM fileset loads from.
+  mediapipe: { kind: 'esm', url: `${NPM}/@mediapipe/tasks-vision@1.1.0/vision_bundle.mjs` },
+  mediapipeWasm: { kind: 'url', url: `${NPM}/@mediapipe/tasks-vision@1.1.0/wasm` },
   // Machine learning (bundles onnxruntime-web, which fetches its WASM from jsDelivr). Loaded inside workers by lib/whisper.js.
   transformers: { kind: 'esm', url: `${NPM}/@huggingface/transformers@4.2.0/dist/transformers.min.js` },
   // AI (lib/ai.js): the official Anthropic SDK, used from the browser with the user's own key.
