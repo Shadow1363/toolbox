@@ -59,6 +59,29 @@ export function backgroundTexture(kind, w, h, color) {
       for (let x = (w % step) / 2; x < w; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
       for (let y = (h % step) / 2; y < h; y += step) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
       ctx.stroke();
+    } else if (kind === 'wood') {
+      // desk top: planks of long wavy grain lines
+      const plank = Math.round(Math.min(w, h) / 4.5);
+      for (let y0 = 0, i = 0; y0 < h; y0 += plank, i++) {
+        ctx.fillStyle = `rgba(${i % 2 ? '0,0,0,.06' : '255,240,220,.05'})`;
+        ctx.fillRect(0, y0, w, plank);
+        for (let j = 0; j < plank / 5; j++) {
+          const y = y0 + r() * plank, seed = i * 100 + j;
+          ctx.beginPath();
+          for (let x = 0; x <= w; x += 16) {
+            const yy = y + fbm1(x / 380 + j, seed, 3) * plank * 0.18;
+            x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy);
+          }
+          ctx.strokeStyle = `rgba(60,30,10,${0.06 + r() * 0.2})`;
+          ctx.lineWidth = 0.6 + r() * 2.4;
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(30,15,5,.45)';
+        ctx.fillRect(0, y0, w, Math.max(1.5, plank / 120));
+      }
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.globalAlpha = 0.3;
+      ctx.drawImage(grainTexture(512, 8), 0, 0, w, h);
     } else if (kind === 'cork') {
       for (let i = 0; i < (w * h) / 60; i++) {
         const v = r();
@@ -81,11 +104,12 @@ export function backgroundTexture(kind, w, h, color) {
 
 /**
  * Build the outline of a w×h rectangle (centred at 0,0) as a list of points.
- * style: 'straight' | 'torn' | 'cutout'
+ * style: 'straight' | 'torn' | 'cutout' | 'rounded'
  * rough: displacement in px. seed: changes the tear.
  */
 export function edgePath(w, h, style, rough, seed) {
   const pts = [];
+  if (style === 'rounded') return roundedPath(w, h, Math.min(w, h) * 0.06 + rough * 0.5);
   if (style === 'straight' || rough <= 0) {
     return [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
   }
@@ -114,6 +138,20 @@ export function edgePath(w, h, style, rough, seed) {
         const d = fbm1(t * len * 0.012 + side * 50, seed, 4) * rough + (r() - 0.5) * rough * 0.35 - rough * 0.15;
         pts.push([ax + (bx - ax) * t + nx * d, ay + (by - ay) * t + ny * d]);
       }
+    }
+  }
+  return pts;
+}
+
+/** A rounded rectangle (centred at 0,0) as points, so it goes through tracePath like the others. */
+function roundedPath(w, h, rad) {
+  const pts = [];
+  rad = Math.min(rad, w / 2, h / 2);
+  const corners = [[w / 2 - rad, -h / 2 + rad, -Math.PI / 2], [w / 2 - rad, h / 2 - rad, 0], [-w / 2 + rad, h / 2 - rad, Math.PI / 2], [-w / 2 + rad, -h / 2 + rad, Math.PI]];
+  for (const [cx, cy, a0] of corners) {
+    for (let i = 0; i <= 8; i++) {
+      const a = a0 + (i / 8) * (Math.PI / 2);
+      pts.push([cx + Math.cos(a) * rad, cy + Math.sin(a) * rad]);
     }
   }
   return pts;

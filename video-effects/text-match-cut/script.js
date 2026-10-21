@@ -7,6 +7,7 @@ import { rng, hash } from "/assets/js/lib/random.js";
 import { overlayTexture } from "/assets/js/lib/paper-textures.js";
 import { loadFontStylesheet, fontString } from "/assets/js/lib/fonts.js";
 import { loadMedia } from "/assets/js/lib/media.js";
+import { createDropzone } from "/assets/js/lib/upload.js";
 import { loadGifenc, quantizeFrame, gifDelay } from "/assets/js/lib/gif.js";
 import {
   h,
@@ -22,6 +23,8 @@ import {
   resetMeasurements,
 } from "./pages.js";
 import { LANG_OPTIONS } from "./lang.js";
+import { SURFACES, getSurface, renderPhoto } from "./surfaces/index.js";
+import { prepareLogo, demoLogo } from "./logo.js";
 
 const JSZIP_URL = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
 const SIZES = {
@@ -35,49 +38,89 @@ const canvas = document.getElementById("preview");
 const ctx = canvas.getContext("2d");
 
 /* ---------- Frames ---------- */
-// { id, kind: 'page', seed, template, locked } | { id, kind: 'image', img, box: {x,y,w,h}, locked }
+// { id, kind: 'page', seed, template, locked } | { id, kind: 'logo', seed, surface, locked }
+// | { id, kind: 'image', img, box: {x,y,w,h}, locked }
+// Pages and logo surfaces are "generated" frames: the Frames slider sets how many, the mode their kind.
 let frames = [];
 let nextId = 1;
 const enabledTemplates = new Set(TEMPLATES.map(([k]) => k));
+const enabledSurfaces = new Set(SURFACES.map((x) => x.id));
+const photoSurfaces = []; // { id: 'photo:<n>', img, name, dispose }
 const randomSeed = () => Math.floor(Math.random() * 2 ** 31);
 
-function pickTemplate(avoid) {
-  const list = [...enabledTemplates];
+function pickFrom(set, avoid) {
+  const list = [...set];
   const options = list.length > 1 ? list.filter((t) => t !== avoid) : list;
   return options[Math.floor(Math.random() * options.length)];
 }
-function newPageFrame(avoid) {
-  return {
-    id: nextId++,
-    kind: "page",
-    seed: randomSeed(),
-    template: pickTemplate(avoid),
-    locked: false,
-  };
+const pickTemplate = (avoid) => pickFrom(enabledTemplates, avoid);
+/** The least-used surface (so every surface shows up before one repeats), never `avoid`. */
+function pickSurface(avoid) {
+  const used = new Map();
+  for (const f of frames) if (f.kind === "logo") used.set(f.surface, (used.get(f.surface) || 0) + 1);
+  const list = [...enabledSurfaces].filter((x) => x !== avoid || enabledSurfaces.size === 1);
+  const least = Math.min(...list.map((x) => used.get(x) || 0));
+  return pickFrom(new Set(list.filter((x) => (used.get(x) || 0) === least)));
 }
-const pageFrames = () => frames.filter((f) => f.kind === "page");
+const styleOf = (f) => (f?.kind === "logo" ? f.surface : f?.template);
+const isGenerated = (f) => f.kind === "page" || f.kind === "logo";
+const genFrames = () => frames.filter(isGenerated);
 
-/** Match the number of generated pages to the "Frames" slider. */
+function newFrame(kind, avoid) {
+  const f = { id: nextId++, kind, seed: randomSeed(), locked: false };
+  if (kind === "logo") f.surface = pickSurface(avoid);
+  else f.template = pickTemplate(avoid);
+  return f;
+}
+
+/** The kind the i-th of n generated frames should have in the current mode. */
+function wantKind(i, n) {
+  if (s.mode === "text") return "page";
+  if (s.mode === "logo") return "logo";
+  if (i === n - 1) return s.mixEnd === "logo" ? "logo" : "page";
+  if (s.mixPattern === "random") return hash(i, 7177) < s.mixRatio / 100 ? "logo" : "page";
+  const pat = { tl: "pl", ttl: "ppl", tll: "pll" }[s.mixPattern] || "pl";
+  return pat[i % pat.length] === "l" ? "logo" : "page";
+}
+
+/** Give every generated frame the kind the mode wants (locked frames keep theirs in Mixed mode). */
+function assignKinds() {
+  const gen = genFrames();
+  gen.forEach((f, i) => {
+    const want = wantKind(i, gen.length);
+    if (f.kind === want || (f.locked && s.mode === "mixed")) return;
+    f.kind = want;
+    delete f.template;
+    delete f.surface;
+    regenerate(f, styleOf(gen[i - 1]));
+  });
+}
+
+/** Match the number of generated frames to the "Frames" slider. */
 function syncFrameCount() {
   const want = s.frames;
-  while (pageFrames().length < want)
-    frames.push(newPageFrame(frames[frames.length - 1]?.template));
-  while (pageFrames().length > want) {
+  while (genFrames().length < want) {
+    const n = genFrames().length;
+    frames.push(newFrame(wantKind(n, want), styleOf(frames[frames.length - 1])));
+  }
+  while (genFrames().length > want) {
     const victim =
-      [...frames].reverse().find((f) => f.kind === "page" && !f.locked) ||
-      [...frames].reverse().find((f) => f.kind === "page");
+      [...frames].reverse().find((f) => isGenerated(f) && !f.locked) ||
+      [...frames].reverse().find(isGenerated);
     frames.splice(frames.indexOf(victim), 1);
   }
+  assignKinds();
 }
 
 function regenerate(f, avoid) {
   f.seed = randomSeed();
-  f.template = pickTemplate(avoid ?? f.template);
+  if (f.kind === "logo") f.surface = pickSurface(avoid ?? f.surface);
+  else f.template = pickTemplate(avoid ?? f.template);
 }
 
 function shuffleAll() {
   frames.forEach((f, i) => {
-    if (f.kind === "page" && !f.locked) regenerate(f, frames[i - 1]?.template);
+    if (isGenerated(f) && !f.locked) regenerate(f, styleOf(frames[i - 1]));
   });
   changed();
 }
@@ -109,13 +152,94 @@ const templateChips = h(
   }),
 );
 
+const surfaceChips = h(
+  "div",
+  { class: "chips" },
+  SURFACES.map((x) => surfaceChip(x.id, x.name)),
+);
+function surfaceChip(id, label) {
+  const b = h(
+    "button",
+    { type: "button", class: "chip", "aria-pressed": String(enabledSurfaces.has(id)) },
+    label,
+  );
+  b.addEventListener("click", () => {
+    if (enabledSurfaces.has(id) && enabledSurfaces.size === 1)
+      return toast("Keep at least one surface.", "warning", 2500);
+    enabledSurfaces.has(id) ? enabledSurfaces.delete(id) : enabledSurfaces.add(id);
+    b.setAttribute("aria-pressed", String(enabledSurfaces.has(id)));
+    frames.forEach((f, i) => {
+      if (f.kind === "logo" && !enabledSurfaces.has(f.surface))
+        regenerate(f, styleOf(frames[i - 1]));
+    });
+    changed();
+  });
+  return b;
+}
+
+const logoEl = h("div", { class: "tmc-logo" });
+const logoNote = h("p", { class: "ctrl-hint" });
+const photosEl = h("div", { class: "tmc-shots" });
 const shotsEl = h("div", { class: "tmc-shots" });
 
 const panel = createControls(
   document.getElementById("controls"),
   [
     {
+      title: "Mode",
+      controls: [
+        {
+          id: "mode",
+          type: "segmented",
+          label: "Match cut on",
+          value: "text",
+          options: [
+            ["text", "Text"],
+            ["logo", "Logo"],
+            ["mixed", "Mixed"],
+          ],
+          hint: "Text: your keyword on pages. Logo: your logo on real-world surfaces. Mixed: both, alternating.",
+        },
+        {
+          id: "mixPattern",
+          type: "select",
+          label: "Pattern",
+          value: "tl",
+          options: [
+            ["tl", "Text, logo, text, logo…"],
+            ["ttl", "Text, text, logo…"],
+            ["tll", "Text, logo, logo…"],
+            ["random", "Random mix"],
+          ],
+          showIf: (st) => st.mode === "mixed",
+        },
+        {
+          id: "mixRatio",
+          type: "range",
+          label: "Logo frames",
+          min: 10,
+          max: 90,
+          step: 5,
+          value: 50,
+          unit: "%",
+          showIf: (st) => st.mode === "mixed" && st.mixPattern === "random",
+        },
+        {
+          id: "mixEnd",
+          type: "segmented",
+          label: "Last frame",
+          value: "logo",
+          options: [
+            ["logo", "Logo"],
+            ["text", "Text"],
+          ],
+          showIf: (st) => st.mode === "mixed",
+        },
+      ],
+    },
+    {
       title: "Text",
+      showIf: (st) => st.mode !== "logo",
       controls: [
         {
           id: "keyword",
@@ -144,6 +268,7 @@ const panel = createControls(
     },
     {
       title: "Pages",
+      showIf: (st) => st.mode !== "logo",
       controls: [
         { type: "custom", label: "Page types", el: templateChips },
         { type: "button", text: "Shuffle pages", onClick: shuffleAll },
@@ -163,23 +288,11 @@ const panel = createControls(
           unit: "px",
           hint: "Relative to a 1080px frame.",
         },
-        { id: "jitter", type: "toggle", label: "Handheld jitter", value: true },
-        {
-          id: "jitterAmount",
-          type: "range",
-          label: "Jitter amount",
-          min: 1,
-          max: 6,
-          step: 0.5,
-          value: 2,
-          unit: "px",
-          decimals: 1,
-          showIf: (s) => s.jitter,
-        },
       ],
     },
     {
       title: "Highlight",
+      showIf: (st) => st.mode !== "logo",
       controls: [
         {
           id: "hlStyle",
@@ -224,7 +337,80 @@ const panel = createControls(
       ],
     },
     {
-      title: "Focus",
+      title: "Logo",
+      showIf: (st) => st.mode !== "text",
+      controls: [
+        { type: "custom", el: logoEl },
+        {
+          id: "logoBg",
+          type: "toggle",
+          label: "Remove a solid background",
+          value: true,
+          hint: "For JPGs and other logos on white (or any one color). Transparent PNGs and SVGs are left as they are.",
+        },
+        {
+          id: "logoThreshold",
+          type: "range",
+          label: "Background threshold",
+          min: 1,
+          max: 60,
+          value: 18,
+          hint: "Higher removes more of the colours close to the background.",
+          showIf: (st) => st.logoBg,
+        },
+        {
+          id: "logoColors",
+          type: "segmented",
+          label: "Logo colors",
+          value: "surface",
+          options: [
+            ["surface", "One color per surface"],
+            ["original", "Original colors"],
+          ],
+          hint: "One color: white paint on concrete, gold thread on a patch, a neon tube color… Original keeps your logo's colors.",
+        },
+        {
+          id: "logoSize",
+          type: "range",
+          label: "Logo size",
+          min: 120,
+          max: 900,
+          value: 460,
+          unit: "px",
+          hint: "Longest side, relative to a 1080px frame. The same on every frame.",
+        },
+        {
+          id: "logoX",
+          type: "range",
+          label: "Horizontal position",
+          min: -35,
+          max: 35,
+          value: 0,
+          unit: "%",
+        },
+        {
+          id: "logoY",
+          type: "range",
+          label: "Vertical position",
+          min: -35,
+          max: 35,
+          value: 0,
+          unit: "%",
+          hint: "In Mixed mode the keyword moves with the logo, so both land on the same spot.",
+        },
+      ],
+    },
+    {
+      title: "Surfaces",
+      showIf: (st) => st.mode !== "text",
+      controls: [
+        { type: "custom", label: "Surface types", el: surfaceChips },
+        { type: "button", text: "Shuffle surfaces", onClick: shuffleAll },
+        { type: "custom", label: "Your own surface photos", el: photosEl },
+      ],
+    },
+    {
+      title: "Camera",
       controls: [
         {
           id: "blur",
@@ -245,7 +431,20 @@ const panel = createControls(
           max: 700,
           value: 170,
           unit: "px",
-          hint: "Sharp area around the keyword. Blur increases beyond it.",
+          hint: "Sharp area around the keyword or logo. Blur increases beyond it.",
+        },
+        { id: "jitter", type: "toggle", label: "Handheld jitter", value: true },
+        {
+          id: "jitterAmount",
+          type: "range",
+          label: "Jitter amount",
+          min: 1,
+          max: 6,
+          step: 0.5,
+          value: 2,
+          unit: "px",
+          decimals: 1,
+          showIf: (s) => s.jitter,
         },
       ],
     },
@@ -394,6 +593,8 @@ const panel = createControls(
   {
     onChange: (st, id) => {
       if (id === "frames") syncFrameCount();
+      if (id === "mode" || id === "mixPattern" || id === "mixRatio" || id === "mixEnd") assignKinds();
+      if (id === "logoBg" || id === "logoThreshold") prepLogo();
       if (id === "shutter" || id === "shutterPreview") {
         if (st.shutter) shutter.load();
         return;
@@ -406,6 +607,58 @@ const panel = createControls(
 
 const s = panel.state;
 const keyword = () => s.keyword.trim() || "Your keyword";
+
+/* ---------- Logo ---------- */
+let logoMedia = null; // the upload (loadMedia result), null = demo logo
+let logo = demoLogo(); // { canvas, removed, color }
+
+function prepLogo() {
+  if (!logoMedia) {
+    logo = demoLogo();
+    logoNote.textContent = "Showing a demo logo. A simple one-color logo works best.";
+  } else {
+    const isSvg = /\.svg$/i.test(logoMedia.name);
+    logo = prepareLogo(logoMedia.el, { removeBg: s.logoBg, threshold: s.logoThreshold, isSvg });
+    logoNote.textContent = logo.empty
+      ? "Nothing left of the logo: lower the background threshold."
+      : logo.removed
+        ? "Background removed."
+        : "";
+  }
+}
+
+createDropzone(logoEl, {
+  accept: ["image"],
+  label: "Drop your logo (PNG, SVG or JPG)",
+  onLoad: (m) => {
+    logoMedia = m;
+    prepLogo();
+    changed();
+  },
+  onClear: () => {
+    logoMedia = null;
+    prepLogo();
+    changed();
+  },
+});
+logoEl.append(logoNote);
+
+/** Where the logo sits on a W×H frame: identical on every frame. */
+function logoBox(W, H, k) {
+  const L = logo.canvas;
+  const S = s.logoSize * k;
+  const sc = Math.min(S / L.width, S / L.height);
+  const w = L.width * sc,
+    hh = L.height * sc;
+  const [cx, cy] = centerOf(W, H);
+  return { x: cx - w / 2, y: cy - hh / 2, w, h: hh, cx, cy };
+}
+
+/** The match-cut point: the frame centre in Text mode, moved by the logo position otherwise. */
+function centerOf(W, H) {
+  if (s.mode === "text") return [W / 2, H / 2];
+  return [W / 2 + (s.logoX / 100) * W, H / 2 + (s.logoY / 100) * H];
+}
 
 /* ---------- Timing ---------- */
 function delays() {
@@ -561,7 +814,8 @@ function drawHighlight(c, x, y, w, hgt, seed, unit, darkBg, redraw) {
 function drawContent(c, W, H, k, f) {
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.globalCompositeOperation = "source-over";
-  const seed = f.kind === "page" ? f.seed : f.id * 7919;
+  const seed = f.kind === "image" ? f.id * 7919 : f.seed;
+  const [ox, oy] = centerOf(W, H);
   let dx = 0,
     dy = 0,
     rot = 0;
@@ -569,6 +823,20 @@ function drawContent(c, W, H, k, f) {
     dx = (hash(seed, 1) - 0.5) * 2 * s.jitterAmount * k;
     dy = (hash(seed, 2) - 0.5) * 2 * s.jitterAmount * k;
     rot = (hash(seed, 3) - 0.5) * 0.012 * s.jitterAmount;
+  }
+
+  if (f.kind === "logo") {
+    const box = logoBox(W, H, k);
+    const surf = scratch(`tmc-surface-${W}x${H}`, W, H);
+    const info = drawSurface(surf.getContext("2d"), W, H, k, f, box);
+    c.fillStyle = info.bg;
+    c.fillRect(0, 0, W, H);
+    c.translate(ox + dx, oy + dy);
+    c.rotate(rot);
+    c.translate(-ox, -oy);
+    c.drawImage(surf, 0, 0);
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    return { w: box.w, h: box.h, surface: info.surface, bg: info.bg, cx: ox, cy: oy };
   }
 
   if (f.kind === "page") {
@@ -579,7 +847,7 @@ function drawContent(c, W, H, k, f) {
       cy = key.y - (key.ascent - key.descent) / 2;
     c.fillStyle = page.bg;
     c.fillRect(0, 0, W, H);
-    c.translate(W / 2 + dx, H / 2 + dy);
+    c.translate(ox + dx, oy + dy);
     c.rotate(rot);
     c.scale(scale, scale);
     c.translate(-cx, -cy);
@@ -606,19 +874,24 @@ function drawContent(c, W, H, k, f) {
       h: (key.ascent + key.descent + pad * 1.2) * scale,
       surface: page.surface,
       bg: page.bg,
+      cx: ox,
+      cy: oy,
     };
   }
 
   // Screenshot frame: the marked box goes to the centre.
   const { img, box } = f;
-  const scale = s.keepSize
-    ? (s.keySize * k * 1.2) / box.h
-    : Math.max(W / img.width, H / img.height);
+  const scale =
+    s.mode === "logo"
+      ? logoBox(W, H, k).h / box.h
+      : s.keepSize
+        ? (s.keySize * k * 1.2) / box.h
+        : Math.max(W / img.width, H / img.height);
   const cover = fit(img.width, img.height, W, H, "cover");
   c.fillStyle = "#111";
   c.fillRect(0, 0, W, H);
   drawBlurred(c, img.el, cover.x, cover.y, cover.w, cover.h, 30 * k);
-  c.translate(W / 2 + dx, H / 2 + dy);
+  c.translate(ox + dx, oy + dy);
   c.rotate(rot);
   c.scale(scale, scale);
   c.translate(-(box.x + box.w / 2), -(box.y + box.h / 2));
@@ -641,14 +914,48 @@ function drawContent(c, W, H, k, f) {
     h: box.h * scale,
     surface: "screen",
     bg: "#111111",
+    cx: ox,
+    cy: oy,
   };
 }
 
+/** One logo frame: the surface module draws the whole frame with the logo applied. */
+function drawSurface(c, W, H, k, f, box) {
+  const r = rng(f.seed);
+  const env = {
+    W,
+    H,
+    k,
+    r,
+    seed: f.seed,
+    box,
+    u: Math.max(box.w, box.h),
+    logo: logo.canvas,
+    logoColor: logo.color,
+    ink: (palette) => {
+      const v = palette[Math.floor(r() * palette.length)];
+      return s.logoColors === "original" ? null : v;
+    },
+  };
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.globalAlpha = 1;
+  c.globalCompositeOperation = "source-over";
+  c.filter = "none";
+  c.clearRect(0, 0, W, H);
+  const photo = photoSurfaces.find((p) => p.id === f.surface);
+  const info = photo ? renderPhoto(c, env, photo.img) : getSurface(f.surface).render(c, env);
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.globalAlpha = 1;
+  c.globalCompositeOperation = "source-over";
+  c.filter = "none";
+  return info;
+}
+
 /** Keep an ellipse around the centre and fade out beyond it. */
-function maskEllipse(c, W, H, rx, ry, inner) {
+function maskEllipse(c, W, H, rx, ry, inner, cx = W / 2, cy = H / 2) {
   c.save();
   c.globalCompositeOperation = "destination-in";
-  c.translate(W / 2, H / 2);
+  c.translate(cx, cy);
   c.scale(1, ry / rx);
   const g = c.createRadialGradient(0, 0, rx * inner, 0, 0, rx);
   g.addColorStop(0, "rgba(0,0,0,1)");
@@ -681,14 +988,14 @@ function renderFrame(out, W, H, f) {
     mctx.setTransform(1, 0, 0, 1, 0, 0);
     mctx.clearRect(0, 0, W, H);
     drawBlurred(mctx, sharp, 0, 0, W, H, b * 0.4);
-    maskEllipse(mctx, W, H, info.w / 2 + R * 2, info.h / 2 + R * 1.3, 0.35);
+    maskEllipse(mctx, W, H, info.w / 2 + R * 2, info.h / 2 + R * 1.3, 0.35, info.cx, info.cy);
     out.drawImage(mid, 0, 0);
     const focus = scratch(`tmc-focus-${W}x${H}`, W, H);
     const fctx = focus.getContext("2d");
     fctx.setTransform(1, 0, 0, 1, 0, 0);
     fctx.clearRect(0, 0, W, H);
     fctx.drawImage(sharp, 0, 0);
-    maskEllipse(fctx, W, H, info.w / 2 + R, info.h / 2 + R * 0.6, 0.45);
+    maskEllipse(fctx, W, H, info.w / 2 + R, info.h / 2 + R * 0.6, 0.45, info.cx, info.cy);
     out.drawImage(focus, 0, 0);
   }
 
@@ -699,7 +1006,7 @@ function renderFrame(out, W, H, f) {
       : s.textureAmount *
         ({ screen: 0.4, paper: 1, aged: 1.25 }[info.surface] || 1);
   if (amount > 0) {
-    const seed = f.kind === "page" ? f.seed : f.id;
+    const seed = f.kind === "image" ? f.id : f.seed;
     out.save();
     out.globalCompositeOperation = "overlay";
     out.globalAlpha = Math.min(1, amount);
@@ -786,6 +1093,12 @@ const stage = createStage({
 });
 
 /* ---------- Filmstrip ---------- */
+function frameLabel(f) {
+  if (f.kind === "image") return f.img.name;
+  if (f.kind === "page") return TEMPLATES.find(([k]) => k === f.template)?.[1] || f.template;
+  return photoSurfaces.find((p) => p.id === f.surface)?.name || getSurface(f.surface).name;
+}
+
 const filmstrip = (() => {
   const root = document.getElementById("filmstrip");
   const count = h("span", { class: "muted" });
@@ -829,9 +1142,9 @@ const filmstrip = (() => {
       const regen = h("button", {
         type: "button",
         class: "tmc-mini",
-        title: "Regenerate this page",
+        title: f.kind === "logo" ? "Regenerate this surface" : "Regenerate this page",
         html: icon("restart"),
-        hidden: f.kind !== "page",
+        hidden: !isGenerated(f),
       });
       const del = h("button", {
         type: "button",
@@ -848,7 +1161,7 @@ const filmstrip = (() => {
           {
             type: "button",
             class: "tmc-thumb",
-            title: "Show this frame",
+            title: `Show this frame (${frameLabel(f)})`,
             onclick: () => {
               stage.pause();
               stage.seek(timeline.starts[frames.indexOf(f)] + 0.0005);
@@ -879,7 +1192,10 @@ const filmstrip = (() => {
           return toast("Keep at least two frames.", "warning", 2500);
         frames.splice(frames.indexOf(f), 1);
         if (f.kind === "image") renderShots();
-        else panel.set({ frames: pageFrames().length }, { silent: true });
+        else {
+          panel.set({ frames: genFrames().length }, { silent: true });
+          assignKinds();
+        }
         changed();
       });
       return { item, canvas: c, label, f, drawn: false };
@@ -1016,6 +1332,112 @@ function renderShots() {
   );
 }
 
+/* ---------- Your own surface photos ---------- */
+const photoInput = h("input", {
+  type: "file",
+  accept: "image/*",
+  multiple: true,
+  "aria-label": "Add surface photos",
+});
+const photoZone = h(
+  "div",
+  { class: "dropzone tmc-shot-zone", html: icon("upload") },
+  h("strong", {}, "Add surface photos"),
+  h("span", {}, "A wall, a T-shirt, a box… The logo is blended into them"),
+  photoInput,
+);
+const photoList = h("ul", { class: "tmc-shot-list" });
+photosEl.append(photoZone, photoList);
+
+async function addPhotos(files) {
+  for (const file of files) {
+    try {
+      const m = await loadMedia(file, { accept: ["image"] });
+      const id = `photo:${nextId++}`;
+      photoSurfaces.push({ id, img: m.el, name: m.name, dispose: m.dispose });
+      enabledSurfaces.add(id);
+      // use it right away on one generated logo frame
+      const target = frames.find((f) => f.kind === "logo" && !f.locked && !f.surface.startsWith("photo:"));
+      if (target) {
+        target.surface = id;
+        target.seed = randomSeed();
+      }
+    } catch (err) {
+      toast(err.message || "Could not open that image.", "error", 6000);
+    }
+  }
+  renderPhotos();
+  changed();
+}
+photoInput.addEventListener("change", () => {
+  addPhotos([...photoInput.files]);
+  photoInput.value = "";
+});
+["dragenter", "dragover"].forEach((ev) =>
+  photoZone.addEventListener(ev, (e) => {
+    e.preventDefault();
+    photoZone.classList.add("is-over");
+  }),
+);
+["dragleave", "drop"].forEach((ev) =>
+  photoZone.addEventListener(ev, (e) => {
+    e.preventDefault();
+    photoZone.classList.remove("is-over");
+  }),
+);
+photoZone.addEventListener("drop", (e) => addPhotos([...e.dataTransfer.files]));
+
+function renderPhotos() {
+  photoList.replaceChildren(
+    ...photoSurfaces.map((p) =>
+      h(
+        "li",
+        {},
+        h("img", { src: p.img.src, alt: "" }),
+        h("span", { class: "tmc-shot-name", title: p.name }, p.name),
+        h("button", {
+          type: "button",
+          class: "tmc-mini",
+          title: enabledSurfaces.has(p.id) ? "In the rotation (click to skip)" : "Skipped (click to use)",
+          "aria-pressed": String(enabledSurfaces.has(p.id)),
+          html: icon("check"),
+          onclick: () => {
+            if (enabledSurfaces.has(p.id) && enabledSurfaces.size === 1)
+              return toast("Keep at least one surface.", "warning", 2500);
+            if (enabledSurfaces.has(p.id)) enabledSurfaces.delete(p.id);
+            else enabledSurfaces.add(p.id);
+            frames.forEach((f, i) => {
+              if (f.kind === "logo" && !enabledSurfaces.has(f.surface)) regenerate(f, styleOf(frames[i - 1]));
+            });
+            renderPhotos();
+            changed();
+          },
+        }),
+        h("button", {
+          type: "button",
+          class: "tmc-mini",
+          title: "Remove",
+          html: icon("x"),
+          onclick: () => {
+            photoSurfaces.splice(photoSurfaces.indexOf(p), 1);
+            enabledSurfaces.delete(p.id);
+            if (!enabledSurfaces.size) {
+              SURFACES.forEach((x) => enabledSurfaces.add(x.id));
+              [...surfaceChips.children].forEach((c) => c.setAttribute("aria-pressed", "true"));
+            }
+            frames.forEach((f, i) => {
+              if (f.kind === "logo" && f.surface === p.id) regenerate(f, styleOf(frames[i - 1]));
+            });
+            p.dispose();
+            renderPhotos();
+            changed();
+          },
+        }),
+      ),
+    ),
+  );
+}
+
 /** Modal where the user clicks the word (or drags a box around it). Resolves to a box in image pixels, or null. */
 function markWord(img, initial) {
   return new Promise((resolve) => {
@@ -1118,7 +1540,7 @@ function markWord(img, initial) {
         h(
           "p",
           {},
-          `Click the center of “${keyword()}” in ${img.name}, or drag a box around it for exact sizing.`,
+          `Click the center of ${s.mode === "logo" ? "your logo" : `“${keyword()}”`} in ${img.name}, or drag a box around it for exact sizing.`,
         ),
         h("div", { class: "tmc-mark-wrap" }, cv),
         h(
@@ -1394,6 +1816,7 @@ if (document.fonts) {
 }
 
 /* ---------- Start ---------- */
+prepLogo();
 syncFrameCount();
 resize();
 rebuildTimeline();

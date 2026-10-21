@@ -75,9 +75,9 @@ export const tools = [
     category: "video-effects",
     name: "Paper Effect",
     description:
-      "Torn-paper edges, grain and stop-motion jitter for any media.",
+      "Torn-paper edges, grain and stop-motion jitter for any media, or an animated scrapbook collage.",
     thumbnail: "/assets/img/paper-effect.svg",
-    tags: ["craft", "texture", "collage", "stop motion"],
+    tags: ["craft", "texture", "collage", "stop motion", "scrapbook", "polaroid"],
   },
   {
     id: "screen-showcase",
@@ -110,9 +110,9 @@ export const tools = [
     category: "video-effects",
     name: "Text Match Cut",
     description:
-      "Your word stays locked in place while pages flicker behind it. Export as GIF.",
+      "Your word or logo stays locked in place while pages and surfaces flicker behind it. Export as GIF.",
     thumbnail: "/assets/img/text-match-cut.svg",
-    tags: ["gif", "match cut", "newspaper", "highlight", "kinetic typography"],
+    tags: ["gif", "match cut", "newspaper", "highlight", "kinetic typography", "logo", "brand", "mockup", "neon", "graffiti"],
   },
   {
     id: "transitions",
