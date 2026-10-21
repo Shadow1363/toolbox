@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Paper Effect · Toolbox</title>
-  <meta name="description" content="Give images and videos a paper craft look with torn edges, grain and stop-motion jitter.">
+  <meta name="description" content="Give images and videos a paper craft look with torn edges, grain and stop-motion jitter, or stack several into an animated scrapbook collage.">
   <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="./style.css">
   <script src="/assets/js/theme-init.js"></script>
   <script type="module" src="/assets/js/site.js"></script>
   <script type="module" src="./script.js"></script>
@@ -17,12 +18,12 @@
     <div data-tool-head></div>
     <div class="tool-layout">
       <aside class="panel controls-panel" aria-label="Settings">
-        <section class="ctrl-section"><h3>Media</h3><div id="upload"></div></section>
         <div id="controls"></div>
       </aside>
       <section class="panel preview-panel" aria-label="Preview">
         <div class="preview-stage">
           <canvas id="preview" width="1280" height="720"></canvas>
+          <canvas id="handles" class="pe-handles" width="1280" height="720" aria-hidden="true"></canvas>
           <div class="preview-overlay" id="overlay" hidden></div>
         </div>
         <div id="transport"></div>

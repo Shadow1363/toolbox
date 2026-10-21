@@ -1,0 +1,31 @@
+/* Paper Effect: tool-only styles, built on the shared tokens. */
+
+/* Collage selection handles: on top of the preview canvas, never part of an export. */
+.preview-stage canvas.pe-handles {
+  position: absolute; max-width: none; max-height: none;
+  border-radius: 6px; box-shadow: none; background: transparent; pointer-events: none;
+}
+#preview { touch-action: none; }
+#preview.pe-dragging { cursor: grabbing; }
+
+/* Collage item list: top row = top layer. */
+.pe-collage { display: flex; flex-direction: column; gap: 8px; }
+.pe-items-head { display: flex; align-items: center; font-size: 12px; }
+.pe-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pe-item {
+  display: flex; align-items: flex-start; gap: 8px; padding: 6px; min-width: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer;
+}
+.pe-item:hover { background: var(--surface-2); }
+.pe-item.is-selected { border-color: var(--accent); background: var(--accent-soft); }
+.pe-thumb { width: 40px; height: 40px; border-radius: 6px; flex: none; object-fit: cover; }
+.pe-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pe-item-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.pe-item-name { font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pe-edge { font-size: 12px; padding: 2px 4px; height: 26px; width: auto; }
+.pe-chip { font-size: 12px; padding: 2px 8px; }
+.pe-caption { font-size: 12px; padding: 4px 6px; width: 100%; }
+.pe-item-tools { display: grid; grid-template-columns: repeat(2, 22px); gap: 2px; flex: none; }
+.pe-mini { display: inline-grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer; }
+.pe-mini:hover { background: var(--surface-2); color: var(--text); }
+.pe-mini svg { width: 14px; height: 14px; }
